@@ -123,7 +123,7 @@ public class FileHandler
                     }
 
                     if (x < WIDTH && z < HEIGHT)
-                        template.hex[x, z] = new Hex(resource, diceNum, portSides);
+                        template.hex[x, z] = new Hex(resource, diceNum, portSides, x, z);
                 }
             }
             reader.Close();

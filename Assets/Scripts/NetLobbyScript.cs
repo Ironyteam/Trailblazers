@@ -52,6 +52,6 @@ public class NetLobbyScript : MonoBehaviour {
 	public void PreGameBoardSceneOn()
     {
         BoardManager.startingGame = true;
-        UnityEngine.SceneManagement.SceneManager.LoadScene(7);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("BoardManager");
     }
 }

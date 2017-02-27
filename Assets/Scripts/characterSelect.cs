@@ -16,7 +16,7 @@ public class characterSelect : MonoBehaviour {
 		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
 			characterSelectImages[count].enabled = false;
 
-		for(int count = 6; count < NUM_OF_CHARACTERS; count++)
+		for(int count = 6; count < NUM_OF_CHARACTERS - 2; count++)
 			characterCanvasArray[count].enabled = false;
 	}
 
@@ -187,7 +187,7 @@ public class characterSelect : MonoBehaviour {
 		characterSelectImages[11].enabled = true;
 	}
 
-	public void quit()
+	public void returnToNetLobby()
 	{
         Application.Quit();
 	}

@@ -12,14 +12,16 @@ public class NavigationScript : MonoBehaviour
     public Canvas optionsCanvas;
     public Canvas quitCanvas;
 	public Canvas playNowCanvas;
+	public Canvas gameRulesCanvas;
 
     void Awake()
     {
-       optionsCanvas.enabled = false;
-       createCanvas.enabled  = false;
-       creditCanvas.enabled  = false;
-       quitCanvas.enabled    = false;
-	   playNowCanvas.enabled = false;
+       optionsCanvas.enabled   = false;
+       createCanvas.enabled    = false;
+       creditCanvas.enabled    = false;
+       quitCanvas.enabled      = false;
+	   playNowCanvas.enabled   = false;
+	   gameRulesCanvas.enabled = false;
     }
 
     public void optionsOn()
@@ -30,6 +32,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
+	   gameRulesCanvas.enabled        = false;
     }
 
 	public void playNow()
@@ -39,6 +42,7 @@ public class NavigationScript : MonoBehaviour
 		createCanvas.enabled  = false;
 		creditCanvas.enabled  = false;
 		quitCanvas.enabled    = false;
+	    gameRulesCanvas.enabled        = false;
 		playNowCanvas.enabled = true;
 	}
 
@@ -50,6 +54,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
+	   gameRulesCanvas.enabled        = false;
     }
 
     public void creditOn()
@@ -60,6 +65,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = true;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
+	   gameRulesCanvas.enabled        = false;
     }
 
     public void returnOn()
@@ -70,6 +76,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
+	   gameRulesCanvas.enabled        = false;
     }
 
     public void quitOn()
@@ -80,7 +87,19 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = true;
 	   playNowCanvas.enabled = false;
+	   gameRulesCanvas.enabled       = false;
     }
+
+	public void rulesOn()
+	{
+	   optionsCanvas.enabled = false;
+       mainCanvas.enabled    = false;
+       createCanvas.enabled  = false;
+       creditCanvas.enabled  = false;
+       quitCanvas.enabled    = false;
+	   playNowCanvas.enabled = false;
+	   gameRulesCanvas.enabled       = true;
+	}
 
     public void exitGame()
     {

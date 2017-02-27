@@ -1,70 +1,63 @@
 ﻿using UnityEngine;
-//using System.Collections;
 using UnityEngine.UI;
-//using System.IO;
+using System;
+using System.Collections.Generic;
 
-// Consider changing z to y because we are working in 2d
+// variables on line 286 and 287 (initial_x and intial_y)
+// determine where the first bottom left hex is spawned for the modifiable game board
+
 public class BoardManager : MonoBehaviour
 {
     public GameObject hexPrefab;
     public GameObject diceNumText;
     public GameObject ListBtn;
     public GameObject mapListPanelPG;
+    public GameObject mapListPanelMOD;
 
+    private List<GameObject> mapBtns = new List<GameObject>();        // Dyanmically created buttons for list of available boards
 
-    private Button[] mapBtns;
-   // public GameObject mapsListGO;
+    private int currentResource = -1;     // The resource type that is currently being used to modify board
+    private int currentDiceNum  = -1;     // The dice number that is currently being used to modify board
 
-    private int currentResource = -1;
-    private int currentDiceNum  = -1;
-
-    public Canvas boardDecisionCanvas;
     public Canvas boardCreationCanvas;
     public Canvas boardSelctionCanvasMOD; // The board selection canvas for MODifying a board
     public Canvas boardSelctionCanvasPG;  // The board selection canvas for Pre Game selection
-    public Canvas HexCanvas;
-	public Canvas createGameCanvas;
-    public InputField mapNameField;
+    public Canvas HexCanvas;              // Canvas that the 2d hex board is spawned on
+	public Canvas createCanvasNetwork;
+    public InputField mapNameField;       // Text field for naming a map that you are saving
     public Text mapNameTextMOD;           // Text box displaying the map names IN MODIFY BOARD SELCTION MENU
     public Text mapNameTextPG;            // Text box displaying the map names IN PRE GAME SELECTION MENU
 
     public const string DefaultMapsPath = FileHandler.DefaultMapsPath;
-    public const string SavedMapsPath = FileHandler.SavedMapsPath;
+    public const string SavedMapsPath   = FileHandler.SavedMapsPath;
 
-    private int savedMapsStartindex;
-    private int board_index;
+    private int savedMapsStartindex;      // The index of the first saved (non-default) map in the array of maps
+    private int board_index;              // The index of the current board being shown for selection
 
-    public static bool startingGame = false;
+    public static bool startingGame = false; // Global variable to determine which canvas to show when board manager scene is loaded
 
-    const int WIDTH = HexTemplate.WIDTH;
+    const int WIDTH  = HexTemplate.WIDTH;
     const int HEIGHT = HexTemplate.HEIGHT;
 
-    const int LEFT  = -1;
-    const int RIGHT = -2;
+    const int LEFT  = -1;  // Index value sent to go left in the list of maps 
+    const int RIGHT = -2;  // Index value sent to go right in the list of maps
 
-    private string[] maps;
-
-    const int ALL_BOARDS = 1;
-    const int DEFAULT_BOARDS = 2;
-    const int SAVED_BOARDS = 3;
+    private string[] maps; // The paths of all available maps
 
     public static HexTemplate template = new HexTemplate();
     private Text[,] diceNumbers = new Text[WIDTH, HEIGHT];
-
-
 
     void Awake()
     {
         boardCreationCanvas.enabled = false;
         boardSelctionCanvasPG.enabled = false;
         boardSelctionCanvasMOD.enabled = false;
-		createGameCanvas.enabled = false;
-        boardDecisionCanvas.enabled = true;
+		createCanvasNetwork.enabled = false;
         if (startingGame == true)
-        {
             preGameBoardSelectOn();
-            startingGame = false;
-        }
+        else
+            MapEditorSelectOn();
+        startingGame = false;
     }
 
     void Update()
@@ -103,9 +96,98 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    public void preGameBoardSelectOn()
+    {
+        boardSelctionCanvasPG.enabled = true;
+        displayMaps();
+    }
+
+    public void MapEditorSelectOn()
+    {
+        boardCreationCanvas.enabled    = false;
+        boardSelctionCanvasPG.enabled  = false;
+		createCanvasNetwork.enabled    = false;
+        boardSelctionCanvasMOD.enabled = true;
+        displayMaps();
+    }
+
+    public void ReturnToMapEditorSelect()
+    {
+        for (int x = 0; x < WIDTH; x++)
+        {
+            for (int y = 0; y < HEIGHT; y++)
+            {
+                Destroy(template.hex[x, y].hex_go);
+            }
+        }
+        boardCreationCanvas.enabled = false;
+        boardSelctionCanvasMOD.enabled = true;
+        displayMaps();
+    }
+
+    public void ReturnToMainMenu()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+    }
+
+    public void startGame()
+    {
+        boardSelctionCanvasPG.enabled = false;
+        FileHandler reader = new FileHandler();
+        if (board_index < savedMapsStartindex)
+            template = reader.retrieveMap(DefaultMapsPath + "/" + maps[board_index] + ".txt");
+        else
+            template = reader.retrieveMap(SavedMapsPath + "/" + maps[board_index] + ".txt");
+        createCanvasNetwork.enabled = true;
+    }
+
+    public void displayMaps()
+    {
+        if (boardSelctionCanvasPG.enabled)
+        {
+            makeScrollingMapList(mapListPanelPG);
+            mapNameTextPG.text = maps[board_index];
+        }
+        else if (boardSelctionCanvasMOD.enabled)
+        {
+            makeScrollingMapList(mapListPanelMOD);
+            mapNameTextMOD.text = maps[board_index];
+        }
+    }
+
+    private void makeScrollingMapList(GameObject panel)
+    {
+        FileHandler reader = new FileHandler();
+
+        maps = reader.getAllMaps(out savedMapsStartindex).ToArray();
+        board_index = 0;
+
+        if (mapBtns.Count > 0)
+        {
+            foreach (GameObject btn in mapBtns)
+            {
+                Destroy(btn);
+            }
+            mapBtns.Clear();
+        }
+
+        for (int index = 0; index < maps.Length; index++)
+        {
+            GameObject tempGO = Instantiate(ListBtn) as GameObject;
+            tempGO.transform.SetParent(panel.transform);
+
+            int desiredIndex = index;
+
+            mapBtns.Add(tempGO);
+            tempGO.GetComponent<Button>().GetComponentInChildren<Text>().text = maps[index];
+            tempGO.GetComponent<Button>().onClick.AddListener(() => { ChangeDisplayedMap(desiredIndex); });
+        }
+    }
+
     public void CreateNewBoard()
     {
-        boardDecisionCanvas.enabled = false;
+        boardSelctionCanvasPG.enabled = false;
+        boardSelctionCanvasMOD.enabled = false;
         boardCreationCanvas.enabled = true;
         SpawnBoard(null);
     }
@@ -148,7 +230,7 @@ public class BoardManager : MonoBehaviour
                 template.hex[x, y].setResource(currentResource);
                 break;
             case 2:
-                template.hex[x, y].hex_go.GetComponentInChildren<Renderer>().material.color = Color.yellow;
+                template.hex[x, y].hex_go.GetComponentInChildren<Renderer>().material.color = Color.green;
                 template.hex[x, y].setResource(currentResource);
                 break;
             case 3:
@@ -157,6 +239,10 @@ public class BoardManager : MonoBehaviour
                 break;
             case 4:
                 template.hex[x, y].hex_go.GetComponentInChildren<Renderer>().material.color = Color.red;
+                template.hex[x, y].setResource(currentResource);
+                break;
+            case 5:
+                template.hex[x, y].hex_go.GetComponentInChildren<Renderer>().material.color = Color.yellow;
                 template.hex[x, y].setResource(currentResource);
                 break;
         }
@@ -197,90 +283,15 @@ public class BoardManager : MonoBehaviour
 
         FileHandler writer = new FileHandler();
         writer.saveMap(template, mapName, "Bob");                    // Get user name for creator parameter
-
-        for (int x = 0; x < WIDTH; x++)
-        {
-            for (int y = 0; y < HEIGHT; y++)
-            {
-                Destroy(template.hex[x, y].hex_go);
-            }
-        }
-
-        boardCreationCanvas.enabled = false;
-        boardDecisionCanvas.enabled = true;
+        ReturnToMapEditorSelect();
     }
-
-    public void preGameBoardSelectOn()
-    {
-        boardDecisionCanvas.enabled = false;
-        boardSelctionCanvasPG.enabled = true;
-        displayMaps();
-    }
-
-    public void ModifyBoardSelectOn()
-    {
-        boardDecisionCanvas.enabled = false;
-        boardSelctionCanvasMOD.enabled = true;
-        displayMaps();
-    }
-
-    public void displayMaps()
-    {
-        FileHandler reader = new FileHandler();
-        float xPos;
-        float nextyPos;
-        float verticalGap;
-		//int   desiredIndex;
-
-        maps = reader.getAllMaps(out savedMapsStartindex).ToArray();
-        board_index = 0;
-
-        RectTransform PanelRT = (RectTransform)mapListPanelPG.transform;
-        
-        Vector3 panelPosition = mapListPanelPG.transform.position;
-        xPos        = panelPosition.x;
-        nextyPos    = panelPosition.y;
-        verticalGap = 30;
-
-        for (int index = 0; index < maps.Length; index++)
-        {
-            GameObject tempGO = Instantiate(ListBtn, new Vector3(xPos , nextyPos + (PanelRT.rect.height * .3F), 0), Quaternion.identity, mapListPanelPG.transform);
-
-			int desiredIndex = index;
-			
-            Button tempBtn = tempGO.GetComponent<Button>();
-            tempBtn.onClick.AddListener(() => { ChangeDisplayedMap(desiredIndex); });
-            Text BtnText = tempBtn.GetComponentInChildren<Text>();            BtnText.text = maps[index];
-
-            nextyPos -= verticalGap;
-        }
-
-
-        if (boardSelctionCanvasPG.enabled)
-           mapNameTextPG.text = maps[board_index];
-        else
-            mapNameTextMOD.text = maps[board_index];
-
-}
-
-    public void startGame()
-    {
-        boardSelctionCanvasPG.enabled = false;
-        FileHandler reader = new FileHandler();
-        if (board_index < savedMapsStartindex)
-            template = reader.retrieveMap(DefaultMapsPath + "/" + maps[board_index] + ".txt");
-        else
-            template = reader.retrieveMap(SavedMapsPath + "/" + maps[board_index] + ".txt");
-        createGameCanvas.enabled = true;
-    }
-	
 
     public void SpawnBoard(HexTemplate template)
     {
         float xOffset = 13.9f;
         float yOffset = 15.8f;
-        float initial_x = 240;
-        float initial_y = 50;
+        float initial_x = 450;
+        float initial_y = 100;
 
         if (template == null)
         {
@@ -291,7 +302,7 @@ public class BoardManager : MonoBehaviour
             {
                 for (int y = 0; y < HEIGHT; y++)
                 {
-                    template.hex[x, y] = new Hex(-1, 2, portSides); // Be aware that these values coul have change
+                    template.hex[x, y] = new Hex(-1, 2, portSides, x, y); // Be aware that these values coul have change
                 }
             }
         }
@@ -330,6 +341,10 @@ public class BoardManager : MonoBehaviour
                         template.hex[x, y].hex_go = (GameObject)Instantiate(hexPrefab, new Vector3(x * xOffset + initial_x, yPos, 0), Quaternion.Euler(0, 0, 30)); ;
                         template.hex[x, y].hex_go.GetComponentInChildren<Renderer>().material.color = Color.red;
                         break;
+                    case 5:
+                        template.hex[x, y].hex_go = (GameObject)Instantiate(hexPrefab, new Vector3(x * xOffset + initial_x, yPos, 0), Quaternion.Euler(0, 0, 30)); ;
+                        template.hex[x, y].hex_go.GetComponentInChildren<Renderer>().material.color = Color.green;
+                        break;
                     default:
                         template.hex[x, y].hex_go = (GameObject)Instantiate(hexPrefab, new Vector3(x * xOffset + initial_x, yPos, 0), Quaternion.Euler(0, 0, 30)); ;
                         template.hex[x, y].hex_go.GetComponentInChildren<Renderer>().material.color = Color.blue;
@@ -337,17 +352,15 @@ public class BoardManager : MonoBehaviour
                 }
                 template.hex[x, y].hex_go.name = x + "," + y;
                 template.hex[x, y].hex_go.transform.SetParent(HexCanvas.transform);
-                //template.hex[x, y].hex_go.AddComponent<Canvas>();
-
                 template.hex[x, y].hex_go.AddComponent<HexData>();
                 template.hex[x, y].hex_go.GetComponent<HexData>().x_index = x;
                 template.hex[x, y].hex_go.GetComponent<HexData>().y_index = y;
             }
         }
-        GameObject text = Instantiate(diceNumText, new Vector3(initial_x, initial_y, 1), Quaternion.identity);
+        /*GameObject text = Instantiate(diceNumText, new Vector3(initial_x, initial_y, 1), Quaternion.identity);
         text.transform.SetParent(HexCanvas.transform);
         diceNumbers[0, 0] = text.GetComponent<Text>();
-        diceNumbers[0, 0].text = "2";
+        diceNumbers[0, 0].text = "2";*/
         BoardManager.template = template;
     }
 	
@@ -361,4 +374,3 @@ public class BoardManager : MonoBehaviour
 		UnityEngine.SceneManagement.SceneManager.LoadScene(3);
 	}
 }
-
