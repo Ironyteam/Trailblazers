@@ -37,13 +37,16 @@ public static class Constants
 	
 	
 	public const int MinXCoordinate = 0;
-	public const int MaxXCoordinate = 6;
+	public const int MaxXCoordinate = 40;
 	public const int MinYCoordinate = 0;
-	public const int MaxYCoordinate = 6;
+	public const int MaxYCoordinate = 40;
 
 	public const float TurnTime     	= 120.0f;
 	public const float StandardDiscount = 0.75f;
 	public const float SpecificDiscount = 0.50f;
 	public const float NoDiscount 		= 1.00f;
 	public const float ResourceCost	 	= 100.0f;
+
+	public const int beginClip = 0;
+	public const int lastClip  = 2;
 }

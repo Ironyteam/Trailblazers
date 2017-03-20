@@ -12,17 +12,42 @@ public class FileHandler
     const int WIDTH = HexTemplate.WIDTH;
     const int HEIGHT = HexTemplate.HEIGHT;
 
+    const int SCREEN_SHOT_WIDTH = BoardManager.SCREEN_SHOT_WIDTH;
+    const int SCREEN_SHOT_LENGTH = BoardManager.SCREEN_SHOT_LENGTH;
+
     const int EOF = -1;
 
     public const string DefaultMapsPath = "Assets/DefaultMaps";
     public const string SavedMapsPath = "Assets/SavedMaps";
 
+
+    public List<Sprite> getScreenShots(List<string> mapNames, int savedMapsStartIndex)
+    {
+        List<Sprite> screenShots = new List<Sprite>();
+
+        for (int index = 0; index < mapNames.Count; index++)
+        {
+            byte[] bytes;
+
+            if (index < savedMapsStartIndex)
+                bytes = System.IO.File.ReadAllBytes(DefaultMapsPath + "/" + mapNames[index] + ".png");
+            else
+                bytes = System.IO.File.ReadAllBytes(SavedMapsPath + "/" + mapNames[index] + ".png");
+            Texture2D texture = new Texture2D(SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH);
+            texture.filterMode = FilterMode.Trilinear;
+            texture.LoadImage(bytes);
+            screenShots.Add(Sprite.Create(texture, new Rect(0, 0, SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH), new Vector2(0.5f, 0.0f), 1.0f));
+        }
+        return screenShots;
+    }
+
     // Consider Need for mapList file in default maps
     // ALSO consider that having the same name for a file in both folders could cause the wrong result
-    public List<string> getAllMaps(out int savedMapsStartIndex)
+    public List<HexTemplate> getAllMaps(out int savedMapsStartIndex)
     {
-        List<string> mapNames = new List<string>();
+        List<HexTemplate> mapNames = new List<HexTemplate>();
         string tempString;
+        string[] hexInfo;
 
         // Figure out how to make sure the maplist File Exists
         //if (File.Exists(DefaultMapsPath + "/MapList.txt") == false)
@@ -32,7 +57,13 @@ public class FileHandler
         using (StreamReader reader = File.OpenText(DefaultMapsPath + "/MapList.txt"))
         {
             while ((tempString = reader.ReadLine()) != null)
-                mapNames.Add(tempString);
+            {
+                hexInfo = tempString.Split();
+                if (hexInfo.Length == 3)
+                    mapNames.Add(new HexTemplate(hexInfo[0], Int32.Parse(hexInfo[1]), Int32.Parse(hexInfo[2])));
+                else
+                    printMapListError();
+            }
             reader.Close();
         }
 
@@ -42,7 +73,13 @@ public class FileHandler
         using (StreamReader reader = File.OpenText(SavedMapsPath + "/MapList.txt"))
         {
             while ((tempString = reader.ReadLine()) != null)
-                mapNames.Add(tempString);
+            {
+                hexInfo = tempString.Split();
+                if (hexInfo.Length == 3)
+                    mapNames.Add(new HexTemplate(hexInfo[0], Int32.Parse(hexInfo[1]), Int32.Parse(hexInfo[2])));
+                else
+                    printMapListError();
+            }
             reader.Close();
         }
         return mapNames;
@@ -54,10 +91,10 @@ public class FileHandler
         int readChar = 0;
         string current = null;
         string next = null;
-        int result;
+        int result = -1;
         int resource = -1;
         int diceNum = -1;
-        bool[] portSides = { false, false, false, false, false, false };
+        
 
         // Modify to do something with the name and creator
         using (StreamReader reader = File.OpenText(mapName))
@@ -65,18 +102,17 @@ public class FileHandler
             List<string> numbers = new List<string>();
 
             // Skip over name and creator
-            string bob = reader.ReadLine();
-            Debug.Log(bob);
-            bob = reader.ReadLine();
+            reader.ReadLine();
+            reader.ReadLine();
 
-            for (int x = 0; x < (WIDTH + 1); x++)
+            template.minVP = Int32.Parse(reader.ReadLine());
+            template.maxVP = Int32.Parse(reader.ReadLine());
+
+            for (int x = 0; x < WIDTH; x++)
             {
                 for (int z = 0; z < HEIGHT; z++)
                 {
-                    for (int index = 0; index < portSides.Length; index++)
-                    {
-                        portSides[index] = false;
-                    }
+                    int portSide = -1;
 
                     // Loop passed additional spaces
                     while ((readChar = reader.Read()) != EOF &&
@@ -104,7 +140,7 @@ public class FileHandler
                     }
 
                     if (numbers.Count >= 1 && Int32.TryParse(numbers[1], out result) &&
-                        result >= 2 && result <= 12)
+                        result >= -1 && result <= 12)
                         diceNum = result;
                     else
                     {
@@ -113,17 +149,20 @@ public class FileHandler
                         x = WIDTH;
                     }
 
-                    for (int index = 2; index < numbers.Count; index++)
+                    if (numbers.Count >= 1 && Int32.TryParse(numbers[2], out result) &&
+                        result >= -1 && result <= 5)
                     {
-                        if (Int32.TryParse(numbers[index], out result) &&
-                            result >= 0 && result <= 5)
-                        {
-                            portSides[result] = true;
-                        }
+                        portSide = result;
+                    }
+                    else
+                    {
+                        printDataError();
+                        z = HEIGHT;
+                        x = WIDTH;
                     }
 
                     if (x < WIDTH && z < HEIGHT)
-                        template.hex[x, z] = new Hex(resource, diceNum, portSides, x, z);
+                        template.hex[x, z] = new Hex(resource, diceNum, result, x, z);
                 }
             }
             reader.Close();
@@ -131,10 +170,24 @@ public class FileHandler
         return template;
     }
 
+    // Read a map as one string to send across the network
+    // Map name should enclude entire path name and extension
+    public string ReadEntireMap(string mapName)
+    {
+        string fileString;
+
+        // Modify to do something with the name and creator
+        using (StreamReader reader = File.OpenText(mapName))
+        {
+            fileString = reader.ReadToEnd();
+            reader.Close();
+        }
+        return fileString;
+    }
 
     // Add check for existence of file before overwritting
     // Add name parameter or check before calling this function
-    public void saveMap(HexTemplate template, string name, string creator)
+    public void saveMap(HexTemplate template, string name, string creator, int minVP, int maxVP)
     {
         List<string> mapNames = new List<string>();
 
@@ -142,18 +195,16 @@ public class FileHandler
         {
             writer.WriteLine(name);
             writer.WriteLine(creator);
+            writer.WriteLine(minVP);
+            writer.WriteLine(maxVP);
             for (int x = 0; x < WIDTH; x++)
             {
                 for (int z = 0; z < HEIGHT; z++)
                 {
                     writer.Write(template.hex[x, z].resource);
                     writer.Write(" " + template.hex[x, z].dice_number);
+                    writer.Write(" " + template.hex[x, z].portSide);
 
-                    for (int index = 0; index < template.hex[x, z].portSides.Length; index++)
-                    {
-                        if (template.hex[x, z].portSides[index] == true)
-                            writer.Write(" " + index);
-                    }
                     writer.Write(" | ");
                 }
                 if (x != (WIDTH - 1))
@@ -174,7 +225,45 @@ public class FileHandler
 
         using (StreamWriter writer = File.CreateText(SavedMapsPath + "/MapList.txt"))
         {
-            writer.WriteLine(name);
+            writer.WriteLine(name + " " + minVP + " " + maxVP);
+            foreach (string mapName in mapNames)
+            {
+                writer.WriteLine(mapName);
+            }
+            writer.Close();
+        }
+
+    }
+
+    // Save a board by writing the entire string of another file
+    // all at once
+    public void saveMap(string fileString, string name)
+    {
+        List<string> mapNames = new List<string>();
+        string[] fileLines;
+
+        using (StreamWriter writer = File.CreateText(SavedMapsPath + "/" + name + ".txt"))
+        {
+            writer.WriteLine(fileString);
+            writer.Close();
+        }
+
+        // May need to add a try catch in case there are not any files
+        using (StreamReader reader = File.OpenText(SavedMapsPath + "/MapList.txt"))
+        {
+            string tempString;
+
+            while ((tempString = reader.ReadLine()) != null)
+                mapNames.Add(tempString);
+            reader.Close();
+        }
+
+        // Separate the lines of the file string and use the appropriate lines to
+        // write the minimum and maximum victory points
+        fileLines = fileString.Split('\n');
+        using (StreamWriter writer = File.CreateText(SavedMapsPath + "/MapList.txt"))
+        {
+            writer.WriteLine(name + " " + fileLines[2] + " " + fileLines[3]);
             foreach (string mapName in mapNames)
             {
                 writer.WriteLine(mapName);
@@ -194,5 +283,10 @@ public class FileHandler
     public void printDataError()
     {
         Debug.Log("Inproper data sequence when reading the file:");
+    }
+
+    public void printMapListError()
+    {
+        Debug.Log("Unable to find expected number of data in mapList file.");
     }
 }

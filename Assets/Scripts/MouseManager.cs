@@ -7,7 +7,7 @@ using System.Collections;
 public class MouseManager : MonoBehaviour {
 
     public AudioClip[] audioClip;
-    public gameUIScript gameScriptLink;
+    public gameUIScriptLocal gameScriptLink;
 	
 	// Update is called once per frame
 	void Update () {
@@ -31,30 +31,42 @@ public class MouseManager : MonoBehaviour {
 
 				if (Input.GetMouseButtonDown (0)) {
 					MeshRenderer mr = ourHitObject.GetComponentInChildren<MeshRenderer> ();
+                    GameBoard currentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
+                    PlaySound (4);
+                    mr.material = currentGameBoard.GetPlayerMaterial(currentGameBoard.CurrentPlayer);
 
-					if (mr.material.color == Color.red) {
-						mr.material.color = Color.yellow;
-						PlaySound (0);
-						gameScriptLink.moreSheep ();
-					} else if (mr.material.color == Color.blue) {
-						mr.material.color = Color.green;
-						PlaySound (1);
-						gameScriptLink.moreOre ();
-					} else if (mr.material.color == Color.green) {
-						mr.material.color = Color.white;
-						PlaySound (2);
-						gameScriptLink.moreWood ();
-					} else if (mr.material.color == Color.yellow) {
-						mr.material.color = Color.blue;
-						PlaySound (3);
-						gameScriptLink.moreWheat ();
-					} else {
-						mr.material.color = Color.red;
-						PlaySound (4);
-						gameScriptLink.moreBrick ();
-					}
-	               
-				}
+                    if (ourHitObject.GetType() == currentGameBoard.Structures[0].Structure_GO.GetType())
+                    {
+                        foreach (Structure currentStructure in currentGameBoard.Structures)
+                        {
+                            if (currentStructure.Structure_GO == ourHitObject)
+                            {
+                                currentStructure.PlayerOwner = currentGameBoard.CurrentPlayer;
+                                //currentStructure.Structure_GO.GetComponent<Collider>().enabled = false;
+                                Debug.Log(currentStructure.Location.X + ", " + currentStructure.Location.Y);
+                                currentGameBoard.HideAvailableSettlements();
+                                if (currentGameBoard.InitialPlacement)
+                                    currentGameBoard.ShowAvailableRoadsInitial(currentStructure.Location);
+                                break;
+                            }
+                        }
+                    }
+                    if (ourHitObject.GetType() == currentGameBoard.Roads[0].Road_GO.GetType())
+                    {
+                        foreach (Road currentRoad in currentGameBoard.Roads)
+                        {
+                            if (currentRoad.Road_GO == ourHitObject)
+                            {
+                                currentRoad.PlayerOwner = currentGameBoard.CurrentPlayer;
+                                //currentRoad.Road_GO.GetComponent<Collider>().enabled = false;
+                                Debug.Log("Side A: " + currentRoad.SideA.X + ", " + currentRoad.SideA.Y);
+                                Debug.Log("Side B: " + currentRoad.SideB.X + ", " + currentRoad.SideB.Y);
+                                currentGameBoard.HideAvailableRoads();
+                                break;
+                            }
+                        }
+                    }
+                }
 			}
 		}
 	}

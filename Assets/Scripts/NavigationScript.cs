@@ -13,6 +13,7 @@ public class NavigationScript : MonoBehaviour
     public Canvas quitCanvas;
 	public Canvas playNowCanvas;
 	public Canvas gameRulesCanvas;
+	public bool networkGame;
 
     void Awake()
     {
@@ -131,4 +132,14 @@ public class NavigationScript : MonoBehaviour
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene(7);
     }
+
+	public void setLocal()
+	{
+		networkGame = false;
+	}
+
+	public void setNetwork()
+	{
+		networkGame = true;
+	}
 }

@@ -1,1 +1,1 @@
-DefaultBoard1
+DefaultBoard1 10 15

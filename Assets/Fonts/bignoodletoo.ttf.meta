@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: a4093178940b9914aa9591b5d7d030da
+timeCreated: 1488395238
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: BigNoodleTooOblique
+  fontNames:
+  - BigNoodleTooOblique
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 80c285a6e32c5cd4ab5f6b31379e6ff7, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

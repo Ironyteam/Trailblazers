@@ -37,7 +37,7 @@ public class Coordinate
 					_x = value;
 				}
 				else
-					throw new System.ArgumentOutOfRangeException("The X coordinate cannot be more than the maximum X coordinate.");
+					throw new System.ArgumentOutOfRangeException("The X coordinate cannot be more than the maximum X coordinate." + value.ToString());
 			}
 			else
 				throw new System.ArgumentOutOfRangeException("The X coordinate cannot be less than the minimum X coordinate.");
@@ -60,7 +60,7 @@ public class Coordinate
 					_y = value;
 				}
 				else
-					throw new System.ArgumentOutOfRangeException("The Y coordinate cannot be more than the maximum Y coordinate.");
+					throw new System.ArgumentOutOfRangeException("The Y coordinate cannot be more than the maximum Y coordinate." + value.ToString());
 			}
 			else
 				throw new System.ArgumentOutOfRangeException("The Y coordinate cannot be less than the minimum Y coordinate.");

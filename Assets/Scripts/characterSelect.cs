@@ -6,18 +6,30 @@ using UnityEngine.UI;
 
 public class characterSelect : MonoBehaviour {
 
-	public const int NUM_OF_CHARACTERS = 12;
-
+	public const int NUM_OF_CHARACTERS   = 8;
+    public const int MAX_PLAYERS         = 6;
+	public int currentPicker             = 0;
+    public int selectedCharacter         = 0;// *********
+    public Image selectedCharacterImage; // *********
 	public Canvas[] characterCanvasArray = new Canvas[NUM_OF_CHARACTERS];
-	public Image[] characterSelectImages = new Image[NUM_OF_CHARACTERS]; 
+    public string[] imageNames           = new string[NUM_OF_CHARACTERS] {"lumberjack", "shepherd", "bricklayer",  "farmer", "Miner", "banker", "Teed", "norris"};// *********
+    public Image[] playerChoiceImages    = new Image[MAX_PLAYERS];// *********
+    public static string[] selectedCharacters = new string[MAX_PLAYERS] {"lumberjack", "shepherd", "bricklayer",  "farmer", "Miner", "banker"};// *********
+	public Switch[] isAi = new Switch[MAX_PLAYERS];
 
-	void Start()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-			characterSelectImages[count].enabled = false;
-
+    void Awake()
+    {
+        for(int count = 0; count < MAX_PLAYERS; count++)
+            playerChoiceImages[count].enabled = false;
+        
 		for(int count = 6; count < NUM_OF_CHARACTERS - 2; count++)
 			characterCanvasArray[count].enabled = false;
+    }
+    
+	void Start()
+	{        
+        for(int count = 0; count < BoardManager.numOfPlayers; count++)
+            playerChoiceImages[count].enabled = true;
 	}
 
 	public void startGame()
@@ -25,167 +37,71 @@ public class characterSelect : MonoBehaviour {
 		UnityEngine.SceneManagement.SceneManager.LoadScene(2);
 	}
 
-	public void normalCharacterShow()
+    public void showLumberJackCharacterSelection()// *********
 	{
-		for(int count = 0; count < (NUM_OF_CHARACTERS * 0.5f); count++)
-		{
-			if(characterCanvasArray[count].enabled == true)
-				characterCanvasArray[count].enabled = false;
-		}
-
-		for(int count = 6; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterCanvasArray[count].enabled == false)
-				characterCanvasArray[count].enabled = true;
-		}
+        selectedCharacter = 0;
+        selectedCharacterImage.sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
+	}
+    
+    public void showShepherdCharacterSelection()// *********
+	{
+        selectedCharacter = 1;
+        selectedCharacterImage.sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
+        
+	}
+    
+	public void showBrickLayerCharacterSelection()// *********
+	{
+        selectedCharacter = 2;
+        selectedCharacterImage.sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
 	}
 
-	public void specialCharacterShow()
+	public void showFarmerCharacterSelection()// *********
 	{
-		for(int count = 6; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterCanvasArray[count].enabled == true)
-				characterCanvasArray[count].enabled = false;
-		}
-
-		for(int count = 0; count < (NUM_OF_CHARACTERS * 0.5f); count++)
-		{
-			if(characterCanvasArray[count].enabled == false)
-				characterCanvasArray[count].enabled = true;
-		}
+        selectedCharacter = 3;
+        selectedCharacterImage.sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
+	}
+    
+    public void showMinerCharacterSelection()// *********
+	{
+        selectedCharacter = 4;
+        selectedCharacterImage.sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
 	}
 
-	public void showMinerCharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
 
-		characterSelectImages[4].enabled = true;
+	public void showBankerCharacterSelection()// *********
+	{
+        selectedCharacter = 5;
+        selectedCharacterImage.sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
 	}
 
-	public void showBrickLayerCharacterSelection()
+	public void showCharacter7Selection()// *********
 	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[2].enabled = true;
+        selectedCharacter = 6;
+        selectedCharacterImage.sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
 	}
 
-	public void showFarmerCharacterSelection()
+	public void showCharacter8Selection()// *********
 	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[3].enabled = true;
+        selectedCharacter = 7;
+        selectedCharacterImage.sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
 	}
-
-	public void showShepherdCharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[1].enabled = true;
-	}
-
-	public void showLumberJackCharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[0].enabled = true;
-	}
-
-	public void showBankerCharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[5].enabled = true;
-	}
-
-	public void showNormalGuy1CharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[6].enabled = true;
-	}
-
-	public void showNormalGuy2CharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[7].enabled = true;
-	}
-
-	public void showNormalGuy3CharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[8].enabled = true;
-	}
-
-	public void showNormalGuy4CharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[9].enabled = true;
-	}
-
-	public void showNormalGuy5CharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[10].enabled = true;
-	}
-
-	public void showNormalGuy6CharacterSelection()
-	{
-		for(int count = 0; count < NUM_OF_CHARACTERS; count++)
-		{
-			if(characterSelectImages[count].enabled == true)
-				characterSelectImages[count].enabled = false;
-		}
-
-		characterSelectImages[11].enabled = true;
-	}
+    
+    public void selectCharacter() // *********
+    {
+        playerChoiceImages[currentPicker].sprite = Resources.Load<Sprite>(imageNames[selectedCharacter]) as Sprite;
+        
+        if(currentPicker < BoardManager.numOfPlayers)
+        {
+            selectedCharacters[currentPicker] = imageNames[selectedCharacter];
+			currentPicker++;
+        }
+    }
+    
+   /* public void switchPLayers()
+    {
+        currentPicker++;
+    } */
 
 	public void returnToNetLobby()
 	{
