@@ -341,6 +341,14 @@ public class BoardManager : MonoBehaviour
         Debug.Log("choosePort");
     }
 
+    public void testNetworkFileHandling()
+    {
+        FileHandler handler = new FileHandler();
+        string fileString = handler.ReadEntireMap(DefaultMapsPath + "/DefaultBoard1.txt");
+        Debug.Log(fileString);
+        handler.saveMap(fileString);
+    }
+
     public int changeMouseOverPort(GameObject newHex)
     {
         int portSideIndex = -1;
@@ -994,16 +1002,23 @@ public class BoardManager : MonoBehaviour
         if (boardSelctionCanvasPG.enabled)
         {
             mapNameTextPG.text = maps[board_index].mapName;
-            MapScreenShortImagePG.sprite = screenShots[board_index];
             mapDetailsTextPG.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
                                     "Maximum Victory Points: " + maps[board_index].maxVP;
+            if (screenShots[board_index] != null)
+                MapScreenShortImagePG.sprite = screenShots[board_index];
+            else
+                MapScreenShortImagePG.sprite = null;
+
         }
         else
         {
             mapNameTextMOD.text = maps[board_index].mapName;
-            MapScreenShortImageMOD.sprite = screenShots[board_index];
             mapDetailsTextMOD.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
                                     "Maximum Victory Points: " + maps[board_index].maxVP;
+            if (screenShots[board_index] != null)
+                MapScreenShortImageMOD.sprite = screenShots[board_index];
+            else
+                MapScreenShortImageMOD.sprite = null;
         }
         
     }

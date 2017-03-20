@@ -24,19 +24,44 @@ public class FileHandler
     public List<Sprite> getScreenShots(List<string> mapNames, int savedMapsStartIndex)
     {
         List<Sprite> screenShots = new List<Sprite>();
+        bool screenShotFound;
 
         for (int index = 0; index < mapNames.Count; index++)
         {
-            byte[] bytes;
+            byte[] bytes = null;
 
             if (index < savedMapsStartIndex)
-                bytes = System.IO.File.ReadAllBytes(DefaultMapsPath + "/" + mapNames[index] + ".png");
+            {
+                try
+                {
+                    bytes = System.IO.File.ReadAllBytes(DefaultMapsPath + "/" + mapNames[index] + ".png");
+                    screenShotFound = true;
+                }
+                catch (Exception e)
+                {
+                    screenShotFound = false;
+                }
+            }
             else
-                bytes = System.IO.File.ReadAllBytes(SavedMapsPath + "/" + mapNames[index] + ".png");
-            Texture2D texture = new Texture2D(SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH);
-            texture.filterMode = FilterMode.Trilinear;
-            texture.LoadImage(bytes);
-            screenShots.Add(Sprite.Create(texture, new Rect(0, 0, SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH), new Vector2(0.5f, 0.0f), 1.0f));
+                try
+                {
+                    bytes = System.IO.File.ReadAllBytes(SavedMapsPath + "/" + mapNames[index] + ".png");
+                    screenShotFound = true;
+                }
+                catch (Exception e)
+                {
+                    screenShotFound = false;
+                }
+
+            if (screenShotFound)
+            {
+                Texture2D texture = new Texture2D(SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH);
+                texture.filterMode = FilterMode.Trilinear;
+                texture.LoadImage(bytes);
+                screenShots.Add(Sprite.Create(texture, new Rect(0, 0, SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH), new Vector2(0.5f, 0.0f), 1.0f));
+            }
+            else
+                screenShots.Add(null);
         }
         return screenShots;
     }
@@ -237,14 +262,19 @@ public class FileHandler
 
     // Save a board by writing the entire string of another file
     // all at once
-    public void saveMap(string fileString, string name)
+    public void saveMap(string rawFileString)
     {
         List<string> mapNames = new List<string>();
         string[] fileLines;
+        string modifiedFileString;
 
-        using (StreamWriter writer = File.CreateText(SavedMapsPath + "/" + name + ".txt"))
+        modifiedFileString = rawFileString.Replace("\r\n", "\n");
+        fileLines = modifiedFileString.Split('\n');
+
+        Debug.Log(fileLines[0]);
+        using (StreamWriter writer = File.CreateText(SavedMapsPath + "/" + fileLines[0] + ".txt"))
         {
-            writer.WriteLine(fileString);
+            writer.Write(rawFileString);
             writer.Close();
         }
 
@@ -260,10 +290,9 @@ public class FileHandler
 
         // Separate the lines of the file string and use the appropriate lines to
         // write the minimum and maximum victory points
-        fileLines = fileString.Split('\n');
         using (StreamWriter writer = File.CreateText(SavedMapsPath + "/MapList.txt"))
         {
-            writer.WriteLine(name + " " + fileLines[2] + " " + fileLines[3]);
+            writer.WriteLine(fileLines[0] + " " + fileLines[2] + " " + fileLines[3]);
             foreach (string mapName in mapNames)
             {
                 writer.WriteLine(mapName);
