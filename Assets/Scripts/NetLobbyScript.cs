@@ -23,21 +23,8 @@ public class NetLobbyScript : MonoBehaviour {
         public string status;
     }
 
-	public Canvas createCanvas;
-	public Canvas netLobbyCanvas;
     public IList<netLobbyText> netLobbyTextList = new List<netLobbyText>();
     public IList<netLobbyValues> netLobbyValuesList = new List<netLobbyValues>();
-    
-	void Awake()
-	{
-		createCanvas.enabled = false;
-	}
-
-	public void createCanvasOn()
-	{
-		createCanvas.enabled = true;
-		netLobbyCanvas.enabled = false;
-	}
 
     public void addNetLobbyValues()
     {
