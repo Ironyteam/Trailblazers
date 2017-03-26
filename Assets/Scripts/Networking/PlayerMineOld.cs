@@ -4,7 +4,7 @@ using UnityEngine;
 
 // Holds data for an individual player.
 [System.Serializable]
-public class Player
+public class PlayerMineOld
 {
     // All of the private properies and their public accessors.
     #region Properties
@@ -38,7 +38,7 @@ public class Player
     #region Public constructors
 
     // Default constructor.
-    public Player()
+    public PlayerMineOld()
     {
         name = "";
         isHost = false;
@@ -53,7 +53,7 @@ public class Player
     }
 
     // Constructor used in the game lobby.
-    public Player(string name)
+    public PlayerMineOld(string name)
     {
         name = this.name;
         isHost = false;
@@ -68,7 +68,7 @@ public class Player
     }
 
     // Constructor used in the game lobby. SILAS
-    public Player(string name, bool hosting)
+    public PlayerMineOld(string name, bool hosting)
     {
         name = this.name;
         isHost = hosting;
