@@ -10,6 +10,7 @@ public class Player
     #region Properties
     private string name;        // The player's name as entered.
     public  string ipAddress;   // ipAddress of the player, used to identify connections for networking SILAS
+    public  bool   isHost;       // if this player is the host
 
     private int armies;         // The number of armies deployed by this player over the entire map.
     private int character;      // The character player has chosen to play as, 0 for no character.
@@ -40,6 +41,7 @@ public class Player
     public Player()
     {
         name = "";
+        isHost = false;
         armies = 0;
         character = 0;
         cities = 0;
@@ -54,6 +56,22 @@ public class Player
     public Player(string name)
     {
         name = this.name;
+        isHost = false;
+        armies = 0;
+        character = 0;
+        cities = 0;
+        gold = Constants.StartingGold;
+        roads = 0;
+        settlements = 0;
+        turnOrder = 0;
+        victoryPoints = 0;
+    }
+
+    // Constructor used in the game lobby. SILAS
+    public Player(string name, bool hosting)
+    {
+        name = this.name;
+        isHost = hosting;
         armies = 0;
         character = 0;
         cities = 0;

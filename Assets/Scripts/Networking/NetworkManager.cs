@@ -494,27 +494,27 @@ public class NetworkManager : MonoBehaviour
       {
          case Constants.buildSettlement:
             // X = gameInfo[0], Y = gameInfo[1]
-            mapObject.BuildSettlementNetwork(gameInfo[0], gameInfo[1]);
+			mapObject.BuildSettlementNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
             break;
          case Constants.upgradeToCity:
             // X = gameInfo[0], Y = gameInfo[1]
-            mapObject.BuildCityNetwork(gameInfo[0], gameInfo[1]);
+			mapObject.BuildCityNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
             break;
          case Constants.buildRoad:
             // AX = gameInfo[0], AY = gameInfo[1], BX = gameInfo[2], BY = gameInfo[3]
-            mapObject.BuildRoadNetwork(gameInfo[0], gameInfo[1], gameInfo[2], gameInfo[3]);
+			mapObject.BuildRoadNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]), Int32.Parse(gameInfo[2]), Int32.Parse(gameInfo[3]));
             break;
          case Constants.buildArmy:
             // X = gameInfo[0], Y = gameInfo[1]
-            mapObject.BuyArmyNetwork(gameInfo[0], gameInfo[1]);
+			mapObject.BuyArmyNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
             break;
          case Constants.attackCity:
             // X = gameInfo[0], Y = gameInfo[1]
-            mapObject.ExecuteAttackNetwork(gameInfo[0], gameInfo[1], gameInfo[2], gameInfo[3]);
+			mapObject.ExecuteAttackNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]), Int32.Parse(gameInfo[2]), Int32.Parse(gameInfo[3]));
             break;
          case Constants.moveRobber:
             // X = gameInfo[0], Y = gameInfo[1]
-            mapObject.MoveRobberNetwork(gameInfo[0], gameInfo[1]);
+			mapObject.MoveRobberNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
             break;
          case Constants.endTurn:
             // No parameters

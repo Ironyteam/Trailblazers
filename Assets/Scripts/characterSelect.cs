@@ -12,9 +12,9 @@ public class characterSelect : MonoBehaviour {
     public int selectedCharacter         = 0;// *********
     public Image selectedCharacterImage; // *********
 	public Canvas[] characterCanvasArray = new Canvas[NUM_OF_CHARACTERS];
-    public string[] imageNames           = new string[NUM_OF_CHARACTERS] {"lumberjack", "shepherd", "bricklayer",  "farmer", "Miner", "banker", "Teed", "norris"};// *********
+    public string[] imageNames           = new string[NUM_OF_CHARACTERS] {"Natty Bumppo", "Scary Harry", "Ganzo",  "Gamly the Red", "Maiden of Dunshire", "Queen Apala", "Abiha the Exiled", "Rosa del Fuego"};// *********
     public Image[] playerChoiceImages    = new Image[MAX_PLAYERS];// *********
-    public static string[] selectedCharacters = new string[MAX_PLAYERS] {"lumberjack", "shepherd", "bricklayer",  "farmer", "Miner", "banker"};// *********
+    public static string[] selectedCharacters = new string[MAX_PLAYERS] {"Natty Bumppo", "Ganzo", "Maiden of Dunshire",  "Queen Apala", "Gamly the Red", "Rosa del Fuego"};// *********
 	public Switch[] isAi = new Switch[MAX_PLAYERS];
 
     void Awake()

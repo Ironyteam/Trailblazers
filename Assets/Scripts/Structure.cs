@@ -5,6 +5,9 @@ using UnityEngine;
 public class Structure {
 
 	public GameObject Structure_GO = null;
+	public GameObject ArmySprite_GO = null;
+	public GameObject ArmyNumber_GO = null;
+
 	public int PlayerOwner = -1;
 	public int StructureID;
 

@@ -6,74 +6,140 @@ using System.Collections;
 
 public class MouseManager : MonoBehaviour {
 
-    public AudioClip[] audioClip;
-    public gameUIScriptLocal gameScriptLink;
-	
+	public GameBoard currentGameBoard;
+	public NetworkManager NetManager;
+
+	private void Start()
+	{
+		currentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
+		NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+	}
+
 	// Update is called once per frame
-	void Update () {
+	private void Update ()
+	{
+		// this only works in orthographic view
+		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		RaycastHit hitInfo;
 
-      //  Debug.Log("Mouse Position: " + Input.mousePosition);
-
-        // this only works in orthographic view
-        // Vector3 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        // Debug.Log("World Point: " + worldPoint);
-
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        RaycastHit hitInfo;
 		if (!EventSystem.current.IsPointerOverGameObject())
 		{
-			if (Physics.Raycast (ray, out hitInfo)) {
+			if (Physics.Raycast (ray, out hitInfo))
+			{
 				GameObject ourHitObject = hitInfo.collider.transform.gameObject;
 
-				//Debug.Log("Raycast hit: " + ourHitObject.name);
+				if (Input.GetMouseButtonDown (0))
+				{
+					if (ourHitObject.GetType() == currentGameBoard.Structures[0].Structure_GO.GetType())
+					{
+						foreach (Structure currentStructure in currentGameBoard.Structures)
+						{
+							if (currentStructure.Structure_GO == ourHitObject)
+							{
+								// Current clicked structure is a settlement
+								if (!currentStructure.IsCity)
+								{
+									// Current clicked settlement has no owner
+									if (currentStructure.PlayerOwner == -1)
+									{
+										currentGameBoard.BuildSettlement(currentStructure);
+										currentGameBoard.HideAvailableSettlements ();
 
+										if (currentGameBoard.LocalGame.isNetwork)
+											NetManager.sendBuildSettlement(currentStructure.Location.X, currentStructure.Location.Y);
 
-				if (Input.GetMouseButtonDown (0)) {
-					MeshRenderer mr = ourHitObject.GetComponentInChildren<MeshRenderer> ();
-                    GameBoard currentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
-                    PlaySound (4);
-                    mr.material = currentGameBoard.GetPlayerMaterial(currentGameBoard.CurrentPlayer);
+										// If initial placement, show first road to build
+										if (currentGameBoard.InitialPlacement)
+											currentGameBoard.ShowAvailableRoadsInitial (currentStructure.Location);
+									}
+									// Current clicked settlement is owned by current player
+									else if (currentStructure.PlayerOwner == currentGameBoard.CurrentPlayer)
+									{
+										currentGameBoard.BuildCity(currentStructure);
+										currentGameBoard.HideAvailableSettlementsToUpgrade();
 
-                    if (ourHitObject.GetType() == currentGameBoard.Structures[0].Structure_GO.GetType())
-                    {
-                        foreach (Structure currentStructure in currentGameBoard.Structures)
-                        {
-                            if (currentStructure.Structure_GO == ourHitObject)
-                            {
-                                currentStructure.PlayerOwner = currentGameBoard.CurrentPlayer;
-                                //currentStructure.Structure_GO.GetComponent<Collider>().enabled = false;
-                                Debug.Log(currentStructure.Location.X + ", " + currentStructure.Location.Y);
-                                currentGameBoard.HideAvailableSettlements();
-                                if (currentGameBoard.InitialPlacement)
-                                    currentGameBoard.ShowAvailableRoadsInitial(currentStructure.Location);
-                                break;
-                            }
-                        }
-                    }
-                    if (ourHitObject.GetType() == currentGameBoard.Roads[0].Road_GO.GetType())
-                    {
-                        foreach (Road currentRoad in currentGameBoard.Roads)
-                        {
-                            if (currentRoad.Road_GO == ourHitObject)
-                            {
-                                currentRoad.PlayerOwner = currentGameBoard.CurrentPlayer;
-                                //currentRoad.Road_GO.GetComponent<Collider>().enabled = false;
-                                Debug.Log("Side A: " + currentRoad.SideA.X + ", " + currentRoad.SideA.Y);
-                                Debug.Log("Side B: " + currentRoad.SideB.X + ", " + currentRoad.SideB.Y);
-                                currentGameBoard.HideAvailableRoads();
-                                break;
-                            }
-                        }
-                    }
-                }
+										if (currentGameBoard.LocalGame.isNetwork)
+											NetManager.sendUpgradeToCity(currentStructure.Location.X, currentStructure.Location.Y);
+									}
+									break;
+								}
+								// Current clicked structure is a city 
+								else
+								{
+									// Player is hiring an army
+									if (currentGameBoard.BuyingArmy) 
+									{
+										currentGameBoard.BuyArmy(currentStructure);
+										currentGameBoard.HideAvailableCitiesForArmies();
+
+										if (currentGameBoard.LocalGame.isNetwork)
+											NetManager.sendBuildArmy(currentStructure.Location.X, currentStructure.Location.Y);
+
+									}
+									// Player is attacking
+									else if (currentGameBoard.Attacking)
+									{
+										// Player is selecting the attack source
+										if (currentStructure.PlayerOwner == currentGameBoard.CurrentPlayer)
+										{
+											currentGameBoard.ShowAvailableCitiesToAttack(currentStructure.Location);
+											currentGameBoard.AttackingCity = currentStructure;
+										}
+										// Player is selecting the attack destination
+										else if (currentStructure.PlayerOwner != currentGameBoard.CurrentPlayer && currentStructure.PlayerOwner != -1)
+										{
+											currentGameBoard.DefendingCity = currentStructure;
+											currentGameBoard.ExecuteAttack();
+											currentGameBoard.HideAvailableCitiesForAttack ();
+											currentGameBoard.HideAvailableCitiesToAttack ();
+
+											if (currentGameBoard.LocalGame.isNetwork)
+												NetManager.sendAttackCity(currentGameBoard.AttackingCity.Location.X, currentGameBoard.AttackingCity.Location.Y, currentGameBoard.DefendingCity.Location.X, currentGameBoard.DefendingCity.Location.Y);
+
+										}
+									}
+									break;
+								}
+							}
+						}
+					}
+					if (ourHitObject.GetType() == currentGameBoard.Roads[0].Road_GO.GetType())
+					{
+						foreach (Road currentRoad in currentGameBoard.Roads)
+						{
+							if (currentRoad.Road_GO == ourHitObject)
+							{
+								// Build road
+								currentGameBoard.BuildRoad(currentRoad);
+								currentGameBoard.HideAvailableRoads();
+
+								if (currentGameBoard.LocalGame.isNetwork)
+									NetManager.sendBuildRoad(currentRoad.SideA.X, currentRoad.SideA.Y, currentRoad.SideB.X, currentRoad.SideB.Y);
+
+								break;
+							}
+						}
+					}
+					if (ourHitObject.GetType() == currentGameBoard.Tokens[0].GetType()) // This is the clicked token
+					{
+						for (int z = 0; z < HexTemplate.HEIGHT; z++)
+						{
+							for (int x = 0; x < HexTemplate.WIDTH; x++)
+							{
+								if (currentGameBoard.template.hex[x, z].token_go == ourHitObject) // Found the clicked token
+								{
+									// Move the robber
+									currentGameBoard.MoveRobber(currentGameBoard.template.hex[x, z]);
+									currentGameBoard.HideHexLocations();
+
+									if (currentGameBoard.LocalGame.isNetwork)
+										NetManager.sendMoveRobber(x, z);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
-
-    void PlaySound(int clip)
-    {
-        GetComponent<AudioSource>().clip = audioClip[clip];
-        GetComponent<AudioSource>().Play();
-    }
 }

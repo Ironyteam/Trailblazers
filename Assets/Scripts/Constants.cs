@@ -36,7 +36,7 @@ public static class Constants
    public const string serverKillCode = "1234";
 
 
-   public const int StartingGold      = 150;
+    public const int StartingGold      = 150;
 	public const int StartingResources = 0;
 	public const int GoldPerSettlement = 50;
 	public const int GoldPerCity	   = 50;
@@ -80,4 +80,15 @@ public static class Constants
 
 	public const int beginClip = 0;
 	public const int lastClip  = 2;
+
+	public const int LongestRoadVP	   = 3;
+	public const int LargestArmyVP	   = 2;
+	public const int CityVP			   = 2;
+	public const int SettlementVP	   = 1;
+
+	// Camera Constants
+	public const float CAMERA_MIN_X = 5.299987f;
+	public const float CAMERA_MAX_X = 24.14998f;
+	public const float CAMERA_MIN_Z = 4.299974f;
+	public const float CAMERA_MAX_Z = 21.84998f;
 }

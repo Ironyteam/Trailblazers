@@ -83,6 +83,11 @@ public class gameUIScriptLocal : MonoBehaviour {
 
     void Awake()
     {
+		gameCanvas.enabled    = true;
+	    escapeCanvas.enabled  = false;
+		optionsCanvas.enabled = false;
+		shopCanvas.enabled    = false;//********** 
+		
         for(int count = 0; count < BoardManager.numOfPlayers; count++)
 		{
 			playerClassLocalArray[count].characterPictureName = characterSelect.selectedCharacters[count];//*****************************
@@ -92,10 +97,7 @@ public class gameUIScriptLocal : MonoBehaviour {
 			screenElementsArray[count].longestRoadIndicator.enabled = false;
 		}
 
-	    gameCanvas.enabled    = true;
-	    escapeCanvas.enabled  = false;
-		optionsCanvas.enabled = false;
-		shopCanvas.enabled    = false;//**********
+	    
     }
 
 	void Start()

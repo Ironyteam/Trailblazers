@@ -735,4 +735,9 @@ public class GuiManager : MonoBehaviour {
 		escapeCanvas.enabled = true;
 		optionsCanvas.enabled = false;
 	}
+
+	public void UpdatePlayer()
+	{
+
+	}
 }
