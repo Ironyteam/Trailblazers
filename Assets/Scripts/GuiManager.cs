@@ -56,7 +56,8 @@ public class GuiManager : MonoBehaviour {
     public Canvas gameCanvas,
    	              escapeCanvas,
 		          optionsCanvas,
-				  shopCanvas;
+				  shopCanvas,
+				  barracksCanvas;
            int armyBuyPrice   = 100,// *********
 			   armySellPrice  = 50,// *********
 			   brickBuyPrice  = 150,// *********
@@ -97,6 +98,7 @@ public class GuiManager : MonoBehaviour {
 	    escapeCanvas.enabled  = false;
 		optionsCanvas.enabled = false;
 		shopCanvas.enabled    = false;//**********
+		barracksCanvas.enabled = false;
     }
 
 	void Start()
@@ -117,7 +119,18 @@ public class GuiManager : MonoBehaviour {
 
 	    if (Input.GetKeyDown("s"))//**********
 		{
-			openShop();
+			if(shopCanvas.enabled == false)
+				shopCanvas.enabled = true;
+			else
+				shopCanvas.enabled = false;
+		}
+
+		if (Input.GetKeyDown("b"))//**********
+		{
+			if(barracksCanvas.enabled == false)
+				barracksCanvas.enabled = true;
+			else
+				barracksCanvas.enabled = false;
 		}
 
 		if(BoardManager.numOfPlayers >= 1)
@@ -534,6 +547,19 @@ public class GuiManager : MonoBehaviour {
 	public void closeShop()// *************
 	{
 		shopCanvas.enabled = false;
+	}
+
+	public void openBaracks()// *********
+	{
+		if(barracksCanvas.enabled == false)
+			barracksCanvas.enabled = true;
+		else
+			barracksCanvas.enabled = false;
+	}
+
+	public void closeBarracks()// *************
+	{
+		barracksCanvas.enabled = false;
 	}
 
 	public void buyArmy(int playerNumber)// *********

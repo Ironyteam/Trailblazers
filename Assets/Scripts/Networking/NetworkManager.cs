@@ -64,7 +64,7 @@ public class NetworkManager : MonoBehaviour
       myReliableChannelId = config.AddChannel(QosType.Reliable);
       HostTopology topology = new HostTopology(config, maxConnections);
       socketId = NetworkTransport.AddHost(topology, socketPort);
-      messageLog.text = messageLog.text + "\n" + "Socket open. Socket ID is : " + socketId;
+      Debug.Log("\n" + "Socket open. Socket ID is : " + socketId);
 
 		// Create an fake game on launch for testing TEST
       requestGameList("172.16.51.127~Name~4~5~passwod~map");
@@ -89,9 +89,9 @@ public class NetworkManager : MonoBehaviour
    public void connectToGame(string ipAddress)
    {
       byte error;
-      messageLog.text = messageLog.text + "\n" + "Trying to connect to: " + ipAddress;
+      Debug.Log("\n" + "Trying to connect to: " + ipAddress);
       connectionId = NetworkTransport.Connect(0, ipAddress, socketPort, 0, out error);
-      messageLog.text = messageLog.text + "\n" + "ConnectionID: " + connectionId;
+      Debug.Log("\n" + "ConnectionID: " + connectionId);
    }
 
    // Send game info to the server
@@ -118,7 +118,7 @@ public class NetworkManager : MonoBehaviour
       }
       else
       {
-         messageLog.text = messageLog.text + "\nError: Already hosting a game.";
+         Debug.Log("\nError: Already hosting a game.");
       }
    }
 
@@ -133,7 +133,7 @@ public class NetworkManager : MonoBehaviour
       formatter.Serialize(stream, message);
 
       int bufferSize = 1024;
-      messageLog.text = messageLog.text + "\nSending to ID " + connectionNum + " : " + message;
+      Debug.Log("\nSending to ID " + connectionNum + " : " + message);
       NetworkTransport.Send(socketId, connectionNum, myReliableChannelId, buffer, bufferSize, out error);
    }
 
@@ -157,17 +157,17 @@ public class NetworkManager : MonoBehaviour
          case NetworkEventType.Nothing:
             break;
          case NetworkEventType.ConnectEvent:
-            messageLog.text = messageLog.text + "\n" + "Incoming connection event received";
+            Debug.Log("\n" + "Incoming connection event received");
             break;
          case NetworkEventType.DataEvent:
             Stream stream = new MemoryStream(recBuffer);
             BinaryFormatter formatter = new BinaryFormatter();
             string message = formatter.Deserialize(stream) as string;
-            messageLog.text = messageLog.text + "\nIncoming: " + message;
+            Debug.Log("\nIncoming: " + message);
             processNetworkMessage(message, recConnectionId);
             break;
          case NetworkEventType.DisconnectEvent:
-            messageLog.text = messageLog.text + "\n" + "Remote client event disconnected";
+            Debug.Log("\n" + "Remote client event disconnected");
             break;
       }
    }
@@ -180,7 +180,7 @@ public class NetworkManager : MonoBehaviour
       {
          case Constants.addPlayer:         // #, ipAddress, password
             addPlayer(gameInfo[1], recConnectionID);
-            messageLog.text = messageLog.text + "\nAdding Player";
+            Debug.Log("\nAdding Player");
             break;
          case Constants.requestGameList:   // #, game, game, game, game...
             requestGameList(gameInfo[1]);
@@ -219,7 +219,7 @@ public class NetworkManager : MonoBehaviour
    // Send request to host to join game
    public void requestGameJoin()
    {
-      messageLog.text = messageLog.text + "\nRequesting to join game, connectionID:" + connectionId;
+      Debug.Log("\nRequesting to join game, connectionID:" + connectionId);
       string message = Constants.addPlayer + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myPlayer.Name;
       sendSocketMessage(message, connectionId);
    }
@@ -227,7 +227,7 @@ public class NetworkManager : MonoBehaviour
    // Player connecting to your lobby
    public void addPlayer(string gameInfo, int connectionID)
    {
-      messageLog.text = messageLog.text + "\nInside add player";
+      Debug.Log("\nInside add player");
       string[] playerInfo = gameInfo.Split(Convert.ToChar(Constants.gameDivider));
 
       // Destroy everything in the panel
@@ -278,13 +278,13 @@ public class NetworkManager : MonoBehaviour
    {
       gameList.Clear();
       string[] gameInfo = serverGameList.Split(Convert.ToChar(Constants.gameListDivider));
-      messageLog.text = messageLog.text + "\n" + "Adding Games\n";
+      Debug.Log("\n" + "Adding Games\n");
       foreach (string game in gameInfo)
       {
          string[] tempGame = game.Split(Convert.ToChar(Constants.gameDivider));
          foreach (string item in tempGame)
          {
-            messageLog.text = messageLog.text + item;
+            Debug.Log(item);
          }
          gameList.Add(tempGame);
       }
@@ -297,7 +297,7 @@ public class NetworkManager : MonoBehaviour
       if (gameInfo == Constants.serverKillCode)
       {
          isHostingGame = false;
-         messageLog.text = messageLog.text + "\n Your game has been canceled by the server";
+         Debug.Log("\n Your game has been canceled by the server");
       }
    }
 
