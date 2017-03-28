@@ -34,11 +34,20 @@ public class NetworkManager : MonoBehaviour
    public Text messageLog;
    public Text ipField;
 
+   // Buttons for Network Lobby scene
+   public Button connectServerBTN;
+   public Button hostGameBTN;
+   public Button refreshGameListBTN;
+   public Button cancelHostingBTN;
+   public Button startGameBTN;
+
    // Game settings input fields
    public Text gameName;
    public Text maxPlayers;
    public Text gamePassword;
    public Text mapName;
+
+   public string MapName = "DEFAULTMAP";
 
    #endregion
 
@@ -70,16 +79,63 @@ public class NetworkManager : MonoBehaviour
       requestGameList("172.16.51.127~Name~4~5~passwod~map");
 
       myPlayer = new Player("DefaultName");
+
+      // Hook up all buttons if in lobby screen
+
    }
 
-#region Temp Functions
+   private void OnEnable()
+   {
+      SceneManager.sceneLoaded += hookUpLobbyFunctionality;
+   }
+
+   private void OnDisable()
+   {
+      SceneManager.sceneLoaded -= hookUpLobbyFunctionality;
+   }
+
+   private void hookUpLobbyFunctionality(Scene scene, LoadSceneMode mode)
+   {
+      if (scene.name == "Network Lobby")
+      {
+         // UI linkups, panels and fields
+         gameInfoPanel = Resources.Load("GameInfoPNL") as GameObject;
+         gameListCanvas = GameObject.Find("ContentPNL");
+         playerInfoPanel = Resources.Load("PlayerInfoPNL") as GameObject;
+         messageLog = GameObject.Find("MessageLogTXT").GetComponent<UnityEngine.UI.Text>();
+         ipField = GameObject.Find("ipTXT").GetComponent<UnityEngine.UI.Text>();
+         gameName = GameObject.Find("gameTXT").GetComponent<UnityEngine.UI.Text>();
+         maxPlayers = GameObject.Find("maxPlayersTXT").GetComponent<UnityEngine.UI.Text>();
+         gamePassword = GameObject.Find("passwordTXT").GetComponent<UnityEngine.UI.Text>();
+         mapName = GameObject.Find("mapTXT").GetComponent<UnityEngine.UI.Text>();
+
+         // Buttons linkup
+         connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
+         connectServerBTN.onClick.AddListener(() => connectToServerBTN());
+         hostGameBTN = GameObject.Find("HostGameBTN").GetComponent<Button>();
+         hostGameBTN.onClick.AddListener(() => hostGame());
+         refreshGameListBTN = GameObject.Find("RefreshBTN").GetComponent<Button>();
+         refreshGameListBTN.onClick.AddListener(() => refreshGameList());
+         cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
+         cancelHostingBTN.onClick.AddListener(() => cancelGame());
+         startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
+         if (!isHostingGame)
+            startGameBTN.gameObject.SetActive(false);
+         startGameBTN.onClick.AddListener(() => UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select"));
+
+         GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+         Debug.Log("Loaded Network Lobby");
+      }
+   }
+
+   #region Temp Functions
    // Function to name player for button TEST
    public void namePlayer()
    {
       // Will eventually be what you name is
    }
    // Function to allow a testing button press, as inpector doesn't allow button function calls that have parameters TEST
-   public void connecToServerBTN()
+   public void connectToServerBTN()
    {
       connectToGame(ipField.text);
    }
@@ -101,7 +157,7 @@ public class NetworkManager : MonoBehaviour
       {
          string gameInfo;
          isHostingGame = true;
-
+         startGameBTN.gameObject.SetActive(true);
          // Initialize the network game for hosting
          myGame = new NetworkGame()
          {
@@ -109,7 +165,7 @@ public class NetworkManager : MonoBehaviour
             numberOfPlayers = "0",
             maxPlayers = maxPlayers.text,
             password = gamePassword.text,
-            mapName = mapName.text
+            mapName = MapName,
          };
 
          gameInfo = Constants.addGame + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myGame.gameName +
@@ -149,8 +205,6 @@ public class NetworkManager : MonoBehaviour
       byte error;
       NetworkEventType recNetworkEvent = NetworkTransport.Receive(out recHostId, out recConnectionId, out recChannelId, recBuffer, bufferSize, out dataSize, out error);
 
-      if (mapObject == null && Application.loadedLevel == 2)
-         mapObject = GameObject.Find("Map").GetComponent<GameBoard>();
 
       switch (recNetworkEvent)
       {
@@ -328,6 +382,7 @@ public class NetworkManager : MonoBehaviour
       if (isHostingGame)
       {
          isHostingGame = false;
+         startGameBTN.gameObject.SetActive(false);
          sendSocketMessage(Constants.cancelGame + Constants.commandDivider + Network.player.ipAddress, serverConnectionID);
       }
    }
