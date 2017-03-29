@@ -40,6 +40,7 @@ public class NetworkManager : MonoBehaviour
    public Button refreshGameListBTN;
    public Button cancelHostingBTN;
    public Button startGameBTN;
+   public Button createGameBTN;
 
    // Game settings input fields
    public Text gameName;
@@ -47,7 +48,11 @@ public class NetworkManager : MonoBehaviour
    public Text gamePassword;
    public Text mapName;
 
-   public string MapName = "DEFAULTMAP";
+   public string gameNameTemp = "Default";
+   public string numberOfPlayersTemp = "0";
+   public string maxPlayersTemp = "0";
+   public string passwordTemp = "Default";
+   public string mapNameTemp = "Default";
 
    #endregion
 
@@ -119,9 +124,11 @@ public class NetworkManager : MonoBehaviour
          cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
          cancelHostingBTN.onClick.AddListener(() => cancelGame());
          startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
+         startGameBTN.onClick.AddListener(() => UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select"));
+         createGameBTN = GameObject.Find("CreateGameBTN").GetComponent<Button>();
+         createGameBTN.onClick.AddListener(() => createGame());
          if (!isHostingGame)
             startGameBTN.gameObject.SetActive(false);
-         startGameBTN.onClick.AddListener(() => UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select"));
 
          GameObject.Find("Network Handler").GetComponent<NetworkManager>();
          Debug.Log("Loaded Network Lobby");
@@ -150,26 +157,28 @@ public class NetworkManager : MonoBehaviour
       Debug.Log("\n" + "ConnectionID: " + connectionId);
    }
 
+   // Create a empty game
+   public void createGame()
+   {
+      isHostingGame = true;
+      myGame = new NetworkGame();
+   }
    // Send game info to the server
    public void hostGame()
    {
-      if (!isHostingGame)
+      if (isHostingGame)
       {
          string gameInfo;
          isHostingGame = true;
          startGameBTN.gameObject.SetActive(true);
-         // Initialize the network game for hosting
-         myGame = new NetworkGame()
-         {
-            gameName = gameName.text,
-            numberOfPlayers = "0",
-            maxPlayers = maxPlayers.text,
-            password = gamePassword.text,
-            mapName = MapName,
-         };
+         myGame.gameName = gameNameTemp;
+         myGame.numberOfPlayers = numberOfPlayersTemp;
+         myGame.maxPlayers = maxPlayersTemp;
+         myGame.password = passwordTemp;
+         myGame.mapName = mapNameTemp;
 
          gameInfo = Constants.addGame + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myGame.gameName +
-            Constants.gameDivider + "0" + Constants.gameDivider + myGame.maxPlayers + Constants.gameDivider + myGame.password + Constants.gameDivider + myGame.mapName;
+         Constants.gameDivider + "0" + Constants.gameDivider + myGame.maxPlayers + Constants.gameDivider + myGame.password + Constants.gameDivider + myGame.mapName;
          sendSocketMessage(gameInfo, serverConnectionID);
       }
       else

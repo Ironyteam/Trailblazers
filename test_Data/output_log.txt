@@ -1,0 +1,187 @@
+Initialize engine version: 5.5.1f1 (88d00a7498cd)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: Intel(R) HD Graphics (ID=0x22b1)
+    Vendor:   Intel
+    VRAM:     1129 MB
+    Driver:   10.18.15.4256
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\Admin\Desktop\Master\test_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\Admin\Desktop\Master\test_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\Admin\Desktop\Master\test_Data\Managed\Assembly-CSharp-firstpass.dll (this message is harmless)
+Loading C:\Users\Admin\Desktop\Master\test_Data\Managed\Assembly-CSharp-firstpass.dll into Unity Child Domain
+Platform assembly: C:\Users\Admin\Desktop\Master\test_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\Admin\Desktop\Master\test_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\Admin\Desktop\Master\test_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\Admin\Desktop\Master\test_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\Admin\Desktop\Master\test_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\Admin\Desktop\Master\test_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: C:\Users\Admin\Desktop\Master\test_Data\Managed\UnityEngine.PlaymodeTestsRunner.dll (this message is harmless)
+Loading C:\Users\Admin\Desktop\Master\test_Data\Managed\UnityEngine.PlaymodeTestsRunner.dll into Unity Child Domain
+- Completed reload, in  0.694 seconds
+Platform assembly: C:\Users\Admin\Desktop\Master\test_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\Admin\Desktop\Master\test_Data\Managed\System.dll (this message is harmless)
+desktop: 1366x768 60Hz; virtual: 1366x768 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+UnloadTime: 2.888408 ms
+The referenced script on this Behaviour (Game Object 'PlayerInfoPNL') is missing!
+ 
+(Filename:  Line: 1754)
+
+Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 18.516409 ms
+
+Unloading 47 unused Assets to reduce memory usage. Loaded Objects now: 583.
+Total: 1.934139 ms (FindLiveObjects: 0.188805 ms CreateObjectMapping: 0.051201 ms MarkObjects: 1.093153 ms  DeleteObjects: 0.536976 ms)
+
+
+Socket open. Socket ID is : 0
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Adding Games
+
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+172.16.51.127
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Name
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+4
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+5
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+passwod
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+map
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Setting up 1 worker threads for Enlighten.
+  Thread -> id: 2068 -> priority: 1 
+Unloading 7 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 9.124760 ms
+
+Unloading 3 unused Assets to reduce memory usage. Loaded Objects now: 1345.
+Total: 3.019612 ms (FindLiveObjects: 0.277128 ms CreateObjectMapping: 0.051201 ms MarkObjects: 2.651601 ms  DeleteObjects: 0.038401 ms)
+
+Unloading 4 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 5.498408 ms
+
+Unloading 58 unused Assets to reduce memory usage. Loaded Objects now: 590.
+Total: 1.425963 ms (FindLiveObjects: 0.186885 ms CreateObjectMapping: 0.032641 ms MarkObjects: 1.072672 ms  DeleteObjects: 0.132484 ms)
+
+7
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+IP ADDRESS
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Trying to connect to: IP ADDRESS
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+getaddrinfo: No such host is known. 
+Wrong ip address {IP ADDRESS} or port {5010}
+ 
+(Filename:  Line: 841)
+
+
+ConnectionID: 0
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+7
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+IP ADDRESS
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Trying to connect to: IP ADDRESS
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+getaddrinfo: No such host is known. 
+Wrong ip address {IP ADDRESS} or port {5010}
+ 
+(Filename:  Line: 841)
+
+
+ConnectionID: 0
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+7
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+IP ADDRESS
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Trying to connect to: IP ADDRESS
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+getaddrinfo: No such host is known. 
+Wrong ip address {IP ADDRESS} or port {5010}
+ 
+(Filename:  Line: 841)
+
+
+ConnectionID: 0
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Requesting to join game, connectionID:0
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Sending to ID 0 : 2:10.100.69.52~DefaultName
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Requesting to join game, connectionID:0
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Sending to ID 0 : 2:10.100.69.52~DefaultName
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Requesting to join game, connectionID:0
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+
+Sending to ID 0 : 2:10.100.69.52~DefaultName
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+

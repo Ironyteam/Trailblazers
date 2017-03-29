@@ -66,6 +66,7 @@ public class BoardManager : MonoBehaviour
     public InputField newNameField;
     public Button confirmNewNameBtn;
 	
+   public InputField GameNameINPT;
 	public Slider numOfPlayersSlider;
 	public Slider numOfVPSlider;
 	public Slider turnTimerSlider;
@@ -1001,8 +1002,6 @@ public class BoardManager : MonoBehaviour
 
         if (boardSelctionCanvasPG.enabled)
         {
-            NetworkManager networkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>(); // SILAS
-            networkObject.MapName = maps[board_index].mapName; // SILAS
             mapNameTextPG.text = maps[board_index].mapName;
             mapDetailsTextPG.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
                                     "Maximum Victory Points: " + maps[board_index].maxVP;
@@ -1426,7 +1425,11 @@ public class BoardManager : MonoBehaviour
     }
 
     public void goToGameLobby()
-	{	
+	{
+      NetworkManager networkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>(); // SILAS
+      networkObject.mapNameTemp    = maps[board_index].mapName; // SILAS
+      networkObject.maxPlayersTemp = numOfPlayers.ToString(); // SILAS
+      networkObject.gameNameTemp   = GameNameINPT.text; // SILAS
 		UnityEngine.SceneManagement.SceneManager.LoadScene("Network Lobby");
 	}
 	
