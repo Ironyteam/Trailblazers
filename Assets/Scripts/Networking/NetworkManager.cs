@@ -29,6 +29,7 @@ public class NetworkManager : MonoBehaviour
    public GameObject gameListCanvas;
    public GameObject playerInfoPanel;
    NetworkGame myGame;
+   HexTemplate gameMap;
    public GameBoard mapObject; // Used to find the GameObject
 
    public Text messageLog;
@@ -108,11 +109,11 @@ public class NetworkManager : MonoBehaviour
          gameListCanvas = GameObject.Find("ContentPNL");
          playerInfoPanel = Resources.Load("PlayerInfoPNL") as GameObject;
          messageLog = GameObject.Find("MessageLogTXT").GetComponent<UnityEngine.UI.Text>();
-         ipField = GameObject.Find("ipTXT").GetComponent<UnityEngine.UI.Text>();
-         gameName = GameObject.Find("gameTXT").GetComponent<UnityEngine.UI.Text>();
-         maxPlayers = GameObject.Find("maxPlayersTXT").GetComponent<UnityEngine.UI.Text>();
-         gamePassword = GameObject.Find("passwordTXT").GetComponent<UnityEngine.UI.Text>();
-         mapName = GameObject.Find("mapTXT").GetComponent<UnityEngine.UI.Text>();
+//         ipField = GameObject.Find("ipTXT").GetComponent<UnityEngine.UI.Text>();
+//         gameName = GameObject.Find("gameTXT").GetComponent<UnityEngine.UI.Text>();
+//         maxPlayers = GameObject.Find("maxPlayersTXT").GetComponent<UnityEngine.UI.Text>();
+//         gamePassword = GameObject.Find("passwordTXT").GetComponent<UnityEngine.UI.Text>();
+//         mapName = GameObject.Find("mapTXT").GetComponent<UnityEngine.UI.Text>();
 
          // Buttons linkup
          connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
@@ -163,6 +164,18 @@ public class NetworkManager : MonoBehaviour
       isHostingGame = true;
       myGame = new NetworkGame();
    }
+
+   // Set the values recieved from BoardManager
+   public void setupGameSettings(int totalPlayers, int turnTimer, int victoryPoints, string gameName, string mapName, HexTemplate map)
+   {
+      myGame.maxPlayers = totalPlayers.ToString();
+      myGame.turnTimer  = turnTimer.ToString();
+      myGame.numberOfVictoryPoints = victoryPoints.ToString();
+      myGame.gameName   = gameName;
+      myGame.mapName    = mapName;
+      gameMap = map;
+   }
+
    // Send game info to the server
    public void hostGame()
    {
