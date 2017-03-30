@@ -124,10 +124,10 @@ public class NetworkManager : MonoBehaviour
          refreshGameListBTN.onClick.AddListener(() => refreshGameList());
          cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
          cancelHostingBTN.onClick.AddListener(() => cancelGame());
-         startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
-         startGameBTN.onClick.AddListener(() => UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select"));
          createGameBTN = GameObject.Find("CreateGameBTN").GetComponent<Button>();
          createGameBTN.onClick.AddListener(() => createGame());
+         startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
+         startGameBTN.onClick.AddListener(() => startGame());
          if (!isHostingGame)
             startGameBTN.gameObject.SetActive(false);
 
@@ -200,6 +200,12 @@ public class NetworkManager : MonoBehaviour
       }
    }
 
+   public void startGame()
+   {
+      sendActionToClients(Constants.gameStarted, 0);
+      UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
+   }
+
    // Send a socket message to connectionId
    public void sendSocketMessage(string message, int connectionNum)
    {
@@ -265,6 +271,8 @@ public class NetworkManager : MonoBehaviour
             removeGame(gameInfo[1]);
             break;
          case Constants.gameStarted:       // #, ipAddress
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
+            break;
          case Constants.gameEnded:         // #, ipAddress
          case Constants.characterSelect:   // #, character
             break;
