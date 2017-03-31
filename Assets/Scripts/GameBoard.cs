@@ -40,7 +40,8 @@ public class GameBoard : MonoBehaviour
 	public int roadIndex = 0;
 	public MKGlow MKGlowObject;
 	public GuiManager GUIManager;
-	public int glowCounter = 0;
+    public NetworkManager NetManager;
+    public int glowCounter = 0;
 
 	public int CurrentPlayer = 0;
 	public bool InitialPlacement = true;
@@ -56,7 +57,8 @@ public class GameBoard : MonoBehaviour
 
 	public Structure AttackingCity = null;
 	public Structure DefendingCity = null;
-	public Hex RobberLocation = null;
+    public Structure BuyingArmyCity = null;
+    public Hex RobberLocation = null;
 	/*
   sendEndTurn()
   sendStartTurn()
@@ -67,7 +69,8 @@ public class GameBoard : MonoBehaviour
 	{
 		MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
 		GUIManager = GameObject.Find("Main Camera").GetComponent<GuiManager>();
-		MKGlowObject.BlurSpread = .125f;
+//        NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+        MKGlowObject.BlurSpread = .125f;
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
 
@@ -268,6 +271,7 @@ public class GameBoard : MonoBehaviour
 					template.hex[x, z].token_go = (GameObject)Instantiate(token, new Vector3(x * xOffset, 2f, zPos), Quaternion.Euler(0, -20, 0));
 					Tokens.Add(template.hex[x, z].token_go);
 
+					Instantiate (armyText, new Vector3 (x * xOffset, 2f, zPos), Quaternion.Euler (0, -20, 0));
 					if (template.hex[x, z].dice_number == 7)
 					{
 						RobberLocation = template.hex[x, z];
@@ -353,7 +357,6 @@ public class GameBoard : MonoBehaviour
 		hexCoordinate = new Coordinate (xCoord, yCoord);
 		// Calculate coordinates of new structure at vertice two.
 		newCoordinateA = MapUtility.CalculateVerticeTwo (hexCoordinate);
-		//Debug.Log (newCoordinateA.X + newCoordinateA.Y);
 		// Instantiate new structure based on coordinates and current unique structure number.
 		newStructure = new Structure (newCoordinateA, structureIndex);
 		// Increment unique structure number.
@@ -376,7 +379,6 @@ public class GameBoard : MonoBehaviour
 		hexCoordinate = new Coordinate (xCoord, yCoord);
 		// Calculate coordinates of new structure at vertice three.
 		newCoordinateA = MapUtility.CalculateVerticeThree(hexCoordinate);
-		//Debug.Log(newCoordinateA.X + newCoordinateA.Y);
 		// Instantiate new structure based on coordinates and current unique structure number.
 		newStructure = new Structure (newCoordinateA, structureIndex);
 		// Increment unique structure number.
@@ -399,7 +401,6 @@ public class GameBoard : MonoBehaviour
 		hexCoordinate = new Coordinate (xCoord, yCoord);
 		// Calculate coordinates of new structure at vertice four.
 		newCoordinateA = MapUtility.CalculateVerticeFour(hexCoordinate);
-		//Debug.Log(newCoordinateA.X + newCoordinateA.Y);
 		// Instantiate new structure based on coordinates and current unique structure number.
 		newStructure = new Structure (newCoordinateA, structureIndex);
 		// Increment unique structure number.
@@ -422,7 +423,6 @@ public class GameBoard : MonoBehaviour
 		hexCoordinate = new Coordinate (xCoord, yCoord);
 		// Calculate coordinates of new structure at vertice five.
 		newCoordinateA = MapUtility.CalculateVerticeFive(hexCoordinate);
-		//Debug.Log(newCoordinateA.X + newCoordinateA.Y);
 		// Instantiate new structure based on coordinates and current unique structure number.
 		newStructure = new Structure (newCoordinateA, structureIndex);
 		// Increment unique structure number.
@@ -445,7 +445,6 @@ public class GameBoard : MonoBehaviour
 		hexCoordinate = new Coordinate (xCoord, yCoord);
 		// Calculate coordinates of new structure at vertice six.
 		newCoordinateA = MapUtility.CalculateVerticeSix(hexCoordinate);
-		//Debug.Log(newCoordinateA.X + newCoordinateA.Y);
 		// Instantiate new structure based on coordinates and current unique structure number.
 		newStructure = new Structure (newCoordinateA, structureIndex);
 		// Increment unique structure number.
@@ -593,6 +592,24 @@ public class GameBoard : MonoBehaviour
 		Roads.Add (newRoad);
 	}
 
+/*	public async void FloatText(GameObject createdText, Color resourceColor, int numberChanged)
+	{
+		createdText.GetComponent<Renderer>().material.color = resourceColor;  // set text color
+		alpha = 1;
+	
+		while (alpha>0)
+		{
+			Vector3 temp = new Vector3(0f, (float)scroll*Time.deltaTime,0f);
+			createdText.transform.position += temp;
+			alpha -= Time.deltaTime/duration; 
+			Color color = TextToFloat.GetComponent<Renderer>().material.color;
+			color.a = alpha; 
+			createdText.GetComponent<Renderer>().material.color = color;        
+		} 	
+
+		Destroy(createdText); // text vanished - destroy itself
+	} */
+
 	// Local building functions
 	public void BuildSettlement(Structure settlementTarget)
 	{
@@ -666,7 +683,8 @@ public class GameBoard : MonoBehaviour
 	{
 		targetCity.Armies++;
 		LocalGame.PlayerList[CurrentPlayer].HireArmy();
-	}
+        targetCity.ArmyNumber_GO.GetComponent<TextMesh>().text = targetCity.Armies.ToString();
+    }
 
 	public void ExecuteAttack()
 	{
@@ -934,7 +952,7 @@ public class GameBoard : MonoBehaviour
 	{
 		BuyingArmy = true;
 
-		foreach (Structure currentStructure in Structures) 
+        foreach (Structure currentStructure in Structures) 
 		{
 			if (currentStructure.PlayerOwner == CurrentPlayer && currentStructure.IsCity) {
 				currentStructure.Structure_GO.GetComponent<Collider> ().enabled = true;
@@ -947,11 +965,34 @@ public class GameBoard : MonoBehaviour
 		}
 	}
 
-	public void HideAvailableCitiesForArmies()
+    public void HideAvailableCitiesForArmiesInitial()
+    {
+        BuyingArmy = false;
+
+        foreach (Structure currentStructure in Structures)
+        {
+            if (currentStructure.PlayerOwner == CurrentPlayer && currentStructure.IsCity && currentStructure.StructureID != BuyingArmyCity.StructureID)
+            {
+                currentStructure.Structure_GO.GetComponent<Collider>().enabled = false;
+                currentStructure.Structure_GO.GetComponent<Renderer>().material = GetPlayerMaterial(CurrentPlayer, 2);
+                currentStructure.ArmySprite_GO.GetComponent<Renderer>().enabled = false;
+                currentStructure.ArmyNumber_GO.GetComponent<Renderer>().enabled = false;
+            }
+            else if (currentStructure.StructureID == BuyingArmyCity.StructureID)
+            {
+                currentStructure.Structure_GO.GetComponent<Collider>().enabled = false;
+                currentStructure.Structure_GO.GetComponent<Renderer>().material = GetPlayerMaterial(CurrentPlayer, 2);
+            }
+
+        }
+    }
+
+    public void HideAvailableCitiesForArmies()
 	{
 		BuyingArmy = false;
+        BuyingArmyCity = null;
 
-		foreach (Structure currentStructure in Structures) 
+        foreach (Structure currentStructure in Structures) 
 		{
 			if (currentStructure.PlayerOwner == CurrentPlayer && currentStructure.IsCity) {
 				currentStructure.Structure_GO.GetComponent<Collider> ().enabled = false;
@@ -1064,7 +1105,7 @@ public class GameBoard : MonoBehaviour
 								if (currentStructure.PlayerOwner != -1 && currentStructure.PlayerOwner != CurrentPlayer && currentStructure.IsCity) 
 								{
 									currentStructure.Structure_GO.GetComponent<Collider>().enabled = true;
-									currentStructure.Structure_GO.GetComponent<Renderer>().material = GetGlowingPlayerMaterial(CurrentPlayer, 2);
+									currentStructure.Structure_GO.GetComponent<Renderer>().material = GetGlowingPlayerMaterial(currentStructure.PlayerOwner, 2);
 								}
 							}
 						}
@@ -1744,7 +1785,8 @@ public class GameBoard : MonoBehaviour
 				}
 			}
 		}
-	}
+        GUIManager.UpdatePlayer();
+    }
 
 	public void DistributeResource(int resourceNumber, int playerNumber, bool isCity)
 	{
@@ -1955,7 +1997,6 @@ public class GameBoard : MonoBehaviour
 					break;
 				default:
 					resourceStolen = true;
-					Debug.Log("random number was: " + resourceToSteal.ToString());
 					break;
 				}
 			} while (!resourceStolen);
@@ -2103,18 +2144,6 @@ public class GameBoard : MonoBehaviour
 		}
 	}
 
-	public void BuyArmyClick()
-	{
-		if (BuyingArmy) 
-		{
-			HideAvailableCitiesForArmies();
-		} 
-		else 
-		{
-			ShowAvailableCitiesForArmies();
-		}
-	}
-
 	public void AttackClick()
 	{
 		if (Attacking) 
@@ -2126,4 +2155,39 @@ public class GameBoard : MonoBehaviour
 			ShowAvailableCitiesForAttack();
 		}
 	}
+
+    public void RollDiceClick()
+    {
+        int rollOne = Dice.Roll();
+        int rollTwo = Dice.Roll();
+
+        GUIManager.rollDice(rollOne, rollTwo);
+        if (rollOne + rollTwo != 7)
+            DistributeResources(rollOne + rollTwo);
+        else
+            ShowHexLocations();
+    }
+
+    public void ShowBarracksClick()
+    {
+        BuyingArmy = true;
+        ShowAvailableCitiesForArmies();
+        GUIManager.openBaracks();
+    }
+
+    public void HideBaracksClick()
+    {
+        HideAvailableCitiesForArmies();
+        GUIManager.closeBarracks();
+    }
+
+    public void BuyArmyClick()
+    {
+        if (LocalGame.PlayerList[CurrentPlayer].CanHireArmy() && BuyingArmyCity != null)
+        {
+            BuyArmy(BuyingArmyCity);
+            if (LocalGame.isNetwork)
+                NetManager.sendBuildArmy(BuyingArmyCity.Location.X, BuyingArmyCity.Location.Y);
+        }
+    }
 }

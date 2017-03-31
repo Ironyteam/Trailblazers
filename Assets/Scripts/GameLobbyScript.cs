@@ -13,14 +13,14 @@ public class GameLobbyScript : MonoBehaviour {
 
    public void returnToMain()
    {
-	  UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+	  UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
    }
    public void netLobbyOn()
    {
-	  UnityEngine.SceneManagement.SceneManager.LoadScene(3);
+	  UnityEngine.SceneManagement.SceneManager.LoadScene("Network Lobby");
    }
       public void startGame()
    {
-	  UnityEngine.SceneManagement.SceneManager.LoadScene(5);
+	  UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
    }  
 }

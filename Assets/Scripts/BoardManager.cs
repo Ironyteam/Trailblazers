@@ -3,10 +3,16 @@ using UnityEngine.UI;
 using System;
 using System.Threading;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
+
+using System.IO;
 
 
 public class BoardManager : MonoBehaviour
 {
+    public Camera mainCamera; //++++++++++++++++++++++++++
+    public Camera screenShotCamera; //++++++++++++++++++++++++++
+
     public GameObject hexPrefab;
     public GameObject diceNumText;
     public GameObject ListBtn;
@@ -26,6 +32,25 @@ public class BoardManager : MonoBehaviour
 
     private List<int> mapErrors = new List<int>();
 
+    public Slider numOfPlayersSlider, //*****************
+				  numOfVPSlider,
+				  turnTimerSlider;
+	public Toggle turnTimerToggleLocal,
+				  characterAbilitiesToggle;
+	public InputField gameLobbyNameNetwork;
+	public Text turnTimerToggleText,
+				turnTimerValueText,
+				numOfPlayersValueText,
+				numOfVPValueText;
+	public Button gameLobbyButtonNetwork,
+				  characterSelectButtonLocal;
+
+	public static int numOfPlayers = 2;
+	public static int victoryPoints = 5;
+	public static int turnTimerMax = 30;
+	public static bool turnTimerOn = true,
+					   characterAbilitiesOn = true;
+                       
     string[] resources = new string[6]
     {
        "Wood", "Ore", "Grain", "Wool", "Brick", "Desert"
@@ -40,7 +65,7 @@ public class BoardManager : MonoBehaviour
     public Canvas boardSelctionCanvasMOD; // The board selection canvas for MODifying a board
     public Canvas boardSelctionCanvasPG;  // The board selection canvas for Pre Game selection
     public Canvas HexCanvas;              // Canvas that the 2d hex board is spawned on
-	public Canvas createCanvasNetwork;
+	public Canvas createCanvas;
     public InputField mapNameField;       // Text field for naming a map that you are saving
     public Text mapNameTextMOD;           // Text box displaying the map names IN MODIFY BOARD SELCTION MENU
     public Text mapNameTextPG;            // Text box displaying the map names IN PRE GAME SELECTION MENU
@@ -49,6 +74,8 @@ public class BoardManager : MonoBehaviour
     public Text mapDetailsTextMOD;
     public Image MapScreenShortImageMOD;
     public Image MapScreenShortImagePG;
+    public Text MissingScreenShotTextPG;
+    public Text MissingScreenShotTextMOD;
 
     // Map error popup window buttons and text
     public Canvas errorsCanvas;
@@ -62,18 +89,10 @@ public class BoardManager : MonoBehaviour
     public Button returnAndFixBtn;
     public Button appendAndSaveBtn;
     public Button enterNewNameBtn;
-    public Text mapNameErrorText;
+    public Text mainErrorText;
     public InputField newNameField;
     public Button confirmNewNameBtn;
-	
-   public InputField GameNameINPT;
-	public Slider numOfPlayersSlider;
-	public Slider numOfVPSlider;
-	public Slider turnTimerSlider;
-
-	public static int numOfPlayers = 2;
-	public static int victoryPoints = 5;
-	public static float turnTimerMax = 30;
+    public Button okayBtn;               //++++++++++++++++++++++++++++++++++
 
     public const string DefaultMapsPath = FileHandler.DefaultMapsPath;
     public const string SavedMapsPath   = FileHandler.SavedMapsPath;
@@ -82,9 +101,14 @@ public class BoardManager : MonoBehaviour
     public const int MISSING_DESERT_ERROR = 2;
     public const int MISSING_DICE_NUMS_ERROR = 3;
     public const int WARNINGS_ERROR = 4;
+    public const int TOO_FEW_HEXES_ERROR = 5; //++++++++++++++++++++++++++
+    public const int NAME_FILTER_ERROR = 6;  //+++++++++++++++++++++++++
+    public const int NAME_FORMAT_ERROR = 7;  //+++++++++++++++++++++++++++
 
+    public const int MINIMUM_HEXES = 7; //++++++++++++++++++++++++++
     public const int MAX_MAPS_WITH_SAME_NAME = 99;
 
+    private bool nameAppended = false;
     private bool ignoreWarnings = false;
 
     private int savedMapsStartindex;      // The index of the first saved (non-default) map in the array of maps
@@ -95,11 +119,13 @@ public class BoardManager : MonoBehaviour
     const int WIDTH  = HexTemplate.WIDTH;
     const int HEIGHT = HexTemplate.HEIGHT;
 
+    public Vector3 currentHexTrans;
+
     const int LEFT  = -1;  // Index value sent to go left in the list of maps 
     const int RIGHT = -2;  // Index value sent to go right in the list of maps
 
-    public const int SCREEN_SHOT_WIDTH = 800;
-    public const int SCREEN_SHOT_LENGTH = 800;
+    public const int SCREEN_SHOT_WIDTH = 1000;
+    public const int SCREEN_SHOT_LENGTH = 1000;
 
     private int[] resourceCounts = new int[6];
     private int[] diceNumCounts = new int[11];
@@ -109,18 +135,23 @@ public class BoardManager : MonoBehaviour
     private GameObject portGO = null;
 
     private HexTemplate[] maps; // The paths of all available maps
-    private Sprite[] screenShots;
+    private List<Sprite> screenShots = new List<Sprite>();
+    public Sprite[] defaultMapImages;
 
     public static HexTemplate template = new HexTemplate();
 
     void Awake()
     {
+        FileHandler handler = new FileHandler();
+        handler.checkForFiles();             //++++++++++++++++++++++++++++
+
+        mainCamera.enabled = true; //++++++++++++++++++++++++++
+        screenShotCamera.enabled = false; //++++++++++++++++++++++++++
         boardCreationCanvas.enabled = false;
         boardSelctionCanvasPG.enabled = false;
         boardSelctionCanvasMOD.enabled = false;
-		createCanvasNetwork.enabled = false;
+		createCanvas.enabled = false;
         errorsCanvas.enabled = false;
-		createCanvasNetwork.enabled = false;
 
         if (startingGame == true)
             preGameBoardSelectOn();
@@ -132,95 +163,99 @@ public class BoardManager : MonoBehaviour
     void Update()
     {
         // See if raycast hit an object
-        Ray toMouse = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit rhInfo;
-        bool didHit = Physics.Raycast(toMouse, out rhInfo, 500.0f);
+        Ray toMouse = mainCamera.ScreenPointToRay(Input.mousePosition);
 
-        if (didHit)
+        if (!EventSystem.current.IsPointerOverGameObject()) //+++++++++++++++++++++++++++
         {
-            GameObject ourHitObject = rhInfo.collider.transform.gameObject;
-            int x = ourHitObject.GetComponent<HexData>().x_index;
-            int y = ourHitObject.GetComponent<HexData>().y_index;
+            RaycastHit rhInfo;
+            bool didHit = Physics.Raycast(toMouse, out rhInfo, 500.0f);
 
-            // Process left click
-            if (Input.GetMouseButtonDown(0))
+            if (didHit)
             {
-                // See if dice number or resource type change is necessary
-                if (currentResource != -1)
-                    changeHex(x, y);
-                else if (currentDiceNum != -1)
-                    changeDiceNumber(x, y);
+                GameObject ourHitObject = rhInfo.collider.transform.gameObject;
+                int x = ourHitObject.GetComponent<HexData>().x_index;
+                int y = ourHitObject.GetComponent<HexData>().y_index;
 
-                // See if port selecting actions are necessary
-                else if (addPortEnabled)
+                // Process left click
+                if (Input.GetMouseButtonDown(0))
                 {
-                    // See if port placement is in progress
-                    if (choosingPort == true)
+                    // See if dice number or resource type change is necessary
+                    if (currentResource != -1)
+                        changeHex(x, y);
+                    else if (currentDiceNum != -1)
+                        changeDiceNumber(x, y);
+
+                    // See if port selecting actions are necessary
+                    else if (addPortEnabled)
                     {
-                        if (availablePortHexes.ContainsKey(ourHitObject))
-                            addPort(ourHitObject);
-                    }
-
-                    // See if a port that borders water is being selected
-                    else
-                    {
-                        if (hexesBorderingWater.Contains(ourHitObject))
-                            chooseHexForPort(ourHitObject);
-                    }
-                }
-            }
-
-            // Reset a hexagon to water if a right click is detected
-            else if (Input.GetMouseButtonDown(1))
-            {
-                if (template.hex[x, y].resource >= 0)
-                {
-                    resetHex(x, y);
-                }
-                else if (template.hex[x, y].hexOwningPort != null)
-                {
-                    deletePort(x, y);
-                }
-            }
-
-            // Perform mouse over effect on a hexagon if necessary
-            else
-            {
-                // Transition mouse over effect if necessary
-                if (availablePortHexes.ContainsKey(ourHitObject))
-                {
-                    if (choosingPort == true)
-                    {
-                        portGO.GetComponent<Renderer>().enabled = true;
-                        if (mousedOverHex != ourHitObject)
+                        // See if port placement is in progress
+                        if (choosingPort == true)
                         {
-                            mousedOverHex = ourHitObject;
-                            changeMouseOverPort(ourHitObject);
+                            if (availablePortHexes.ContainsKey(ourHitObject))
+                                addPort(ourHitObject);
+                        }
+
+                        // See if a port that borders water is being selected
+                        else
+                        {
+                            if (hexesBorderingWater.Contains(ourHitObject))
+                                chooseHexForPort(ourHitObject);
                         }
                     }
                 }
 
-                // Remove mouse effect when cursor exits available hexagon (Cursor still within map area)
+                // Reset a hexagon to water if a right click is detected
+                else if (Input.GetMouseButtonDown(1))
+                {
+                    if (template.hex[x, y].resource >= 0)
+                    {
+                        resetHex(x, y);
+                    }
+                    else if (template.hex[x, y].hexOwningPort != null)
+                    {
+                        deletePort(x, y);
+                    }
+                }
+
+                // Perform mouse over effect on a hexagon if necessary
                 else
                 {
-                    if (choosingPort == true && mousedOverHex != null)
+                    // Transition mouse over effect if necessary
+                    if (availablePortHexes.ContainsKey(ourHitObject))
                     {
-                        portGO.GetComponent<Renderer>().enabled = false;
+                        if (choosingPort == true)
+                        {
+                            portGO.GetComponent<Renderer>().enabled = true;
+                            if (mousedOverHex != ourHitObject)
+                            {
+                                mousedOverHex = ourHitObject;
+                                changeMouseOverPort(ourHitObject);
+                            }
+                        }
+                    }
+
+                    // Remove mouse effect when cursor exits available hexagon (Cursor still within map area)
+                    else
+                    {
+                        if (choosingPort == true && mousedOverHex != null)
+                        {
+                            portGO.GetComponent<Renderer>().enabled = false;
+                        }
                     }
                 }
             }
-        }
 
-        // Remove mouse effect when cursor exits available hexagon (Cursor outside of map area)
-        else
-        {
-            if (choosingPort == true && mousedOverHex != null)
+            // Remove mouse effect when cursor exits available hexagon (Cursor outside of map area)
+            else
             {
-                portGO.GetComponent<Renderer>().enabled = false;
+                if (choosingPort == true && mousedOverHex != null)
+                {
+                    portGO.GetComponent<Renderer>().enabled = false;
+                }
             }
         }
     }
-
+        
     public void preGameBoardSelectOn()
     {
         boardSelctionCanvasPG.enabled = true;
@@ -231,9 +266,8 @@ public class BoardManager : MonoBehaviour
     {
         boardCreationCanvas.enabled    = false;
         boardSelctionCanvasPG.enabled  = false;
-		createCanvasNetwork.enabled    = false;
+		createCanvas.enabled    = false;
         boardSelctionCanvasMOD.enabled = true;
-		createCanvasNetwork.enabled    = false;
         displayMaps();
     }
 
@@ -263,15 +297,19 @@ public class BoardManager : MonoBehaviour
         boardSelctionCanvasPG.enabled = false;
         FileHandler reader = new FileHandler();
         if (board_index < savedMapsStartindex)
-            template = reader.retrieveMap(DefaultMapsPath + "/" + maps[board_index].mapName + ".txt");
+            template = reader.retrieveMap(maps[board_index].mapName, true);
         else
-            template = reader.retrieveMap(SavedMapsPath + "/" + maps[board_index].mapName + ".txt");
-        createCanvasNetwork.enabled = true;
+            template = reader.retrieveMap(maps[board_index].mapName, false);
+        createCanvas.enabled = true;
     }
 
     public void displayMaps()
     {
         List<string> mapNames = new List<string>();
+
+
+        MissingScreenShotTextPG.enabled = false;
+        MissingScreenShotTextMOD.enabled = false;
 
         if (boardSelctionCanvasPG.enabled)
         {
@@ -282,9 +320,25 @@ public class BoardManager : MonoBehaviour
                 mapNames.Add(template.mapName);
             }
 
+            screenShots.Clear();
+
+            if (savedMapsStartindex == defaultMapImages.Length)
+                screenShots.AddRange(defaultMapImages);
+            else
+                Debug.Log("Error in function displayMaps:" +
+                         "\nNumber of defaultMaps does not equal number of defaultMapImages");
+
             FileHandler reader = new FileHandler();
-            screenShots = reader.getScreenShots(mapNames, savedMapsStartindex).ToArray();
-            MapScreenShortImagePG.sprite = screenShots[board_index];
+            screenShots.AddRange(reader.getScreenShots(mapNames, savedMapsStartindex));
+
+            if (screenShots[board_index] != null)            //vvvvvvvvvvvvvvvvvvv
+                MapScreenShortImagePG.sprite = screenShots[board_index];
+            else
+            {
+                MapScreenShortImagePG.sprite = null;
+                MissingScreenShotTextPG.text = "No preview available";
+                MissingScreenShotTextPG.enabled = true;
+            }
 
             mapNameTextPG.text = maps[board_index].mapName;
             mapDetailsTextPG.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
@@ -299,9 +353,25 @@ public class BoardManager : MonoBehaviour
                 mapNames.Add(template.mapName);
             }
 
+            screenShots.Clear();
+
+            if (savedMapsStartindex == defaultMapImages.Length)
+                screenShots.AddRange(defaultMapImages);
+            else
+                Debug.Log("Error in function displayMaps:" +
+                         "\nNumber of defaultMaps does not equal number of defaultMapImages");
+
             FileHandler reader = new FileHandler();
-            screenShots = reader.getScreenShots(mapNames, savedMapsStartindex).ToArray();
-            MapScreenShortImageMOD.sprite = screenShots[board_index];
+            screenShots.AddRange(reader.getScreenShots(mapNames, savedMapsStartindex));
+
+            if (screenShots[board_index] != null)               //vvvvvvvvvvvvvvvvvvv
+                MapScreenShortImageMOD.sprite = screenShots[board_index];
+            else
+            {
+                MapScreenShortImageMOD.sprite = null;
+                MissingScreenShotTextMOD.text = "No preview available";
+                MissingScreenShotTextMOD.enabled = true;
+            }
 
             mapNameTextMOD.text = maps[board_index].mapName;
             mapDetailsTextMOD.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
@@ -311,43 +381,59 @@ public class BoardManager : MonoBehaviour
        
     }
 
-    public void AddPortClicked()
+    public void deleteMap()
+    {
+        if (board_index >= savedMapsStartindex)
+        {
+            FileHandler handler = new FileHandler();
+            handler.deleteMap(maps[board_index].mapName);
+            displayMaps();
+        }
+    }
+
+    public void AddPortClicked()  // Glowing effect code added
     {
         addPortEnabled = true;
         currentResource = -1;
         currentDiceNum = -1;
 
         hexesBorderingWater = getHexesBorderedByWater(template);
-    }
 
-    public void chooseHexForPort(GameObject chosenHex)
+        // Add glowing effect to hexagons that are bordered by water
+        foreach(GameObject hex in hexesBorderingWater)
+        {
+            changeGlowEffect(hex, true);
+        }
+    }      
+
+    public void chooseHexForPort(GameObject chosenHex)       // Glowing effect code added
     {
         GameObject[] hexes;
         int x = chosenHex.GetComponent<HexData>().x_index;
         int y = chosenHex.GetComponent<HexData>().y_index;
 
-        Debug.Log("here");
+        // Remove glowing effect from hexagons that are bordered by water
+        foreach (GameObject hex in hexesBorderingWater)
+        {
+            changeGlowEffect(hex, false);
+        }
 
+        // Find each water hexagon surrounding the chosen hexagon and add a glowing effect to them
         hexes = getSurroundingHexes(x, y);
-
         for (int index = 0; index < hexes.Length; index++)
         {
             if (template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].resource == -1)
-               availablePortHexes.Add(hexes[index], index);
+            {
+                changeGlowEffect(hexes[index], true);
+                availablePortHexes.Add(hexes[index], index);
+            }
         }
-        
+
         choosingPort = true;
         hexToReceivePort = chosenHex;
-        portGO = Instantiate(portPrefab, new Vector3(0, 0.5F, 0), Quaternion.identity, HexCanvas.transform);
-        Debug.Log("choosePort");
-    }
-
-    public void testNetworkFileHandling()
-    {
-        FileHandler handler = new FileHandler();
-        string fileString = handler.ReadEntireMap(DefaultMapsPath + "/DefaultBoard1.txt");
-        Debug.Log(fileString);
-        handler.saveMap(fileString);
+        currentHexTrans = hexToReceivePort.transform.position;
+        portGO = Instantiate(portPrefab, new Vector3(0, 0, 0), Quaternion.identity, HexCanvas.transform);
+        portGO.GetComponent<Renderer>().enabled = false;
     }
 
     public int changeMouseOverPort(GameObject newHex)
@@ -356,55 +442,45 @@ public class BoardManager : MonoBehaviour
 
         if (availablePortHexes.TryGetValue(newHex, out portSideIndex))
         {
-            Vector3 hexTrans  = hexToReceivePort.transform.position;
-            Vector3 portTrans;
-            Quaternion newRotation;
-
             switch (portSideIndex)
             {
                 
                 case 0:
-                    newRotation = Quaternion.Euler(new Vector3(90, 0, 0));
-                    portGO.transform.rotation = newRotation;
-                    portTrans = portGO.transform.position;
-                    Debug.Log(hexTrans.z + " " + portTrans.z);
-                    portGO.transform.Translate(new Vector3(hexTrans.x - portTrans.x, hexTrans.z - portTrans.z + 0.7f, 0));
+                    
+                    portGO.transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0)); ;
+                    portGO.transform.position = new Vector3(currentHexTrans.x, currentHexTrans.y, currentHexTrans.z + .7f);
                     Debug.Log(portSideIndex);
                     break;
                 case 1:
-                    newRotation = Quaternion.Euler(new Vector3(90, 0, -60));
-                    portGO.transform.rotation = newRotation;
-                    portTrans = portGO.transform.position;
-                    portGO.transform.Translate(new Vector3(hexTrans.x - portTrans.x + .6f, hexTrans.z - portTrans.z + 1.0f, 0));
+                    portGO.transform.rotation = Quaternion.Euler(new Vector3(90, 0, -60)); ;
+                    portGO.transform.position = new Vector3(currentHexTrans.x + .655f, currentHexTrans.y, currentHexTrans.z + .315f);
                     Debug.Log(portSideIndex);
+
+                    
                     break;
                 case 2:
-                    newRotation = Quaternion.Euler(new Vector3(90, 0, -120));
-                    portGO.transform.rotation = newRotation;
-                    portTrans = portGO.transform.position;
-                    portGO.transform.Translate(new Vector3(hexTrans.x - portTrans.x - .6f, hexTrans.z - portTrans.z - 1.0f, 0));
+                    portGO.transform.rotation = Quaternion.Euler(new Vector3(90, 0, -120)); ;
+                    portGO.transform.position = new Vector3(currentHexTrans.x + .585f, currentHexTrans.y, currentHexTrans.z - .38f);
                     Debug.Log(portSideIndex);
+
                     break;
                 case 3:
-                    newRotation = Quaternion.Euler(new Vector3(90, 0, 0));
-                    portGO.transform.rotation = newRotation;
-                    portTrans = portGO.transform.position;
-                    portGO.transform.Translate(new Vector3(hexTrans.x - portTrans.x, hexTrans.z - portTrans.z - 0.7f, 0));
+                    portGO.transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0)); ;
+                    portGO.transform.position = new Vector3(currentHexTrans.x, currentHexTrans.y, currentHexTrans.z - .7f);
                     Debug.Log(portSideIndex);
+
                     break;
                 case 4:
-                    newRotation = Quaternion.Euler(new Vector3(90, 0, 120));
-                    portGO.transform.rotation = newRotation;
-                    portTrans = portGO.transform.position;
-                    portGO.transform.Translate(new Vector3(hexTrans.x - portTrans.x + .6f, hexTrans.z - portTrans.z - 1.0f, 0));
+                    portGO.transform.rotation = Quaternion.Euler(new Vector3(90, 0, 120)); ;
+                    portGO.transform.position = new Vector3(currentHexTrans.x - .585f, currentHexTrans.y, currentHexTrans.z - .38f);
                     Debug.Log(portSideIndex);
+
                     break;
                 case 5:
-                    newRotation = Quaternion.Euler(new Vector3(90, 0, 60));
-                    portGO.transform.rotation = newRotation;
-                    portTrans = portGO.transform.position;
-                    portGO.transform.Translate(new Vector3(hexTrans.x - portTrans.x - .6f, hexTrans.z - portTrans.z + 1.0f, 0));
+                    portGO.transform.rotation = Quaternion.Euler(new Vector3(90, 0, 60)); ;
+                    portGO.transform.position = new Vector3(currentHexTrans.x - .655f, currentHexTrans.y, currentHexTrans.z + .315f);
                     Debug.Log(portSideIndex);
+
                     break;
 
             }
@@ -432,8 +508,27 @@ public class BoardManager : MonoBehaviour
         resetPortAddingChanges();
     }
 
-    private void resetPortAddingChanges()
+    private void resetPortAddingChanges()       // Glowing effect code added
     {
+        // Remove glowing effect from water hexagons surrounding chosen hexagon if necessary
+        if (choosingPort == true)
+        {
+            Dictionary<GameObject, int>.KeyCollection hexes = availablePortHexes.Keys;
+            foreach(GameObject hex in hexes)
+            {
+                changeGlowEffect(hex, false);
+            }
+        }
+
+        // Remove glowing effect from hexagons bordered by water if necessary
+        else
+        {
+            foreach (GameObject hex in hexesBorderingWater)
+            {
+                changeGlowEffect(hex, false);
+            }
+        }
+
         mousedOverHex = null;
         portGO = null;
         hexToReceivePort = null;
@@ -441,6 +536,21 @@ public class BoardManager : MonoBehaviour
         hexesBorderingWater.Clear();
         addPortEnabled = false;
         choosingPort = false;
+    }
+
+    private void changeGlowEffect(GameObject hex, bool turningOn)
+    {
+        // Turn glowing effect on
+        if (turningOn)
+        {
+
+        }
+
+        // Turn glowing effect off
+        else
+        {
+
+        }
     }
 
     public GameObject[] getSurroundingHexes(int x, int y)
@@ -551,7 +661,6 @@ public class BoardManager : MonoBehaviour
 
                     if (bordersWater == true)
                     {
-                        template.hex[x, y].hex_go.GetComponentInChildren<Renderer>().material.color = Color.cyan;
                         hexesBorderedByWater.Add(template.hex[x, y].hex_go);
                     }
                     bordersWater = false;
@@ -667,7 +776,8 @@ public class BoardManager : MonoBehaviour
         if (mapErrors.Contains(MISSING_DICE_NUMS_ERROR))
             addRandomDiceNums();
         if (mapErrors.Contains(WARNINGS_ERROR))
-            ignoreAllWarnings();
+            ignoreWarnings = true;
+        SaveBoard();
     }
 
     public void returnAndFixErrors()
@@ -683,35 +793,71 @@ public class BoardManager : MonoBehaviour
         appendAndSaveBtn.gameObject.SetActive(false);
         enterNewNameBtn.gameObject.SetActive(false);
         boardCreationCanvas.gameObject.SetActive(false);
-
-        newNameField.gameObject.SetActive(false);
         
         confirmNewNameBtn.gameObject.SetActive(true);
         newNameField.gameObject.SetActive(true);
-        mapNameErrorText.text = "Please Enter a new name";
+        mainErrorText.text = "\n\n\nPlease Enter a new name";
          
     }
 
     public void appendNameAndSaveMap()
     {
         name = mapNameField.text;
-        mapNameField.text = name + "(" + numToAppendToName + ")";
+        mapNameField.text     = name + "(" + numToAppendToName + ")";
+        nameAppended = true;
         SaveBoard();
     }
 
     public void confirmNewName()
     {
         string newName = newNameField.text;
-
+        Debug.Log("here");
         if (newName != "")
         {
             mapNameField.text = newName;
             SaveBoard();
+            newNameField.text = "";
         }
+        
+    }
+
+    public int findNumberToAppendToName(string mapName, int max_number)           //vvvvvvvvvvvvvvvv entire function added
+    {
+        List<HexTemplate> maps = new List<HexTemplate>();
+        FileHandler fileChecker = new FileHandler();
+        int savedMapsStartindex = 0;
+        int firstAvailableNumber = -1;
+        bool numberUnused = true;
+
+        // Search for an number that has not yet been appended onto
+        // the same name
+        maps = fileChecker.getAllMaps(out savedMapsStartindex);
+        int index;
+        for (index = 2; index <= max_number; index++)
+        {
+            numberUnused = true;
+            for (int i = savedMapsStartindex; i < maps.Count; i++)
+            {
+                if (String.Compare(maps[i].mapName, mapName + "(" + index + ")") == 0)
+                {
+                    numberUnused = false;
+                    i = maps.Count;
+                }
+            }
+
+            if (numberUnused)
+            {
+                firstAvailableNumber = index;
+                index = max_number + 1;
+            }
+        }
+        return firstAvailableNumber;
     }
 
     private void displayAnyErrors(List<int> errors, string mapName)
     {
+        bool boardErrorExists = false;
+
         boardCreationCanvas.gameObject.SetActive(false);
         errorsCanvas.enabled = true;
         addRandomDesertBtn.gameObject.SetActive(false);
@@ -722,71 +868,30 @@ public class BoardManager : MonoBehaviour
         appendAndSaveBtn.gameObject.SetActive(false);
         enterNewNameBtn.gameObject.SetActive(false);
         confirmNewNameBtn.gameObject.SetActive(false);
-        mapNameErrorText.enabled = false;
+        mainErrorText.enabled = false;
         missingDesertText.enabled = false;
         missingDiceNumsText.enabled = false;
         warningsErrorText.enabled = false;
         newNameField.gameObject.SetActive(false);
+        okayBtn.gameObject.SetActive(false);       //++++++++++++++++++++++++++++
 
-        // Handle map name error when it is the only error left
-        if (errors.Count == 1 && errors.Contains(MAP_NAME_CONFLICT_ERROR))
+        // Print error if the map has less than the minimum number of hexagons
+        if (errors.Contains(TOO_FEW_HEXES_ERROR))      //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         {
-            List<HexTemplate> maps = new List<HexTemplate>();
-            FileHandler fileChecker = new FileHandler();
-            int savedMapsStartindex = 0;
-            bool numberUnused = true;
-
-            // Search for an number that has not yet been appended onto
-            // the same name
-            maps = fileChecker.getAllMaps(out savedMapsStartindex);
-            int index;
-            for (index = 2; index <= MAX_MAPS_WITH_SAME_NAME; index++)
-            {
-                numberUnused = true;
-                for (int i = savedMapsStartindex; i < maps.Count; i++)
-                {
-                    if (String.Compare(maps[i].mapName, mapName + "(" + index + ")") == 0)
-                    {
-                        numberUnused = false;
-                        i = maps.Count;
-                    }
-                }
-
-                if (numberUnused)
-                {
-                    numToAppendToName = index;
-                    index = MAX_MAPS_WITH_SAME_NAME + 1;
-                }
-            }
-            mapNameErrorText.enabled = true;
-
-            // If a valid within the limit was found display choice message
-            if (numberUnused)
-            {
-                appendAndSaveBtn.gameObject.SetActive(true);
-                enterNewNameBtn.gameObject.SetActive(true);
-                mapNameErrorText.text = "Error: Map already exists with the name " + mapName + "." +
-                                      "\nMap will be saved as " + mapName + "(" + numToAppendToName + ").";
-            }
-            else
-            {
-                confirmNewNameBtn.gameObject.SetActive(false);
-                newNameField.gameObject.SetActive(true);
-                mapNameErrorText.text = "Error: This map name has been used too many times." +
-                                      "\nPlease enter a different name.";
-            }                        
+            mainErrorText.enabled = true;
+            mainErrorText.text = "Please add more tiles to this map." +
+                               "\nA map must have at least " + MINIMUM_HEXES + " tiles.";
+            okayBtn.gameObject.SetActive(true);
         }
         else
         {
-            autoFixAllBtn.gameObject.SetActive(true);
-            returnAndFixBtn.gameObject.SetActive(true);
-
             if (errors.Contains(MISSING_DESERT_ERROR))
             {
                 addRandomDesertBtn.gameObject.SetActive(true);
                 missingDesertText.enabled = true;
                 missingDesertText.text =
                     "Error: This map contains no desert resource. A desert resource is required.";
+                boardErrorExists = true;
             }
 
             if (errors.Contains(MISSING_DICE_NUMS_ERROR))
@@ -794,6 +899,7 @@ public class BoardManager : MonoBehaviour
                 addRandomDiceNumsBtn.gameObject.SetActive(true); ;
                 missingDiceNumsText.enabled = true;
                 missingDiceNumsText.text = "Error: Not all active map tiles have dice numbers assigned.";
+                boardErrorExists = true;
             }
 
             if (errors.Contains(WARNINGS_ERROR))
@@ -801,6 +907,62 @@ public class BoardManager : MonoBehaviour
                 ignoreWarningsBtn.gameObject.SetActive(true);
                 warningsErrorText.enabled = true;
                 warningsErrorText.text = "Error: Some unused resources and dice numbers. Gameplay will be affected.";
+                boardErrorExists = true;
+            }
+
+            if (boardErrorExists)
+            {
+                autoFixAllBtn.gameObject.SetActive(true);
+                returnAndFixBtn.gameObject.SetActive(true);
+            }
+
+            // Handle map name errors if any exist
+            else
+            {
+                if (errors.Contains(NAME_FORMAT_ERROR))
+                {
+                    mainErrorText.enabled = true;
+
+                    
+                    confirmNewNameBtn.gameObject.SetActive(true);
+                    newNameField.gameObject.SetActive(true);
+                    mainErrorText.text = "Error: This map name is not in the proper format" +
+                                       "\nNames can only contain letters and spaces" +
+                                       "\nPlease enter a different name.";
+                }
+
+                else if (errors.Contains(NAME_FILTER_ERROR))
+                {
+                    mainErrorText.enabled = true;
+
+                    confirmNewNameBtn.gameObject.SetActive(true);
+                    newNameField.gameObject.SetActive(true);
+                    mainErrorText.text = "Error: This map name did not pass the filter" +
+                                       "\nPlease enter a different name.";
+                }
+
+                else if (errors.Contains(MAP_NAME_CONFLICT_ERROR))
+                {
+                    numToAppendToName = findNumberToAppendToName(mapName, MAX_MAPS_WITH_SAME_NAME);    //+++++++++++++++++++++++
+
+                    mainErrorText.enabled = true;
+
+                    // If a valid within the limit was found display choice message
+                    if (numToAppendToName >= 0)                         //++++++++++++++++++++++++++
+                    {
+                        appendAndSaveBtn.gameObject.SetActive(true);
+                        enterNewNameBtn.gameObject.SetActive(true);
+                        mainErrorText.text = "Error: Map already exists with the name " + mapName + "." +
+                                              "\nMap will be saved as " + mapName + "(" + numToAppendToName + ").";
+                    }
+                    else
+                    {
+                        confirmNewNameBtn.gameObject.SetActive(false);
+                        newNameField.gameObject.SetActive(true);
+                        mainErrorText.text = "Error: This map name has been used too many times." +
+                                              "\nPlease enter a different name.";
+                    }
+                }
             }
         }
     }
@@ -846,15 +1008,16 @@ public class BoardManager : MonoBehaviour
 
     public void ModifyMap()
     {
+        nameAppended = false;
         boardSelctionCanvasMOD.enabled = false;
         boardCreationCanvas.enabled = true;
         boardCreationCanvas.gameObject.SetActive(true);
         mapNameField.text = "";
         FileHandler reader = new FileHandler();
         if (board_index < savedMapsStartindex)
-            template = reader.retrieveMap(DefaultMapsPath + "/" + maps[board_index].mapName + ".txt");
+            template = reader.retrieveMap(maps[board_index].mapName, true);
         else
-            template = reader.retrieveMap(SavedMapsPath + "/" + maps[board_index].mapName + ".txt");
+            template = reader.retrieveMap(maps[board_index].mapName, false);
         SpawnBoard(template);
     }
 
@@ -993,6 +1156,9 @@ public class BoardManager : MonoBehaviour
 
     public void ChangeDisplayedMap(int desiredIndex)
     {
+        MissingScreenShotTextPG.enabled = false;
+        MissingScreenShotTextMOD.enabled = false;
+
         if (desiredIndex == RIGHT && board_index < (maps.Length - 1))
             board_index += 1;
         else if (desiredIndex == LEFT && board_index > 0)
@@ -1005,10 +1171,15 @@ public class BoardManager : MonoBehaviour
             mapNameTextPG.text = maps[board_index].mapName;
             mapDetailsTextPG.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
                                     "Maximum Victory Points: " + maps[board_index].maxVP;
-            if (screenShots[board_index] != null)
+
+            if (screenShots[board_index] != null)                  //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                 MapScreenShortImagePG.sprite = screenShots[board_index];
             else
+            {
                 MapScreenShortImagePG.sprite = null;
+                MissingScreenShotTextPG.text = "No preview available";
+                MissingScreenShotTextPG.enabled = true;
+            }
 
         }
         else
@@ -1016,10 +1187,15 @@ public class BoardManager : MonoBehaviour
             mapNameTextMOD.text = maps[board_index].mapName;
             mapDetailsTextMOD.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
                                     "Maximum Victory Points: " + maps[board_index].maxVP;
-            if (screenShots[board_index] != null)
+
+            if (screenShots[board_index] != null)                 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                 MapScreenShortImageMOD.sprite = screenShots[board_index];
             else
+            {
                 MapScreenShortImageMOD.sprite = null;
+                MissingScreenShotTextMOD.text = "No preview available";
+                MissingScreenShotTextMOD.enabled = true;
+            }
         }
         
     }
@@ -1029,7 +1205,33 @@ public class BoardManager : MonoBehaviour
         List<int> errors = new List<int>();
         List<HexTemplate> maps = new List<HexTemplate>();
         FileHandler fileChecker = new FileHandler();
+        NameChecker nameChecker = new NameChecker();    //++++++++++++++++++++++++++
+        string formattedName = "";
         int savedMapsStartindex = 0;
+        int totalHexes = 0;                                    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+        if (nameAppended == false)
+        {
+            if (nameChecker.passesFormatCheck(newMapName, out formattedName))
+            {
+                if (nameChecker.passesFilter(formattedName) == false)
+                {
+                    errors.Add(NAME_FILTER_ERROR);
+                }
+            }
+            else
+            {
+                errors.Add(NAME_FORMAT_ERROR);
+            }
+        }
+
+        // See if the map contains the minimum number of hexagons
+        for (int index = 0; index < resourceCounts.Length; index++)
+        {
+            totalHexes += resourceCounts[index];
+        }
+        if (totalHexes < MINIMUM_HEXES)
+            errors.Add(TOO_FEW_HEXES_ERROR);
 
         // See if a map already exists with the desired name
         maps = fileChecker.getAllMaps(out savedMapsStartindex);
@@ -1069,7 +1271,7 @@ public class BoardManager : MonoBehaviour
         return errors;
     }
 
-    public void SaveBoard()                 // Determine why boards are getting saved twice if you choose to auto fix all errors
+    public void SaveBoard()
     {
         string mapName;
         string warnings;
@@ -1119,15 +1321,19 @@ public class BoardManager : MonoBehaviour
 
     public void addRandomDiceNums()
     {
-        randomizeBoard(template, false, true, false);
+        template = randomizeDiceNumsInEditor();
     }
 
-    private HexTemplate randomizeBoard(HexTemplate template, bool randomizeResources,
-                                       bool randomizeDiceNums, bool completedBoard)
+    private HexTemplate randomizeDiceNumsInEditor()
     {
-        int randomNum;
-        Hex desertHex = null; // Desert hex that is temporarily removed from list during randomization
         List<Hex> landHexes = new List<Hex>();
+        int hexRandomNum;
+        int diceRandomNum;
+        List<int> diceNums = new List<int>()
+        {
+            2, 3, 4, 5, 6, 8, 9, 10, 11, 12
+        };
+        List<int> availableDiceNums = new List<int>(diceNums);
 
         // Form a list of all land hexagons
         for (int x = 0; x < WIDTH; x++)
@@ -1141,131 +1347,35 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        // Randomize a completed board according to the number of each resource
-        // and the number of each dice number in original
-        if (completedBoard)
+        // Reset all resource and dice number counts
+        for (int index = 0; index < diceNumCounts.Length; index++)
         {
-            if (randomizeResources == true)
-            {
-                List<int> availableResourceNums = new List<int>(); // List from which numbers will be drawn
-
-                // Gather all resources in the original template
-                foreach (Hex hex in landHexes)
-                {
-                    if (hex.resource != 5)
-                    {
-                        availableResourceNums.Add(hex.resource);
-                    }
-                }
-
-                // Randomly choose a hexagon to be desert and remove it from the list
-                // temporarily in order to preserve it
-                randomNum = UnityEngine.Random.Range(0, availableResourceNums.Count);
-                landHexes[randomNum].resource = 5;
-                landHexes[randomNum].setDiceNum(7);
-                desertHex = landHexes[randomNum];
-                landHexes.Remove(desertHex);
-
-                // Randomly assign available resource numbers to hexagons
-                foreach (Hex hex in landHexes)
-                {
-                    if (availableResourceNums.Count > 0)
-                    {
-                        randomNum = UnityEngine.Random.Range(0, availableResourceNums.Count);
-                        hex.resource = availableResourceNums[randomNum];
-                        availableResourceNums.Remove(availableResourceNums[randomNum]);
-                    }
-                    else
-                    {
-                        Debug.Log("Error assigning resource numbers randomly: In fucntion randomizeBoard.");
-                    }
-                }
-                landHexes.Add(desertHex);
-            }
-
-
-            if (randomizeDiceNums == true)
-            {
-                List<int> availableDiceNums = new List<int>(); // List from which numbers will be drawn
-
-                // Gather all dice numbers in the original template
-                foreach (Hex hex in landHexes)
-                {
-                    if (hex.resource == 5)
-                    {
-                        desertHex = hex;
-                    }
-                    else
-                    {
-                        availableDiceNums.Add(hex.dice_number);
-                    }
-                }
-
-                // Temporarily remove desert hexagon to preserve dice number
-                landHexes.Remove(desertHex);
-
-                // Randomly assign available dice numbers to hexagons
-                foreach (Hex hex in landHexes)
-                {
-                    if (availableDiceNums.Count > 0)
-                    {
-                        randomNum = UnityEngine.Random.Range(0, availableDiceNums.Count);
-                        hex.dice_number = availableDiceNums[randomNum];
-                        availableDiceNums.Remove(availableDiceNums[randomNum]);
-                    }
-                    else
-                    {
-                        Debug.Log("Error assigning dice numbers randomly: In fucntion randomizeBoard.");
-                    }
-                }
-                landHexes.Add(desertHex);
-            }
+            diceNumCounts[index] = 0;
         }
 
-        // Randomize dice numbers without regard to current setup (completedBoard == false)
-        else
+        // Randomly assign available resource numbers to hexagons
+        while (landHexes.Count > 0)
         {
-            if (randomizeDiceNums == true)
+            if (availableDiceNums.Count == 0)
             {
-                int hexRandomNum;
-                int diceRandomNum;
-                List<int> diceNums = new List<int>()
-                {
-                    2, 3, 4, 5, 6, 8, 9, 10, 11, 12
-                };
-                List<int> availableDiceNums = new List<int>(diceNums);
-
-                // Reset all resource and dice number counts
-                for (int index = 0; index < diceNumCounts.Length; index++)
-                {
-                    diceNumCounts[index] = 0;
-                }
-
-                // Randomly assign available resource numbers to hexagons
-                while (landHexes.Count > 0)
-                {
-                    if (availableDiceNums.Count == 0)
-                    {
-                        availableDiceNums.AddRange(diceNums);
-                    }
-                    hexRandomNum = UnityEngine.Random.Range(0, landHexes.Count);
-                    diceRandomNum = UnityEngine.Random.Range(0, availableDiceNums.Count);
-                    if (landHexes[hexRandomNum].resource == 5)
-                    {
-                        landHexes.Remove(landHexes[hexRandomNum]);
-                        diceNumCounts[5] += 1;
-                    }
-                    else
-                    {
-                        landHexes[hexRandomNum].dice_number = availableDiceNums[diceRandomNum];
-                        diceNumCounts[availableDiceNums[diceRandomNum] - 2] += 1;
-                        landHexes[hexRandomNum].hex_go.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = DiceNumImages[availableDiceNums[diceRandomNum] - 2];
-                        landHexes.Remove(landHexes[hexRandomNum]);
-                        availableDiceNums.Remove(availableDiceNums[diceRandomNum]);
-                    }
-                    printAnyWarnings();
-                }
+                availableDiceNums.AddRange(diceNums);
             }
+            hexRandomNum = UnityEngine.Random.Range(0, landHexes.Count);
+            diceRandomNum = UnityEngine.Random.Range(0, availableDiceNums.Count);
+            if (landHexes[hexRandomNum].resource == 5)
+            {
+                landHexes.Remove(landHexes[hexRandomNum]);
+                diceNumCounts[5] += 1;
+            }
+            else
+            {
+                landHexes[hexRandomNum].dice_number = availableDiceNums[diceRandomNum];
+                diceNumCounts[availableDiceNums[diceRandomNum] - 2] += 1;
+                landHexes[hexRandomNum].hex_go.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = DiceNumImages[availableDiceNums[diceRandomNum] - 2];
+                landHexes.Remove(landHexes[hexRandomNum]);
+                availableDiceNums.Remove(availableDiceNums[diceRandomNum]);
+            }
+            printAnyWarnings();
         }
         return template;
     }
@@ -1376,9 +1486,6 @@ public class BoardManager : MonoBehaviour
                 }
                 else
                 {
-                    //template.hex[x, y].hex_go.transform.GetChild(0).gameObject.AddComponent<Texture>();
-                    //template.hex[x, y].hex_go.transform.GetChild(0).gameObject.GetComponent<Texture>(). = port;
-
                     template.hex[x, y].hex_go.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = null;
 
                 }
@@ -1394,8 +1501,9 @@ public class BoardManager : MonoBehaviour
                 {
                     GameObject[] hexes = getSurroundingHexes(x, y);
 
-                    hexes[template.hex[x, y].portSide].GetComponentInChildren<Renderer>().material.color = Color.magenta;
-                    addPort(hexes[template.hex[x, y].portSide]);
+                    chooseHexForPort(template.hex[x, y].hex_go);
+                    addPort(hexes[template.hex[x,y].portSide]);
+                    template.hex[x, y].portGO.GetComponent<Renderer>().enabled = true;
                 }
             }
         }
@@ -1410,42 +1518,78 @@ public class BoardManager : MonoBehaviour
         errorsCanvas.enabled = false;
 
         RenderTexture rt = new RenderTexture(SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH, 24);
-        Camera.main.targetTexture = rt;
+        screenShotCamera.targetTexture = rt;                                   //+++++++++++++++++++++++++++++++++++++
         Texture2D screenShot = new Texture2D(SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH, TextureFormat.RGB24, false);
-        Camera.main.Render();
+        screenShotCamera.Render();                   //+++++++++++++++++++++++++++++++++++++
         RenderTexture.active = rt;
         screenShot.ReadPixels(new Rect(0, 0, SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH), 0, 0);
-        Camera.main.targetTexture = null;
+        screenShotCamera.targetTexture = null;                          //+++++++++++++++++++++++++++++++++++++
         RenderTexture.active = null; // JC: added to avoid errors
         Destroy(rt);
         byte[] bytes = screenShot.EncodeToPNG();
-        string filename = "Assets/SavedMaps/" + mapName + ".png";
+        string filename = Application.dataPath + "/SavedMaps/" + mapName + ".png";  // +++++++++++++++++++++++++++
         System.IO.File.WriteAllBytes(filename, bytes);
         Debug.Log(string.Format("Took screenshot to: {0}", filename));
+        boardCreationCanvas.gameObject.SetActive(false);
     }
 
-    public void goToGameLobby()
+   public void goToGameLobby()
+	{	
+		UnityEngine.SceneManagement.SceneManager.LoadScene("Game Lobby");
+	}
+
+	public void goToCharacterSelect()
 	{
-      NetworkManager networkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>(); // SILAS
-      networkObject.setupGameSettings(numOfPlayers, (int)turnTimerMax, victoryPoints, GameNameINPT.text, maps[board_index].mapName, template); // SILAS
-		UnityEngine.SceneManagement.SceneManager.LoadScene("Network Lobby");
+		UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
 	}
 	
 	public void netLobbyCanvasOn()
 	{
-		UnityEngine.SceneManagement.SceneManager.LoadScene(3);
+		UnityEngine.SceneManagement.SceneManager.LoadScene("Network Lobby");
 	}
 	
 	public void changeNumOfPlayers()
 	{
 		numOfPlayers = (int)numOfPlayersSlider.value;
+		numOfPlayersValueText.text = numOfPlayers.ToString();
 	}
 	public void changeVP()
 	{
 		victoryPoints = (int)numOfVPSlider.value;
+		numOfVPValueText.text = victoryPoints.ToString();
 	}
 	public void changeTimerValue()
 	{
-		turnTimerMax = turnTimerSlider.value;
+		turnTimerMax = (int)turnTimerSlider.value;
+		turnTimerValueText.text = turnTimerMax.ToString();
+	}
+
+	public void toggleCharacterAbilities()
+	{
+		characterAbilitiesOn = characterAbilitiesToggle.isOn;
+	}
+
+	public void toggleTurnTimer()
+	{
+		turnTimerOn = turnTimerToggleLocal.isOn;
+	}
+
+	public void showConditionalButtons() //***********
+	{
+		if(NavigationScript.networkGame == true)
+		{
+			turnTimerToggleLocal.gameObject.SetActive(false);
+			turnTimerToggleText.enabled = false;
+			characterSelectButtonLocal.gameObject.SetActive(false);
+			gameLobbyNameNetwork.gameObject.SetActive(true);
+			gameLobbyButtonNetwork.enabled = true;
+		}
+		else
+		{
+			turnTimerToggleLocal.gameObject.SetActive(true);
+			characterSelectButtonLocal.enabled = true;
+			gameLobbyButtonNetwork.gameObject.SetActive(false);
+			gameLobbyNameNetwork.gameObject.SetActive(false);
+		}	
 	}
 }

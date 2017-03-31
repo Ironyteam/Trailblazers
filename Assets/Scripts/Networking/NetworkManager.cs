@@ -29,31 +29,16 @@ public class NetworkManager : MonoBehaviour
    public GameObject gameListCanvas;
    public GameObject playerInfoPanel;
    NetworkGame myGame;
-   HexTemplate gameMap;
    public GameBoard mapObject; // Used to find the GameObject
 
    public Text messageLog;
    public Text ipField;
-
-   // Buttons for Network Lobby scene
-   public Button connectServerBTN;
-   public Button hostGameBTN;
-   public Button refreshGameListBTN;
-   public Button cancelHostingBTN;
-   public Button startGameBTN;
-   public Button createGameBTN;
 
    // Game settings input fields
    public Text gameName;
    public Text maxPlayers;
    public Text gamePassword;
    public Text mapName;
-
-   public string gameNameTemp = "Default";
-   public string numberOfPlayersTemp = "0";
-   public string maxPlayersTemp = "0";
-   public string passwordTemp = "Default";
-   public string mapNameTemp = "Default";
 
    #endregion
 
@@ -85,69 +70,16 @@ public class NetworkManager : MonoBehaviour
       requestGameList("172.16.51.127~Name~4~5~passwod~map");
 
       myPlayer = new Player("DefaultName");
-
-      // Hook up all buttons if in lobby screen
-
    }
 
-   private void OnEnable()
-   {
-      SceneManager.sceneLoaded += hookUpLobbyFunctionality;
-   }
-
-   private void OnDisable()
-   {
-      SceneManager.sceneLoaded -= hookUpLobbyFunctionality;
-   }
-
-   private void hookUpLobbyFunctionality(Scene scene, LoadSceneMode mode)
-   {
-      if (scene.name == "Network Lobby")
-      {
-         // UI linkups, panels and fields
-         gameInfoPanel = Resources.Load("GameInfoPNL") as GameObject;
-         gameListCanvas = GameObject.Find("ContentPNL");
-         playerInfoPanel = Resources.Load("PlayerInfoPNL") as GameObject;
-         messageLog = GameObject.Find("MessageLogTXT").GetComponent<UnityEngine.UI.Text>();
-         ipField = GameObject.Find("ipTXT").GetComponent<UnityEngine.UI.Text>();
-//         gameName = GameObject.Find("gameTXT").GetComponent<UnityEngine.UI.Text>();
-//         maxPlayers = GameObject.Find("maxPlayersTXT").GetComponent<UnityEngine.UI.Text>();
-//         gamePassword = GameObject.Find("passwordTXT").GetComponent<UnityEngine.UI.Text>();
-//         mapName = GameObject.Find("mapTXT").GetComponent<UnityEngine.UI.Text>();
-
-         // Buttons linkup
-         connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
-         connectServerBTN.onClick.AddListener(() => connectToServerBTN());
-         hostGameBTN = GameObject.Find("HostGameBTN").GetComponent<Button>();
-         hostGameBTN.onClick.AddListener(() => hostGame());
-         refreshGameListBTN = GameObject.Find("RefreshBTN").GetComponent<Button>();
-         refreshGameListBTN.onClick.AddListener(() => requestGameListServer());
-         cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
-         cancelHostingBTN.onClick.AddListener(() => cancelGame());
-         createGameBTN = GameObject.Find("CreateGameBTN").GetComponent<Button>();
-         createGameBTN.onClick.AddListener(() => createGame());
-         startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
-         startGameBTN.onClick.AddListener(() => startGame());
-         if (!isHostingGame)
-            startGameBTN.gameObject.SetActive(false);
-
-         GameObject.Find("Network Handler").GetComponent<NetworkManager>();
-         Debug.Log("Loaded Network Lobby");
-      }
-      else if (scene.name == "In Game Scene Local")
-      {
-            mapObject = GameObject.Find("Map").GetComponent<GameBoard>();
-      }
-   }
-
-   #region Temp Functions
+#region Temp Functions
    // Function to name player for button TEST
    public void namePlayer()
    {
       // Will eventually be what you name is
    }
    // Function to allow a testing button press, as inpector doesn't allow button function calls that have parameters TEST
-   public void connectToServerBTN()
+   public void connecToServerBTN()
    {
       connectToGame(ipField.text);
    }
@@ -158,52 +90,36 @@ public class NetworkManager : MonoBehaviour
    {
       byte error;
       Debug.Log("\n" + "Trying to connect to: " + ipAddress);
-      connectionId = NetworkTransport.Connect(socketId, ipAddress, socketPort, 0, out error);
+      connectionId = NetworkTransport.Connect(0, ipAddress, socketPort, 0, out error);
       Debug.Log("\n" + "ConnectionID: " + connectionId);
-   }
-
-   // Create a empty game
-   public void createGame()
-   {
-      isHostingGame = true;
-      myGame = new NetworkGame();
-   }
-
-   // Set the values recieved from BoardManager
-   public void setupGameSettings(int totalPlayers, int turnTimer, int victoryPoints, string gameName, string mapName, HexTemplate map)
-   {
-      myGame.maxPlayers = totalPlayers.ToString();
-      myGame.turnTimer  = turnTimer.ToString();
-      myGame.numberOfVictoryPoints = victoryPoints.ToString();
-      myGame.gameName   = gameName;
-      myGame.mapName    = mapName;
-      gameMap = map;
-        Debug.Log("Setting up game" + gameName + totalPlayers.ToString() + turnTimer.ToString() + victoryPoints.ToString());
    }
 
    // Send game info to the server
    public void hostGame()
    {
-      if (isHostingGame)
+      if (!isHostingGame)
       {
          string gameInfo;
          isHostingGame = true;
-         startGameBTN.gameObject.SetActive(true);
+
+         // Initialize the network game for hosting
+         myGame = new NetworkGame()
+         {
+            gameName = gameName.text,
+            numberOfPlayers = "0",
+            maxPlayers = maxPlayers.text,
+            password = gamePassword.text,
+            mapName = mapName.text
+         };
 
          gameInfo = Constants.addGame + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myGame.gameName +
-         Constants.gameDivider + "0" + Constants.gameDivider + myGame.maxPlayers + Constants.gameDivider + myGame.password + Constants.gameDivider + myGame.mapName;
+            Constants.gameDivider + "0" + Constants.gameDivider + myGame.maxPlayers + Constants.gameDivider + myGame.password + Constants.gameDivider + myGame.mapName;
          sendSocketMessage(gameInfo, serverConnectionID);
       }
       else
       {
          Debug.Log("\nError: Already hosting a game.");
       }
-   }
-
-   public void startGame()
-   {
-      sendActionToClients(Constants.gameStarted, 0);
-      UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
    }
 
    // Send a socket message to connectionId
@@ -233,6 +149,8 @@ public class NetworkManager : MonoBehaviour
       byte error;
       NetworkEventType recNetworkEvent = NetworkTransport.Receive(out recHostId, out recConnectionId, out recChannelId, recBuffer, bufferSize, out dataSize, out error);
 
+      if (mapObject == null && Application.loadedLevel == 1)
+         mapObject = GameObject.Find("Map").GetComponent<GameBoard>();
 
       switch (recNetworkEvent)
       {
@@ -271,8 +189,6 @@ public class NetworkManager : MonoBehaviour
             removeGame(gameInfo[1]);
             break;
          case Constants.gameStarted:       // #, ipAddress
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
-            break;
          case Constants.gameEnded:         // #, ipAddress
          case Constants.characterSelect:   // #, character
             break;
@@ -412,7 +328,6 @@ public class NetworkManager : MonoBehaviour
       if (isHostingGame)
       {
          isHostingGame = false;
-         startGameBTN.gameObject.SetActive(false);
          sendSocketMessage(Constants.cancelGame + Constants.commandDivider + Network.player.ipAddress, serverConnectionID);
       }
    }
@@ -475,15 +390,20 @@ public class NetworkManager : MonoBehaviour
    public void sendBuildSettlement(int x, int y, int targetID = hostConnectionID)
    {
       string message = Constants.buildSettlement + Constants.commandDivider + x + Constants.gameDivider + y;
-      if (isHostingGame)
+      if (!isHostingGame)
+      {
          sendSocketMessage(message, targetID);
+      }
       else
+      {
          sendActionToClients(message, 0);
+      }
    }
 
    public void sendUpgradeToCity(int x, int y, int targetID = hostConnectionID)
    {
-      string message = Constants.upgradeToCity + Constants.commandDivider + x + Constants.gameDivider + y;  
+      string message = Constants.upgradeToCity + Constants.commandDivider + x + Constants.gameDivider + y;
+
       if (isHostingGame)
          sendSocketMessage(message, targetID);
       else

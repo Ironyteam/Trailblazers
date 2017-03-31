@@ -18,8 +18,6 @@ public class NetworkGame
    public string maxPlayers;
    public string password;
 	public string mapName;
-   public string numberOfVictoryPoints;
-   public string turnTimer;
 
    public bool addPlayer()
    {

@@ -591,6 +591,18 @@ public class Player
         return tempBool;
     }
 
+    public bool CanHireArmy()
+    {
+        bool canBuy = true;
+
+        float cost = Constants.ArmyGoldCost;
+
+        if (Gold < (int)cost)
+            canBuy = false;
+
+        return canBuy;
+    }
+
     // Subtracts the cost to hire an Army from the player's gold amount and adds a Army to the player's total armies.
     public void HireArmy()
     {

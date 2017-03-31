@@ -1,9 +1,4 @@
-DefaultBoard1 8 12
-DefaultBoard1 8 12
-DefaultBoard1 8 12
-DefaultBoard1 8 12
-DefaultBoard1 8 12
-DefaultBoard1 8 12
-DefaultBoard1 8 12
-DefaultBoard1 8 12
-DefaultBoard1 8 12
+howdy 2 6
+hi(2) 7 11
+hi 4 8
+bob 3 7

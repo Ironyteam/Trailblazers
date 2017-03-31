@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System;
+using System.Text; //+++++++++++++++++++++++++++++++++++++
 
 // Consider changing read to where the dice number is ignored if hex is not used
 // Consider changing default resource from -1 to a 5-9 and reading one character at a time
@@ -18,50 +19,92 @@ public class FileHandler
     const int EOF = -1;
 
     public const string DefaultMapsPath = "Assets/DefaultMaps";
-    public const string SavedMapsPath = "Assets/SavedMaps";
+    public const string SavedMapsPath = "Assets/SavedMaps";                 // Consider removing
 
+    public void checkForFiles()
+    {
+            // Create Saved Maps directory if one does not exist
+            if (!Directory.Exists(Application.dataPath + "/SavedMaps"))
+                Directory.CreateDirectory(Application.dataPath + "/SavedMaps");
+            else
+                Debug.Log("Directory exists");
+
+        // Create map list file if one does not exist
+        if (!File.Exists(Application.dataPath + "/SavedMaps/MapList.txt"))
+        {
+            using (StreamWriter temp = File.CreateText(Application.dataPath + "/SavedMaps/MapList.txt"))
+            {
+                temp.Close();
+            }
+        }
+        else
+            Debug.Log("File exists");
+    }
+
+    public void deleteMap(string name)
+    {
+        List<string> mapNames = new List<string>();
+        List<string> mapInfo = new List<string>();
+
+        try
+        {
+            File.Delete(Application.dataPath + "/SavedMaps/" + name + ".txt");
+            File.Delete(Application.dataPath + "/SavedMaps/" + name + ".png");
+        }
+        catch(Exception)
+        {
+            Debug.Log("Map unlinked but not deleted.");
+        }
+
+        // Get a list of all names in the map list file
+        using (StreamReader reader = File.OpenText(Application.dataPath + "/SavedMaps/MapList.txt"))
+        {
+            string tempString;
+            string[] tempArray;
+
+            while ((tempString = reader.ReadLine()) != null)
+            {
+                mapInfo.Add(tempString);
+                tempArray = tempString.Split(' ');
+                mapNames.Add(tempArray[0]);
+            }
+            reader.Close();
+        }
+
+        // Remove map's name from the list of map names
+        mapInfo.Remove(mapInfo[mapNames.IndexOf(name)]);
+
+        // Rewrite the remaining names to the map list file
+        using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/MapList.txt"))
+        {
+            foreach (string line in mapInfo)
+            {
+                writer.WriteLine(line);
+            }
+            writer.Close();
+        }
+    }
 
     public List<Sprite> getScreenShots(List<string> mapNames, int savedMapsStartIndex)
     {
         List<Sprite> screenShots = new List<Sprite>();
-        bool screenShotFound;
 
-        for (int index = 0; index < mapNames.Count; index++)
+        for (int index = savedMapsStartIndex; index < mapNames.Count; index++)
         {
             byte[] bytes = null;
 
-            if (index < savedMapsStartIndex)
+            try                     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             {
-                try
-                {
-                    bytes = System.IO.File.ReadAllBytes(DefaultMapsPath + "/" + mapNames[index] + ".png");
-                    screenShotFound = true;
-                }
-                catch (Exception e)
-                {
-                    screenShotFound = false;
-                }
-            }
-            else
-                try
-                {
-                    bytes = System.IO.File.ReadAllBytes(SavedMapsPath + "/" + mapNames[index] + ".png");
-                    screenShotFound = true;
-                }
-                catch (Exception e)
-                {
-                    screenShotFound = false;
-                }
-
-            if (screenShotFound)
-            {
+                bytes = System.IO.File.ReadAllBytes(Application.dataPath + "/SavedMaps/" + mapNames[index] + ".png");
                 Texture2D texture = new Texture2D(SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH);
                 texture.filterMode = FilterMode.Trilinear;
                 texture.LoadImage(bytes);
                 screenShots.Add(Sprite.Create(texture, new Rect(0, 0, SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH), new Vector2(0.5f, 0.0f), 1.0f));
             }
-            else
+            catch (Exception)
+            {
                 screenShots.Add(null);
+            }
         }
         return screenShots;
     }
@@ -74,12 +117,12 @@ public class FileHandler
         string tempString;
         string[] hexInfo;
 
-        // Figure out how to make sure the maplist File Exists
-        //if (File.Exists(DefaultMapsPath + "/MapList.txt") == false)
-        //  File.Create(DefaultMapsPath + "/MapList.txt");
-
         // May need to add a try catch in case there are not any files
-        using (StreamReader reader = File.OpenText(DefaultMapsPath + "/MapList.txt"))
+        TextAsset mapList = Resources.Load("DefaultMaps/MapList") as TextAsset;
+        byte[] byteArray = Encoding.UTF8.GetBytes(mapList.text);
+        MemoryStream stream = new MemoryStream(byteArray);
+
+        using (StreamReader reader = new StreamReader(stream))
         {
             while ((tempString = reader.ReadLine()) != null)
             {
@@ -94,8 +137,7 @@ public class FileHandler
 
         savedMapsStartIndex = mapNames.Count;
 
-        // May need to add a try catch in case there are not any files
-        using (StreamReader reader = File.OpenText(SavedMapsPath + "/MapList.txt"))
+        using (StreamReader reader = File.OpenText(Application.dataPath + "/SavedMaps/MapList.txt"))
         {
             while ((tempString = reader.ReadLine()) != null)
             {
@@ -110,24 +152,37 @@ public class FileHandler
         return mapNames;
     }
 
-    public HexTemplate retrieveMap(string mapName)
+    public HexTemplate retrieveMap(string mapName, bool isDefaultMap)
     {
         HexTemplate template = new HexTemplate();
+        StreamReader reader;
         int readChar = 0;
         string current = null;
         string next = null;
         int result = -1;
         int resource = -1;
         int diceNum = -1;
-        
+
+        if (isDefaultMap)
+        {
+            Debug.Log(mapName);
+            TextAsset map = Resources.Load("DefaultMaps/" + mapName) as TextAsset;
+            byte[] byteArray = Encoding.UTF8.GetBytes(map.text);
+            MemoryStream stream = new MemoryStream(byteArray);
+            reader = new StreamReader(stream);
+        }
+        else
+        {
+            reader = File.OpenText(Application.dataPath + "/SavedMaps/" + mapName + ".txt");
+        }
 
         // Modify to do something with the name and creator
-        using (StreamReader reader = File.OpenText(mapName))
+        using (reader)
         {
             List<string> numbers = new List<string>();
 
             // Skip over name and creator
-            reader.ReadLine();
+            template.mapName = reader.ReadLine();
             reader.ReadLine();
 
             template.minVP = Int32.Parse(reader.ReadLine());
@@ -197,12 +252,25 @@ public class FileHandler
 
     // Read a map as one string to send across the network
     // Map name should enclude entire path name and extension
-    public string ReadEntireMap(string mapName)
+    public string ReadEntireMap(string mapName, bool isDefaultBoard)
     {
+        StreamReader reader;
         string fileString;
 
+        if (isDefaultBoard)
+        {
+            TextAsset map = Resources.Load("DefaultMaps/" + mapName) as TextAsset;
+            byte[] byteArray = Encoding.UTF8.GetBytes(map.text);
+            MemoryStream stream = new MemoryStream(byteArray);
+            reader = new StreamReader(stream);
+        }
+        else
+        {
+            reader = File.OpenText(Application.dataPath + "/SavedMaps/" + mapName + ".txt");
+        }
+
         // Modify to do something with the name and creator
-        using (StreamReader reader = File.OpenText(mapName))
+        using (reader)
         {
             fileString = reader.ReadToEnd();
             reader.Close();
@@ -216,7 +284,7 @@ public class FileHandler
     {
         List<string> mapNames = new List<string>();
 
-        using (StreamWriter writer = File.CreateText(SavedMapsPath + "/" + name + ".txt"))
+        using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/" + name + ".txt"))
         {
             writer.WriteLine(name);
             writer.WriteLine(creator);
@@ -238,8 +306,7 @@ public class FileHandler
             writer.Close();
         }
 
-        // May need to add a try catch in case there are not any files
-        using (StreamReader reader = File.OpenText(SavedMapsPath + "/MapList.txt"))
+        using (StreamReader reader = File.OpenText(Application.dataPath + "/SavedMaps/MapList.txt"))
         {
             string tempString;
 
@@ -248,7 +315,7 @@ public class FileHandler
             reader.Close();
         }
 
-        using (StreamWriter writer = File.CreateText(SavedMapsPath + "/MapList.txt"))
+        using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/MapList.txt"))
         {
             writer.WriteLine(name + " " + minVP + " " + maxVP);
             foreach (string mapName in mapNames)
@@ -257,14 +324,13 @@ public class FileHandler
             }
             writer.Close();
         }
-
     }
 
     // Save a board by writing the entire string of another file
     // all at once
     public void saveMap(string rawFileString)
     {
-        List<string> mapNames = new List<string>();
+        List<string> mapNames = new List<string>();         //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Many changes
         string[] fileLines;
         string modifiedFileString;
 

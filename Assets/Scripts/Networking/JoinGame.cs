@@ -13,7 +13,6 @@ public class JoinGame : MonoBehaviour
    void Start ()
    {
       joinBTN.onClick.AddListener(() => StartCoroutine(joinGame()));
-      joinBTN.transform.GetComponentInChildren<Text>().text = "Join";
    }
         
    IEnumerator joinGame()
@@ -24,7 +23,6 @@ public class JoinGame : MonoBehaviour
       networkThing = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
       networkThing.connectToGame(gameTextBoxes[6].text);
       yield return new WaitForSecondsRealtime(2);
-        Debug.Log("CLICKED ON A BUTTON" + gameTextBoxes[6].text);
-        networkThing.requestGameJoin();
+      networkThing.requestGameJoin();
    }
 }

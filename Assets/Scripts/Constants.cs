@@ -20,7 +20,6 @@ public static class Constants
    public const string characterSelect = "7";
    public const string characterResult = "8";
    public const string diceRoll = "9";
-   public const string sendMap = "21";
 
    // In game turn commands
    public const string buildSettlement = "10";
@@ -37,7 +36,7 @@ public static class Constants
    public const string serverKillCode = "1234";
 
 
-   public const int StartingGold      = 150;
+    public const int StartingGold      = 150;
 	public const int StartingResources = 0;
 	public const int GoldPerSettlement = 50;
 	public const int GoldPerCity	   = 50;

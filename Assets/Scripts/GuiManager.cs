@@ -10,7 +10,7 @@ public class GuiManager : MonoBehaviour {
 	public const int LOCAL_PLAYER = 0;
     
     [System.Serializable]
-    public class playerIndicatorClassLocal //*************************
+    public class playerIndicatorClassLocal
     {
 		public bool largestArmyIndicator = false;
 		public bool longestRoadIndicator = false;
@@ -20,18 +20,18 @@ public class GuiManager : MonoBehaviour {
         public int victoryPoints;
 		public int uiPosition;
         public string playerName;
-        public int armyQuantity   = 0,// *********
+        public int armyQuantity   = 0,
 				   brickQuantity  = 0,
 	               goldQuantity   = 100,
 				   oreQuantity    = 0,
 	           	   sheepQuantity  = 0,
 	           	   wheatQuantity  = 0,
 	           	   woodQuantity   = 0,
-				   numOfVictoryPoints = 0;// *********
+				   numOfVictoryPoints = 0;
     }
 
     [System.Serializable]
-	public class screenElements //*******************************
+	public class screenElements
 	{
 		public Canvas playerCanvas;
 		public Image largestArmyIndicator;
@@ -58,20 +58,20 @@ public class GuiManager : MonoBehaviour {
 		          optionsCanvas,
 				  shopCanvas,
 				  barracksCanvas;
-           int armyBuyPrice   = 100,// *********
-			   armySellPrice  = 50,// *********
-			   brickBuyPrice  = 150,// *********
-			   brickSellPrice = 75,// *********
-			   oreBuyPrice    = 150,// *********
-			   oreSellPrice   = 75,// *********
-			   sheepBuyPrice  = 150,// *********
-			   sheepSellPrice = 75,// *********
-			   wheatBuyPrice  = 150,// *********
-			   wheatSellPrice = 75,// *********
-			   woodBuyPrice   = 150,// *********
-			   woodSellPrice  = 75,// *********
-			   currentPlayer  = 0,// *********
- 			   playerNumberCurrent = 1;// *********
+           int armyBuyPrice   = 100,
+			   armySellPrice  = 50,
+			   brickBuyPrice  = 150,
+			   brickSellPrice = 75,
+			   oreBuyPrice    = 150,
+			   oreSellPrice   = 75,
+			   sheepBuyPrice  = 150,
+			   sheepSellPrice = 75,
+			   wheatBuyPrice  = 150,
+			   wheatSellPrice = 75,
+			   woodBuyPrice   = 150,
+			   woodSellPrice  = 75,
+			   currentPlayer  = 0,
+ 			   playerNumberCurrent = 1;
 
 	public int // numOfPlayers,
     	       randomNumber1,
@@ -82,14 +82,18 @@ public class GuiManager : MonoBehaviour {
     
     public playerIndicatorClassLocal[] playerClassLocalArray = new playerIndicatorClassLocal[MAX_NUM_OF_PLAYERS];
 	public screenElements[] screenElementsArray = new screenElements[MAX_NUM_OF_PLAYERS];
+
+    public GameBoard CurrentGameBoard;
     
     void Awake()
     {
-        for(int count = 0; count < BoardManager.numOfPlayers; count++)
+        CurrentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
+
+        for (int count = 0; count < BoardManager.numOfPlayers; count++)
 		{
-			playerClassLocalArray[count].characterPictureName = characterSelect.selectedCharacters[count];//*****************************
+			playerClassLocalArray[count].characterPictureName = characterSelect.selectedCharacters[count];
 			playerClassLocalArray[count].uiPosition = count;
-            screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite> (playerClassLocalArray[count].characterPictureName) as Sprite;//*****************************
+            screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite> (playerClassLocalArray[count].characterPictureName) as Sprite;
 			screenElementsArray[count].largestArmyIndicator.enabled = false;
 			screenElementsArray[count].longestRoadIndicator.enabled = false;
 		}
@@ -97,7 +101,7 @@ public class GuiManager : MonoBehaviour {
 	    gameCanvas.enabled    = true;
 	    escapeCanvas.enabled  = false;
 		optionsCanvas.enabled = false;
-		shopCanvas.enabled    = false;//**********
+		shopCanvas.enabled    = false;
 		barracksCanvas.enabled = false;
     }
 
@@ -117,7 +121,7 @@ public class GuiManager : MonoBehaviour {
                 escapeCanvas.enabled = false;
         }
 
-	    if (Input.GetKeyDown("s"))//**********
+	    if (Input.GetKeyDown("s"))
 		{
 			if(shopCanvas.enabled == false)
 				shopCanvas.enabled = true;
@@ -125,7 +129,7 @@ public class GuiManager : MonoBehaviour {
 				shopCanvas.enabled = false;
 		}
 
-		if (Input.GetKeyDown("b"))//**********
+		if (Input.GetKeyDown("b"))
 		{
 			if(barracksCanvas.enabled == false)
 				barracksCanvas.enabled = true;
@@ -239,40 +243,6 @@ public class GuiManager : MonoBehaviour {
         chatBox.text += '\n' + playerClassLocalArray[playerNumber].playerName + ": " + message;
     }
 
-/*    // Removes a road from roads remaining, and adds a road to roads built for the local player.
-    public void BuildRoad()
-    {
-     // Code to remove a road from roads remaining, and add a road to roads built for the local player. No other player option needed.
-    }
-
-    // Removes a settlement from settlements remaining, and adds a settlement to settlements built for the local player.
-    public void BuildSettlement(int numOfSettlements)
-    {
-     // Code to remove a settlement from settlements remaining, and add a settlement to settlements built for the local player.
-    //    playerClassLocalArray[LOCAL_PLAYER].numOfSettlementsDisplay.text = numOfSettlements.ToString();
-    }
-
-    // Removes a settlement from settlements remaining, and adds a settlement to settlements built for all other players, based on passed player number.
-    public void BuildSettlement(int numOfSettlements, int playerNumber)
-    {
-     // Code to remove a settlement from settlements remaining, and add a settlement to settlements built for all other players, based on passed player number.
-   //     playerClassLocalArray[playerNumber].numOfSettlementsDisplay.text = numOfSettlements.ToString();       
-    }
-
-    // Removes a city from cities remaining, and adds a city to cities built for the local player.
-    public void BuildCity(int numOfCities)
-    {
-     // Code to remove a city from cities remaining, and add a city to cities built for the local player.
- //       playerClassLocalArray[LOCAL_PLAYER].numOfCitiesDisplay.text = numOfCities.ToString();
-    }
-
-    // Removes a city from cities remaining, and adds a city to cities built for all other players, based on passed player number.
-    public void BuildCity(int numOfCities, int playerNumber)
-    {
-     // Code to remove a city from cities remaining, and add a city to cities built for all other players, based on passed player number.
-  //      playerClassLocalArray[playerNumber].numOfCitiesDisplay.text = numOfCities.ToString(); 
-    } */
-
     // Sets the local player to the current winner of the longest road.
 	public int SetLongestRoadWinner(int previousLongestRoad)
     {
@@ -371,7 +341,7 @@ public class GuiManager : MonoBehaviour {
 		{
 	        screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite> (playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].characterPictureName) as Sprite;
 			playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].uiPosition = count;
-		}//*******************************************
+		}
 		if(previousLongestRoad > -1)
 		{
 			if(playerClassLocalArray[previousLongestRoad].uiPosition < BoardManager.numOfPlayers-1)
@@ -409,25 +379,31 @@ public class GuiManager : MonoBehaviour {
 			currentPlayer++;
 		else
 			currentPlayer = 0;
+
+		brickScore.text = playerClassLocalArray[currentPlayer].brickQuantity.ToString();
+		oreScore.text = playerClassLocalArray[currentPlayer].oreQuantity.ToString();
+		wheatScore.text = playerClassLocalArray[currentPlayer].wheatQuantity.ToString();
+		woodScore.text = playerClassLocalArray[currentPlayer].woodQuantity.ToString();
+		sheepScore.text = playerClassLocalArray[currentPlayer].sheepQuantity.ToString();
 	}
 
-	public void moreArmy(int playerNumber)//*****************************
+	public void moreArmy(int playerNumber)
 	{
 		playerClassLocalArray[playerNumber].armyQuantity++;
 	}
 
-	public void lessArmy(int playerNumber)//*****************************
+	public void lessArmy(int playerNumber)
 	{
 		playerClassLocalArray[playerNumber].armyQuantity--;
 	}
 
-    public void moreWheat(int playerNumber)//*****************************
+    public void moreWheat(int playerNumber)
     {
         playerClassLocalArray[playerNumber].wheatQuantity++;
         wheatScore.text = playerClassLocalArray[playerNumber].wheatQuantity.ToString(); 
     }
 
-    public void lessWheat(int playerNumber)//*****************************
+    public void lessWheat(int playerNumber)
     {
         if(playerClassLocalArray[playerNumber].wheatQuantity > 0)
         {
@@ -436,13 +412,13 @@ public class GuiManager : MonoBehaviour {
         }
     }
        
-    public void moreSheep(int playerNumber)//*****************************
+    public void moreSheep(int playerNumber)
     {
         playerClassLocalArray[playerNumber].sheepQuantity++;
         sheepScore.text = playerClassLocalArray[playerNumber].sheepQuantity.ToString();
     }
 
-    public void lessSheep(int playerNumber)//*****************************
+    public void lessSheep(int playerNumber)
     {
         if(playerClassLocalArray[playerNumber].sheepQuantity > 0)
         {
@@ -451,13 +427,13 @@ public class GuiManager : MonoBehaviour {
         }
     }
        
-    public void moreBrick(int playerNumber)//*****************************
+    public void moreBrick(int playerNumber)
     {
         playerClassLocalArray[playerNumber].brickQuantity++;
         brickScore.text = playerClassLocalArray[playerNumber].brickQuantity.ToString();
     } 
 
-    public void lessBrick(int playerNumber)//*****************************
+    public void lessBrick(int playerNumber)
     {
         if(playerClassLocalArray[playerNumber].brickQuantity > 0)
         {
@@ -465,13 +441,13 @@ public class GuiManager : MonoBehaviour {
             brickScore.text = playerClassLocalArray[playerNumber].brickQuantity.ToString();
         }
     }   
-    public void moreWood(int playerNumber)//*****************************
+    public void moreWood(int playerNumber)
     {
         playerClassLocalArray[playerNumber].woodQuantity++;
         woodScore.text = playerClassLocalArray[playerNumber].woodQuantity.ToString();
     }
 
-    public void lessWood(int playerNumber)//*****************************
+    public void lessWood(int playerNumber)
     {
         if(playerClassLocalArray[playerNumber].woodQuantity > 0)
         {
@@ -480,33 +456,18 @@ public class GuiManager : MonoBehaviour {
         }
     }
 
-    public void moreOre(int playerNumber)//*****************************
+    public void moreOre(int playerNumber)
     {
         playerClassLocalArray[playerNumber].oreQuantity++;
         oreScore.text = playerClassLocalArray[playerNumber].oreQuantity.ToString();
     }
 
-	public void randDice(int playerNumber)
+	public void rollDice(int rollOne, int rollTwo)
     {
-        randomNumber1 = randDiceObject.Next(1, 7);
-        randomNumber2 = randDiceObject.Next(1, 7);
-        randomNumberActual = randomNumber1 + randomNumber2;
-
-        if(randomNumberActual == 4 || randomNumberActual == 8 || randomNumberActual == 12 || randomNumberActual == 6 || randomNumberActual == 10 || randomNumberActual == 11)
-        {
-            moreSheep(playerNumber);
-            moreBrick(playerNumber);
-        }
-        else if(randomNumberActual == 3 || randomNumberActual == 2 || randomNumberActual == 5 || randomNumberActual == 7 || randomNumberActual == 9)
-        {
-            moreOre(playerNumber);
-            moreWood(playerNumber);
-            moreWheat(playerNumber);
-        }             
-        diceValue.text = randomNumberActual.ToString();
+        diceValue.text = (rollOne + rollTwo).ToString();
     }
 
-    public void lessOre(int playerNumber)//*****************************
+    public void lessOre(int playerNumber)
     {
         if(playerClassLocalArray[playerNumber].oreQuantity > 0)
         {
@@ -515,19 +476,19 @@ public class GuiManager : MonoBehaviour {
         }
     }
 
-    public void moreGoldSettlement(int playerNumber)//*****************************
+    public void moreGoldSettlement(int playerNumber)
     {
-        playerClassLocalArray[playerNumber].goldQuantity += 20;//*****************************
-        goldScore.text = playerClassLocalArray[playerNumber].goldQuantity.ToString();//*****************************
+        playerClassLocalArray[playerNumber].goldQuantity += 20;
+        goldScore.text = playerClassLocalArray[playerNumber].goldQuantity.ToString();
     }
 
-    public void moreGoldCity(int playerNumber)//*****************************
+    public void moreGoldCity(int playerNumber)
     {
-        playerClassLocalArray[playerNumber].goldQuantity += 50;//*****************************
-        goldScore.text = playerClassLocalArray[playerNumber].goldQuantity.ToString();//*****************************
+        playerClassLocalArray[playerNumber].goldQuantity += 50;
+        goldScore.text = playerClassLocalArray[playerNumber].goldQuantity.ToString();
     }
 
-    public void lessGold(int playerNumber)//*****************************
+    public void lessGold(int playerNumber)
     {
         if(playerClassLocalArray[playerNumber].goldQuantity > 0)
         {
@@ -536,7 +497,7 @@ public class GuiManager : MonoBehaviour {
         }
     }
 
-	public void openShop()// *********
+	public void openShop()
 	{
 		if(shopCanvas.enabled == false)
 			shopCanvas.enabled = true;
@@ -544,12 +505,12 @@ public class GuiManager : MonoBehaviour {
 			shopCanvas.enabled = false;
 	}
 
-	public void closeShop()// *************
+	public void closeShop()
 	{
 		shopCanvas.enabled = false;
 	}
 
-	public void openBaracks()// *********
+	public void openBaracks()
 	{
 		if(barracksCanvas.enabled == false)
 			barracksCanvas.enabled = true;
@@ -557,12 +518,12 @@ public class GuiManager : MonoBehaviour {
 			barracksCanvas.enabled = false;
 	}
 
-	public void closeBarracks()// *************
+	public void closeBarracks()
 	{
 		barracksCanvas.enabled = false;
 	}
 
-	public void buyArmy(int playerNumber)// *********
+	public void buyArmy(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].goldQuantity >= armyBuyPrice)
 		{
@@ -576,7 +537,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void sellArmy(int playerNumber)// *********
+	public void sellArmy(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].armyQuantity > 0)
 		{
@@ -590,7 +551,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void buyWood(int playerNumber)// *********
+	public void buyWood(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].goldQuantity >= woodBuyPrice)
 		{
@@ -604,7 +565,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void sellWood(int playerNumber)// *********
+	public void sellWood(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].woodQuantity > 0)
 		{
@@ -618,7 +579,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void buySheep(int playerNumber)// *********
+	public void buySheep(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].goldQuantity >= sheepBuyPrice)
 		{
@@ -632,7 +593,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void sellSheep(int playerNumber)// *********
+	public void sellSheep(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].sheepQuantity > 0)
 		{
@@ -646,7 +607,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void buyBrick(int playerNumber)// *********
+	public void buyBrick(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].goldQuantity >= brickBuyPrice)
 		{
@@ -660,7 +621,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void sellBrick(int playerNumber)// *********
+	public void sellBrick(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].brickQuantity > 0)
 		{
@@ -674,7 +635,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void buyOre(int playerNumber)// *********
+	public void buyOre(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].goldQuantity >= oreBuyPrice)
 		{
@@ -688,7 +649,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void sellOre(int playerNumber)// *********
+	public void sellOre(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].oreQuantity > 0)
 		{
@@ -702,7 +663,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void buyWheat(int playerNumber)// *********
+	public void buyWheat(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].goldQuantity >= wheatBuyPrice)
 		{
@@ -716,7 +677,7 @@ public class GuiManager : MonoBehaviour {
 		}
 	}
 
-	public void sellWheat(int playerNumber)// *********
+	public void sellWheat(int playerNumber)
 	{
 		if(playerClassLocalArray[playerNumber].wheatQuantity > 0)
 		{
@@ -764,6 +725,19 @@ public class GuiManager : MonoBehaviour {
 
 	public void UpdatePlayer()
 	{
-
-	}
+        Player tempPlayer = CurrentGameBoard.LocalGame.PlayerList[CurrentGameBoard.CurrentPlayer];
+        // Wheat
+        wheatScore.text = tempPlayer.Wheat.ToString();
+        // Brick
+        brickScore.text = tempPlayer.Brick.ToString();
+        // Wool
+        sheepScore.text = tempPlayer.Wool.ToString();
+        // Wood
+        woodScore.text = tempPlayer.Wood.ToString();
+        // Ore
+        oreScore.text = tempPlayer.Ore.ToString();
+        // Gold
+        goldScore.text = tempPlayer.Gold.ToString();
+        // VP
+    }
 }

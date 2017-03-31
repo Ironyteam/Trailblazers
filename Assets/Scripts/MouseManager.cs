@@ -12,7 +12,7 @@ public class MouseManager : MonoBehaviour {
 	private void Start()
 	{
 		currentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
-		NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+//		NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
 	}
 
 	// Update is called once per frame
@@ -69,13 +69,10 @@ public class MouseManager : MonoBehaviour {
 									// Player is hiring an army
 									if (currentGameBoard.BuyingArmy) 
 									{
-										currentGameBoard.BuyArmy(currentStructure);
-										currentGameBoard.HideAvailableCitiesForArmies();
+										currentGameBoard.BuyingArmyCity = currentStructure;
+										currentGameBoard.HideAvailableCitiesForArmiesInitial();
 
-										if (currentGameBoard.LocalGame.isNetwork)
-											NetManager.sendBuildArmy(currentStructure.Location.X, currentStructure.Location.Y);
-
-									}
+                                    }
 									// Player is attacking
 									else if (currentGameBoard.Attacking)
 									{

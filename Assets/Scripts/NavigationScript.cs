@@ -13,7 +13,7 @@ public class NavigationScript : MonoBehaviour
     public Canvas quitCanvas;
 	public Canvas playNowCanvas;
 	public Canvas gameRulesCanvas;
-	public bool networkGame;
+	public static bool networkGame = false;
 
     void Awake()
     {
@@ -25,6 +25,17 @@ public class NavigationScript : MonoBehaviour
 	   gameRulesCanvas.enabled = false;
     }
 
+	void Update()
+	{
+		if(Input.GetKeyDown("escape"))
+		{
+			if(mainCanvas.enabled == true)
+				quitOn();
+			else
+				returnOn();
+		}
+	}
+
     public void optionsOn()
     {
        optionsCanvas.enabled = true;
@@ -33,7 +44,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
-	   gameRulesCanvas.enabled        = false;
+	   gameRulesCanvas.enabled = false;
     }
 
 	public void playNow()
@@ -43,7 +54,7 @@ public class NavigationScript : MonoBehaviour
 		createCanvas.enabled  = false;
 		creditCanvas.enabled  = false;
 		quitCanvas.enabled    = false;
-	    gameRulesCanvas.enabled        = false;
+	    gameRulesCanvas.enabled = false;
 		playNowCanvas.enabled = true;
 	}
 
@@ -55,7 +66,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
-	   gameRulesCanvas.enabled        = false;
+	   gameRulesCanvas.enabled = false;
     }
 
     public void creditOn()
@@ -66,7 +77,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = true;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
-	   gameRulesCanvas.enabled        = false;
+	   gameRulesCanvas.enabled = false;
     }
 
     public void returnOn()
@@ -77,7 +88,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
-	   gameRulesCanvas.enabled        = false;
+	   gameRulesCanvas.enabled = false;
     }
 
     public void quitOn()
@@ -88,7 +99,7 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = true;
 	   playNowCanvas.enabled = false;
-	   gameRulesCanvas.enabled       = false;
+	   gameRulesCanvas.enabled = false;
     }
 
 	public void rulesOn()
@@ -99,47 +110,39 @@ public class NavigationScript : MonoBehaviour
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
-	   gameRulesCanvas.enabled       = true;
+	   gameRulesCanvas.enabled = true;
 	}
 
     public void exitGame()
     {
        Application.Quit();
     } 
-
-    public void loadOn()
-    {
- 	  UnityEngine.SceneManagement.SceneManager.LoadScene(2);
-    }
     
     public void netLobbyOn()
     {
-	   UnityEngine.SceneManagement.SceneManager.LoadScene(3);
+		networkGame = true;
+	    UnityEngine.SceneManagement.SceneManager.LoadScene("Network lobby");
     }
     
 	public void PreGameBoardSceneOn()
     {
         BoardManager.startingGame = true;
-        UnityEngine.SceneManagement.SceneManager.LoadScene(7);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("BoardManager");
     }
 	
 	public void characterSelectOn()
 	{
-		UnityEngine.SceneManagement.SceneManager.LoadScene(5);
+		UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
 	}
 	
 	public void boardManagerOn()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(7);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("BoardManager");
     }
 
 	public void setLocal()
 	{
 		networkGame = false;
-	}
-
-	public void setNetwork()
-	{
-		networkGame = true;
+		PreGameBoardSceneOn();
 	}
 }
