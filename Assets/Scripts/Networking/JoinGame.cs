@@ -23,6 +23,7 @@ public class JoinGame : MonoBehaviour
       Debug.Log(gameTextBoxes[6].text);
       networkThing = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
       networkThing.connectToGame(gameTextBoxes[6].text);
+      networkThing.onJoinGameClient();
       yield return new WaitForSecondsRealtime(2);
       networkThing.requestGameJoin();
       networkThing.myGame.mapName = gameTextBoxes[4].text;

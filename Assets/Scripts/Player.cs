@@ -10,7 +10,8 @@ public class Player
     #region Properties
 	
 	 public string ipAddress;   // ipAddress of the player, used to identify connections for networking 
-	 public int connectionID;   // Used to send a message to a player, linked with id number 
+	 public int connectionID;   // Used to send a message to a player, linked with id number
+    public int playerIndex;
 
 
     public string Name;        // The player's name as entered.

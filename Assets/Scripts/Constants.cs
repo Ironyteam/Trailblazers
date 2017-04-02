@@ -5,6 +5,17 @@ using UnityEngine;
 // Holds all constants for the entire project.
 public static class Constants
 {
+   // Character select name integers
+   // "Abiha the Exiled", "Rosa del Fuego"
+   public const int NattyBumppo       = 0;
+   public const int ScaryHarry        = 1;
+   public const int Ganzo             = 2;
+   public const int GamlyTheRed       = 3;
+   public const int MaidenOfDunshire  = 4;
+   public const int QueenApala        = 5;
+   public const int AbihaTheExiled    = 6;
+   public const int RosaDelFuego      = 7;
+
    // Network message dividers
    public const string commandDivider = ":";
    public const string gameDivider = "~";
@@ -16,6 +27,7 @@ public static class Constants
    public const string requestGameList = "3";
    public const string cancelGame = "4";
    public const string goToCharacterSelect = "22";
+   public const string playerNumber = "23";
    public const string gameStarted = "5";
    public const string gameEnded = "6";
    public const string characterSelect = "7";
@@ -38,7 +50,7 @@ public static class Constants
    public const string serverKillCode = "1234";
 
 
-    public const int StartingGold      = 150;
+   public const int StartingGold      = 150;
 	public const int StartingResources = 0;
 	public const int GoldPerSettlement = 50;
 	public const int GoldPerCity	   = 50;

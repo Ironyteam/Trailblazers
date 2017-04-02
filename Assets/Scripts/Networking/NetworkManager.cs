@@ -18,10 +18,10 @@ public class NetworkManager : MonoBehaviour
    const int hostConnectionID = 2; // Should be two may need to change
    const string myIP = "127.0.0.1";
    public List<Player> lobbyPlayers = new List<Player>();
-   Player myPlayer;
+   public Player myPlayer;
 
    bool isHostingGame = false;
-   bool inGameLobby   = false;
+   bool inPlayerLobby   = false;
    bool inGame        = false;
 
    List<string[]> gameList = new List<string[]>();
@@ -110,16 +110,12 @@ public class NetworkManager : MonoBehaviour
          playerInfoPanel = Resources.Load("PlayerInfoPNL") as GameObject;
          messageLog = GameObject.Find("MessageLogTXT").GetComponent<UnityEngine.UI.Text>();
          ipField = GameObject.Find("ipTXT").GetComponent<UnityEngine.UI.Text>();
-//         gameName = GameObject.Find("gameTXT").GetComponent<UnityEngine.UI.Text>();
-//         maxPlayers = GameObject.Find("maxPlayersTXT").GetComponent<UnityEngine.UI.Text>();
-//         gamePassword = GameObject.Find("passwordTXT").GetComponent<UnityEngine.UI.Text>();
-//         mapName = GameObject.Find("mapTXT").GetComponent<UnityEngine.UI.Text>();
 
          // Buttons linkup
          connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
-         connectServerBTN.onClick.AddListener(() => connectToServerBTN());
-         hostGameBTN = GameObject.Find("HostGameBTN").GetComponent<Button>();
-         hostGameBTN.onClick.AddListener(() => hostGame());
+         connectServerBTN.onClick.AddListener(() => connectToServer());
+         //hostGameBTN = GameObject.Find("HostGameBTN").GetComponent<Button>();
+         //hostGameBTN.onClick.AddListener(() => hostGame());
          refreshGameListBTN = GameObject.Find("RefreshBTN").GetComponent<Button>();
          refreshGameListBTN.onClick.AddListener(() => requestGameListServer());
          cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
@@ -143,21 +139,21 @@ public class NetworkManager : MonoBehaviour
       {
          startGameCharacterSelectBTN = GameObject.Find("Start Game").GetComponent<Button>();
          startGameCharacterSelectBTN.onClick.AddListener(() => characterSelectStartGame());
+         if (!isHostingGame)
+            startGameCharacterSelectBTN.enabled = false;
       }
    }
 
-#region Temp Functions
-   // Function to name player for button TEST
-   public void namePlayer()
+   // Connect to the server
+   public void connectToServer()
    {
-      // Will eventually be what you name is
+      byte error;
+      Debug.Log("\n" + "Connecting to server: " + ipField.text);
+      connectionId = NetworkTransport.Connect(socketId, ipField.text, socketPort, 0, out error);
+      connectServerBTN.gameObject.SetActive(false);
+      ipField.transform.parent.gameObject.SetActive(false);
+      Debug.Log("\n" + "ConnectionID: " + connectionId);
    }
-   // Function to allow a testing button press, as inpector doesn't allow button function calls that have parameters TEST
-   public void connectToServerBTN()
-   {
-      connectToGame(ipField.text);
-   }
-#endregion
 
    // Connect to ipAddress, target auto connects in return
    public void connectToGame(string ipAddress)
@@ -174,7 +170,7 @@ public class NetworkManager : MonoBehaviour
       isHostingGame = true;
    }
 
-   // Set the values recieved from BoardManager
+   // Set the values recieved from BoardManager and send the server the game
    public void setupGameSettings(int totalPlayers, int turnTimer, int victoryPoints, string gameName, string mapName, HexTemplate map)
    {
       myGame.maxPlayers = totalPlayers.ToString();
@@ -188,6 +184,7 @@ public class NetworkManager : MonoBehaviour
       myGame.mapPiece2  = myGame.mapString.Substring(400, 400);
       myGame.mapPiece3  = myGame.mapString.Substring(800, 400);
       myGame.mapPiece4  = myGame.mapString.Substring(1200, myGame.mapString.Length - 1200);
+      hostGame();
       Debug.Log("Setting up game" + gameName + totalPlayers.ToString() + turnTimer.ToString() + victoryPoints.ToString());
    }
 
@@ -199,6 +196,7 @@ public class NetworkManager : MonoBehaviour
          string gameInfo;
          isHostingGame = true;
          startGameBTN.gameObject.SetActive(true);
+         lobbyPlayers.Add(myPlayer);
 
          gameInfo = Constants.addGame + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myGame.gameName +
          Constants.gameDivider + "0" + Constants.gameDivider + myGame.maxPlayers + Constants.gameDivider + myGame.password + Constants.gameDivider + myGame.mapName;
@@ -214,11 +212,21 @@ public class NetworkManager : MonoBehaviour
    public void startCharacterSelect()
    {
       sendActionToClients(Constants.goToCharacterSelect + Constants.commandDivider + Network.player.ipAddress, 0);
-      BoardManager.template = myGame.gameMap;
+      sendPlayerNumbers();
+      BoardManager.template     = myGame.gameMap;
+      BoardManager.numOfPlayers = Int32.Parse(myGame.numberOfPlayers);
       UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
    }
 
-   // Tell the clients to go start game
+   public void sendPlayerNumbers()
+   {
+      for (int i = 1; i < lobbyPlayers.Count; i++)
+      {
+         sendSocketMessage(Constants.playerNumber + Constants.commandDivider + i, lobbyPlayers[i].connectionID);
+      }
+   }
+
+   // Tell the clients to go to in game scene
    public void characterSelectStartGame()
    {
       sendActionToClients(Constants.gameStarted + Constants.commandDivider + Network.player.ipAddress, 0);
@@ -302,6 +310,9 @@ public class NetworkManager : MonoBehaviour
          case Constants.gameEnded:         // #, ipAddress
          case Constants.characterSelect:   // #, character
             break;
+         case Constants.playerNumber:
+            myPlayer.playerIndex = Int32.Parse(gameInfo[1]);
+            break;
          case Constants.characterResult:   // #, characterResult
             break;
          case Constants.diceRoll:          // #, number1, number2
@@ -341,6 +352,21 @@ public class NetworkManager : MonoBehaviour
       string message = Constants.addPlayer + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myPlayer.Name;
       sendSocketMessage(message, connectionId);
    }
+   // Joined game, disable buttons
+   public void onJoinGameClient()
+   {
+      inPlayerLobby = true;
+
+      // Destroy everything in the panel
+      foreach (Transform child in gameListCanvas.transform)
+      {
+         GameObject.Destroy(child.gameObject);
+      }
+
+      createGameBTN.gameObject.SetActive(false);
+      refreshGameListBTN.gameObject.SetActive(false);
+      cancelHostingBTN.gameObject.SetActive(false);
+   }
 
    // Player connecting to your lobby
    public void addPlayer(string gameInfo, int connectionID)
@@ -368,7 +394,8 @@ public class NetworkManager : MonoBehaviour
       Player newplayer = new Player()
       {
          connectionID = connectionID,
-         ipAddress = gameInfo
+         ipAddress    = gameInfo,
+         playerIndex  = lobbyPlayers.Count
       };
 
       lobbyPlayers.Add(newplayer);
@@ -666,27 +693,27 @@ public class NetworkManager : MonoBehaviour
       {
          case Constants.buildSettlement:
             // X = gameInfo[0], Y = gameInfo[1]
-			mapObject.BuildSettlementNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
+			   mapObject.BuildSettlementNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
             break;
          case Constants.upgradeToCity:
             // X = gameInfo[0], Y = gameInfo[1]
-			mapObject.BuildCityNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
+			   mapObject.BuildCityNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
             break;
          case Constants.buildRoad:
             // AX = gameInfo[0], AY = gameInfo[1], BX = gameInfo[2], BY = gameInfo[3]
-			mapObject.BuildRoadNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]), Int32.Parse(gameInfo[2]), Int32.Parse(gameInfo[3]));
+			   mapObject.BuildRoadNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]), Int32.Parse(gameInfo[2]), Int32.Parse(gameInfo[3]));
             break;
          case Constants.buildArmy:
             // X = gameInfo[0], Y = gameInfo[1]
-			mapObject.BuyArmyNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
+			   mapObject.BuyArmyNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
             break;
          case Constants.attackCity:
             // X = gameInfo[0], Y = gameInfo[1]
-			mapObject.ExecuteAttackNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]), Int32.Parse(gameInfo[2]), Int32.Parse(gameInfo[3]));
+			   mapObject.ExecuteAttackNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]), Int32.Parse(gameInfo[2]), Int32.Parse(gameInfo[3]));
             break;
          case Constants.moveRobber:
             // X = gameInfo[0], Y = gameInfo[1]
-			mapObject.MoveRobberNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
+			   mapObject.MoveRobberNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
             break;
          case Constants.endTurn:
             // No parameters
@@ -706,6 +733,7 @@ public class NetworkManager : MonoBehaviour
       }
    }
 
+   // Distributes a network message to all clients
    void sendActionToClients(string message, int connectionID)
    {
       foreach (Player player in lobbyPlayers)
