@@ -40,8 +40,8 @@ public class GameBoard : MonoBehaviour
 	public int roadIndex = 0;
 	public MKGlow MKGlowObject;
 	public GuiManager GUIManager;
-    public NetworkManager NetManager;
-    public int glowCounter = 0;
+   public NetworkManager NetManager;
+   public int glowCounter = 0;
 
 	public int CurrentPlayer = 0;
 	public bool InitialPlacement = true;
@@ -57,9 +57,9 @@ public class GameBoard : MonoBehaviour
 
 	public Structure AttackingCity = null;
 	public Structure DefendingCity = null;
-    public Structure BuyingArmyCity = null;
-    public Hex RobberLocation = null;
-	/*
+   public Structure BuyingArmyCity = null;
+   public Hex RobberLocation = null;
+   /*
   sendEndTurn()
   sendStartTurn()
   sendSendChat(int chatMessageNumber)
@@ -70,7 +70,7 @@ public class GameBoard : MonoBehaviour
 		MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
 		GUIManager = GameObject.Find("Main Camera").GetComponent<GuiManager>();
 //        NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
-        MKGlowObject.BlurSpread = .125f;
+      MKGlowObject.BlurSpread = .125f;
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
 
@@ -83,7 +83,6 @@ public class GameBoard : MonoBehaviour
 		LocalGame.PlayerList.Add(new Player("General"));
 		LocalGame.PlayerList.Add(new Player("Merchant"));
 		LocalGame.PlayerList.Add(new Player("Queen"));
-
 
 		template = BoardManager.template;
 

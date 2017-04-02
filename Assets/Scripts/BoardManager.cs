@@ -821,38 +821,7 @@ public class BoardManager : MonoBehaviour
         
     }
 
-    public int findNumberToAppendToName(string mapName, int max_number)           //vvvvvvvvvvvvvvvv entire function added
-    {
-        List<HexTemplate> maps = new List<HexTemplate>();
-        FileHandler fileChecker = new FileHandler();
-        int savedMapsStartindex = 0;
-        int firstAvailableNumber = -1;
-        bool numberUnused = true;
-
-        // Search for an number that has not yet been appended onto
-        // the same name
-        maps = fileChecker.getAllMaps(out savedMapsStartindex);
-        int index;
-        for (index = 2; index <= max_number; index++)
-        {
-            numberUnused = true;
-            for (int i = savedMapsStartindex; i < maps.Count; i++)
-            {
-                if (String.Compare(maps[i].mapName, mapName + "(" + index + ")") == 0)
-                {
-                    numberUnused = false;
-                    i = maps.Count;
-                }
-            }
-
-            if (numberUnused)
-            {
-                firstAvailableNumber = index;
-                index = max_number + 1;
-            }
-        }
-        return firstAvailableNumber;
-    }
+    
 
     private void displayAnyErrors(List<int> errors, string mapName)
     {
@@ -943,7 +912,8 @@ public class BoardManager : MonoBehaviour
 
                 else if (errors.Contains(MAP_NAME_CONFLICT_ERROR))
                 {
-                    numToAppendToName = findNumberToAppendToName(mapName, MAX_MAPS_WITH_SAME_NAME);    //+++++++++++++++++++++++
+                   FileHandler fh = new FileHandler();
+                    numToAppendToName = fh.findNumberToAppendToName(mapName, MAX_MAPS_WITH_SAME_NAME);    //+++++++++++++++++++++++
 
                     mainErrorText.enabled = true;
 
@@ -1535,8 +1505,8 @@ public class BoardManager : MonoBehaviour
 
    public void goToGameLobby()
 	{	
-	    NetworkManager networkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>(); // SILAS
-        networkObject.setupGameSettings(numOfPlayers, turnTimerMax, victoryPoints, gameLobbyNameNetwork.text, maps[board_index].mapName, template); // SILAS
+	   NetworkManager networkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>(); // SILAS
+      networkObject.setupGameSettings(numOfPlayers, turnTimerMax, victoryPoints, gameLobbyNameNetwork.text, maps[board_index].mapName, template); // SILAS
 		UnityEngine.SceneManagement.SceneManager.LoadScene("Network Lobby");
 	}
 

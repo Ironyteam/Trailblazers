@@ -12,7 +12,7 @@ public class Game
 
     public List<Player> PlayerList = new List<Player>();  // Holds a list of all players in the game.
 
-    public bool isNetwork = false;          // Either a local or network game.
+    public bool isNetwork = true;          // Either a local or network game.
 
     private string mapName;             // The name of the map chosen for this game to be played on.
 

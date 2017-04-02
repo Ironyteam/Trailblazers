@@ -12,7 +12,7 @@ public class MouseManager : MonoBehaviour {
 	private void Start()
 	{
 		currentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
-//		NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+		NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
 	}
 
 	// Update is called once per frame
@@ -46,8 +46,10 @@ public class MouseManager : MonoBehaviour {
 										currentGameBoard.HideAvailableSettlements ();
 
 										if (currentGameBoard.LocalGame.isNetwork)
+                              {
+                                 Debug.Log(currentStructure.Location.X + currentStructure.Location.Y);
 											NetManager.sendBuildSettlement(currentStructure.Location.X, currentStructure.Location.Y);
-
+                              }
 										// If initial placement, show first road to build
 										if (currentGameBoard.InitialPlacement)
 											currentGameBoard.ShowAvailableRoadsInitial (currentStructure.Location);

@@ -9,14 +9,14 @@ public class Player
     // All of the private properies and their public accessors.
     #region Properties
 	
-	public  string ipAddress;   // ipAddress of the player, used to identify connections for networking 
-	public  int connectionID;   // Used to send a message to a player, linked with id number 
+	 public string ipAddress;   // ipAddress of the player, used to identify connections for networking 
+	 public int connectionID;   // Used to send a message to a player, linked with id number 
 
 
     public string Name;        // The player's name as entered.
     public int LongestRoad = 0;
-	public bool LongestRoadWinner = false;
-	public bool LargestArmyWinner = false;
+	 public bool LongestRoadWinner = false;
+	 public bool LargestArmyWinner = false;
 
     private int armies;         // The number of armies deployed by this player over the entire map.
     private int character;      // The character player has chosen to play as, 0 for no character.

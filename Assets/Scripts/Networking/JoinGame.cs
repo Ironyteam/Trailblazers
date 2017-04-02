@@ -24,7 +24,7 @@ public class JoinGame : MonoBehaviour
       networkThing = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
       networkThing.connectToGame(gameTextBoxes[6].text);
       yield return new WaitForSecondsRealtime(2);
-        Debug.Log("CLICKED ON A BUTTON" + gameTextBoxes[6].text);
-        networkThing.requestGameJoin();
+      networkThing.requestGameJoin();
+      networkThing.myGame.mapName = gameTextBoxes[4].text;
    }
 }

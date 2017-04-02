@@ -338,14 +338,14 @@ public class FileHandler
         fileLines = modifiedFileString.Split('\n');
 
         Debug.Log(fileLines[0]);
-        using (StreamWriter writer = File.CreateText(SavedMapsPath + "/" + fileLines[0] + ".txt"))
+        using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/" + fileLines[0] + ".txt"))
         {
             writer.Write(rawFileString);
             writer.Close();
         }
 
         // May need to add a try catch in case there are not any files
-        using (StreamReader reader = File.OpenText(SavedMapsPath + "/MapList.txt"))
+        using (StreamReader reader = File.OpenText(Application.dataPath + "/SavedMaps/MapList.txt"))
         {
             string tempString;
 
@@ -353,12 +353,13 @@ public class FileHandler
                 mapNames.Add(tempString);
             reader.Close();
         }
-
+        
         // Separate the lines of the file string and use the appropriate lines to
         // write the minimum and maximum victory points
-        using (StreamWriter writer = File.CreateText(SavedMapsPath + "/MapList.txt"))
+        using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/MapList.txt"))
         {
             writer.WriteLine(fileLines[0] + " " + fileLines[2] + " " + fileLines[3]);
+            Debug.Log(fileLines[0] + " " + fileLines[2] + " " + fileLines[3]);
             foreach (string mapName in mapNames)
             {
                 writer.WriteLine(mapName);
@@ -366,6 +367,56 @@ public class FileHandler
             writer.Close();
         }
 
+    }
+   public bool mapExists(string name)
+   {
+      HexTemplate[] maps;
+      bool exists = false;
+      int savedMapsStartIndex;
+
+      // See if a map already exists with the desired name
+      maps = getAllMaps(out savedMapsStartIndex).ToArray();
+      for (int index = savedMapsStartIndex; index < maps.Length; index++)
+      {
+            if (String.Compare(maps[index].mapName, name) == 0)
+            {
+               exists = true;
+               index = maps.Length;
+            }
+      }
+      return exists;
+   }
+   public int findNumberToAppendToName(string mapName, int max_number)           //vvvvvvvvvvvvvvvv entire function added
+    {
+        List<HexTemplate> maps = new List<HexTemplate>();
+        FileHandler fileChecker = new FileHandler();
+        int savedMapsStartindex = 0;
+        int firstAvailableNumber = -1;
+        bool numberUnused = true;
+
+        // Search for an number that has not yet been appended onto
+        // the same name
+        maps = fileChecker.getAllMaps(out savedMapsStartindex);
+        int index;
+        for (index = 2; index <= max_number; index++)
+        {
+            numberUnused = true;
+            for (int i = savedMapsStartindex; i < maps.Count; i++)
+            {
+                if (String.Compare(maps[i].mapName, mapName + "(" + index + ")") == 0)
+                {
+                    numberUnused = false;
+                    i = maps.Count;
+                }
+            }
+
+            if (numberUnused)
+            {
+                firstAvailableNumber = index;
+                index = max_number + 1;
+            }
+        }
+        return firstAvailableNumber;
     }
 
     // Print error message if a file contained insufficient data

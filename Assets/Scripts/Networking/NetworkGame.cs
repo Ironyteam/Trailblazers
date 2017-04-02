@@ -20,6 +20,18 @@ public class NetworkGame
 	public string mapName;
    public string numberOfVictoryPoints;
    public string turnTimer;
+   public HexTemplate gameMap;
+   public string mapString;
+   public string mapPiece1;
+   public string mapPiece2;
+   public string mapPiece3;
+   public string mapPiece4;
+
+   public string assembledMapStrings()
+   {
+      mapString = mapPiece1 + mapPiece2 + mapPiece3 + mapPiece4;
+      return mapString;
+   }
 
    public bool addPlayer()
    {
