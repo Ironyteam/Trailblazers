@@ -120,7 +120,7 @@ public class NavigationScript : MonoBehaviour
     
     public void netLobbyOn()
     {
-		networkGame = true;
+		 networkGame = true;
 	    UnityEngine.SceneManagement.SceneManager.LoadScene("Network lobby");
     }
     

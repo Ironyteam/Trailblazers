@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +9,7 @@ public class Structure {
 	public GameObject ArmyNumber_GO = null;
 
 	public int PlayerOwner = -1;
+	public int portDiscount = -1;
 	public int StructureID;
 
 	public Coordinate Location = null;

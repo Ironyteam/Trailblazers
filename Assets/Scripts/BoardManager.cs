@@ -45,11 +45,12 @@ public class BoardManager : MonoBehaviour
 	public Button gameLobbyButtonNetwork,
 				  characterSelectButtonLocal;
 
-	public static int numOfPlayers = 2;
-	public static int victoryPoints = 5;
-	public static int turnTimerMax = 30;
-	public static bool turnTimerOn = true,
-					   characterAbilitiesOn = true;
+	public static int  numOfPlayers  = 2;
+	public static int  victoryPoints = 5;
+	public static int  turnTimerMax  = 30;
+   public static bool turnTimerOn   = true;
+   public static bool characterAbilitiesOn = true;
+   public static int  localPlayerIndex;
                        
     string[] resources = new string[6]
     {
@@ -1504,11 +1505,17 @@ public class BoardManager : MonoBehaviour
     }
 
    public void goToGameLobby()
-	{	
-	   NetworkManager networkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>(); // SILAS
-      networkObject.setupGameSettings(numOfPlayers, turnTimerMax, victoryPoints, gameLobbyNameNetwork.text, maps[board_index].mapName, template); // SILAS
-		UnityEngine.SceneManagement.SceneManager.LoadScene("Network Lobby");
-	}
+	{
+      if (NavigationScript.networkGame)
+      {
+         NetworkManager networkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>(); // SILAS
+         networkObject.setupGameSettings(numOfPlayers, turnTimerMax, victoryPoints, gameLobbyNameNetwork.text, maps[board_index].mapName, template); // SILAS
+         UnityEngine.SceneManagement.SceneManager.LoadScene("Network Lobby");
+      }
+      else
+         UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
+
+   }
 
 	public void goToCharacterSelect()
 	{

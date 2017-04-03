@@ -27,6 +27,7 @@ public static class Constants
    public const string requestGameList = "3";
    public const string cancelGame = "4";
    public const string goToCharacterSelect = "22";
+   public const string sendGameInfo = "24";
    public const string playerNumber = "23";
    public const string gameStarted = "5";
    public const string gameEnded = "6";
@@ -56,7 +57,7 @@ public static class Constants
 	public const int GoldPerCity	   = 50;
 
 	public const int BricksPerRoad = 0;
-	public const int OrePerRoad	   = 0;
+	public const int OrePerRoad	 = 0;
 	public const int WheatPerRoad  = 0;
 	public const int WoodPerRoad   = 0;
 	public const int WoolPerRoad   = 0;
@@ -75,9 +76,9 @@ public static class Constants
 
 	public const int ArmyGoldCost  = 100;
 	
-	public const int MaxRoads	    = 10; 
-	public const int MaxSettlements = 10; 
-	public const int MaxCities      = 10;
+	public const int MaxRoads	    = 100; 
+	public const int MaxSettlements = 100; 
+	public const int MaxCities      = 100;
 	public const int MaxPlayers     = 6; 
 	
 	
@@ -92,7 +93,13 @@ public static class Constants
 	public const float NoDiscount 		= 1.00f;
 	public const float ResourceCost	 	= 100.0f;
 
-	public const int beginClip = 0;
+	public const float QueenGoldBonus = 1.5f;
+	public const int LongestRoadBonus = 2;
+	public const int LargestArmyBonus = 4;
+    public const int MinLargestArmy = 4;
+    public const int MinLongestRoad = 4;
+
+    public const int beginClip = 0;
 	public const int lastClip  = 2;
 
 	public const int LongestRoadVP	   = 3;

@@ -13,6 +13,8 @@ public class GameBoard : MonoBehaviour
 	public GameObject roadRect;
 	public GameObject structure;
 	public GameObject city;
+	public GameObject boat;
+	public GameObject dock;
 	public GameObject token;
 	public GameObject armySprite;
 	public GameObject armyText;
@@ -44,7 +46,8 @@ public class GameBoard : MonoBehaviour
    public int glowCounter = 0;
 
 	public int CurrentPlayer = 0;
-	public bool InitialPlacement = true;
+   public int LocalPlayer = 0;
+   public bool InitialPlacement = true;
 	public bool FirstTurn = true;
 	public bool goingUp = true;
 	public Game LocalGame;
@@ -69,20 +72,31 @@ public class GameBoard : MonoBehaviour
 	{
 		MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
 		GUIManager = GameObject.Find("Main Camera").GetComponent<GuiManager>();
-//        NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+      NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
       MKGlowObject.BlurSpread = .125f;
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
-
+        GUIManager.DisableGameCanvas();
+      LocalPlayer = BoardManager.localPlayerIndex;
 
 		LocalGame = new Game();
 
-		LocalGame.PlayerList.Add(new Player("Frontiersman"));
-		LocalGame.PlayerList.Add(new Player("Engineer"));
-		LocalGame.PlayerList.Add(new Player("Knight"));
-		LocalGame.PlayerList.Add(new Player("General"));
-		LocalGame.PlayerList.Add(new Player("Merchant"));
-		LocalGame.PlayerList.Add(new Player("Queen"));
+        LocalGame.isNetwork = NavigationScript.networkGame;
+
+        foreach (int selectedCharacter in characterSelect.selectedCharacters)
+		    LocalGame.PlayerList.Add(new Player(Characters.Names[selectedCharacter], BoardManager.characterAbilitiesOn ? selectedCharacter:-1));
+
+		foreach (Player currentPlayer in LocalGame.PlayerList) 
+		{
+			if (currentPlayer.playerAbility == 3) 
+			{
+				currentPlayer.Wood = 2;
+				currentPlayer.Ore = 2;
+				currentPlayer.Wheat = 2;
+				currentPlayer.Wool = 2;
+				currentPlayer.Brick = 2;
+			}
+		}
 
 		template = BoardManager.template;
 
@@ -106,13 +120,18 @@ public class GameBoard : MonoBehaviour
 					{
 						// Spawn Structure 1
 						spawnStructureOne(x, z);
+						if (template.hex [x, z].portSide == 0 || template.hex [x, z].portSide == 5)
+							Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 					}
-
+							
 					// Road 1 - Always spawn
 					spawnRoadOne(x, z);
 
 					// Structure 2 - Always spawn
 					spawnStructureTwo(x, z);
+
+					if (template.hex [x, z].portSide == 0 || template.hex [x, z].portSide == 1)
+						Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 
 					// Road 2 - Always spawn
 					spawnRoadTwo(x, z);
@@ -123,10 +142,13 @@ public class GameBoard : MonoBehaviour
 					{
 						// Spawn Structure 3
 						spawnStructureThree(x, z);
-
+						if (template.hex [x, z].portSide == 1 || template.hex [x, z].portSide == 2)
+							Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
+						
 						// Spawn Road 3, same conditions apply
 						spawnRoadThree(x, z);
 					}
+
 
 					//Structure 4
 					if (x % 2 != 1) // x is even
@@ -135,6 +157,8 @@ public class GameBoard : MonoBehaviour
 						{
 							// Spawn Structure 4
 							spawnStructureFour(x, z);
+							if (template.hex [x, z].portSide == 2 || template.hex [x, z].portSide == 3)
+								Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 						}
 					} 
 					else // x is odd
@@ -143,6 +167,8 @@ public class GameBoard : MonoBehaviour
 						{
 							// Spawn Structure 4
 							spawnStructureFour(x, z);
+							if (template.hex [x, z].portSide == 2 || template.hex [x, z].portSide == 3)
+								Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 						}
 					}
 
@@ -164,6 +190,8 @@ public class GameBoard : MonoBehaviour
 							{
 								// Spawn Structure 5
 								spawnStructureFive(x, z);
+								if (template.hex [x, z].portSide == 3 || template.hex [x, z].portSide == 4)
+									Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 							}
 							else if (x != 0 && z != 0)
 							{
@@ -172,6 +200,8 @@ public class GameBoard : MonoBehaviour
 								{
 									// Spawn Structure 5
 									spawnStructureFive(x, z);
+									if (template.hex [x, z].portSide == 3 || template.hex [x, z].portSide == 4)
+										Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 								}
 							}
 
@@ -184,6 +214,8 @@ public class GameBoard : MonoBehaviour
 							{
 								// Spawn Structure 5
 								spawnStructureFive(x, z);
+								if (template.hex [x, z].portSide == 3 || template.hex [x, z].portSide == 4)
+									Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 							}
 						}
 					}
@@ -229,6 +261,8 @@ public class GameBoard : MonoBehaviour
 						{
 							// Spawn Structure 6
 							spawnStructureSix(x, z);
+							if (template.hex [x, z].portSide == 4 || template.hex [x, z].portSide == 5)
+								Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 						}
 						else if (x != 0 && z != 0)
 						{
@@ -237,6 +271,8 @@ public class GameBoard : MonoBehaviour
 							{
 								// Spawn Structure 6
 								spawnStructureSix(x, z);
+								if (template.hex [x, z].portSide == 4 || template.hex [x, z].portSide == 5)
+									Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 							}
 						}
 
@@ -249,6 +285,8 @@ public class GameBoard : MonoBehaviour
 						{
 							// Spawn Structure 6
 							spawnStructureSix(x, z);
+							if (template.hex [x, z].portSide == 4 || template.hex [x, z].portSide == 5)
+								Structures [Structures.Count - 1].portDiscount = template.hex [x, z].resource;
 						}
 					}
 
@@ -290,13 +328,19 @@ public class GameBoard : MonoBehaviour
 					template.hex[x, z].Coordinates[4] = MapUtility.CalculateVerticeFive(hexCoordinate);
 					template.hex[x, z].Coordinates[5] = MapUtility.CalculateVerticeSix(hexCoordinate);
 
+					if (template.hex [x, z].portSide != -1)
+						SpawnPort (template.hex [x, z]);
 				}
 			}
 		}
 
 		InitialPlacement = true;
-		ShowAvailableSettlementsInitial();
-	}
+
+        if (!LocalGame.isNetwork)
+            ShowAvailableSettlementsInitial();
+        else if (LocalPlayer == CurrentPlayer)
+            ShowAvailableSettlementsInitial();
+    }
 
 	void FixedUpdate () {
 
@@ -325,7 +369,13 @@ public class GameBoard : MonoBehaviour
 			}
 		}
 		glowCounter++;
-	}
+
+      if (LocalGame.isNetwork)
+         if (LocalPlayer == CurrentPlayer)
+            GUIManager.EnableGameCanvas();
+         else
+            GUIManager.EnableGameCanvas();
+   }
 
 	void spawnStructureOne(int xCoord, int yCoord)
 	{
@@ -591,23 +641,61 @@ public class GameBoard : MonoBehaviour
 		Roads.Add (newRoad);
 	}
 
-/*	public async void FloatText(GameObject createdText, Color resourceColor, int numberChanged)
+	public void SpawnPort (Hex HexWithPort)
 	{
-		createdText.GetComponent<Renderer>().material.color = resourceColor;  // set text color
-		alpha = 1;
-	
-		while (alpha>0)
+		Vector3 hexLocation = HexWithPort.hex_go.transform.position;
+
+		switch (HexWithPort.portSide) 
 		{
-			Vector3 temp = new Vector3(0f, (float)scroll*Time.deltaTime,0f);
+			case 0:
+				Instantiate (boat, new Vector3 (hexLocation.x + .3f, hexLocation.y -.218f, hexLocation.z + 3.2f), Quaternion.Euler (0f, -60f, 0f));
+				Instantiate (dock, new Vector3 (hexLocation.x - .02f, hexLocation.y - .1f, hexLocation.z + 2.45f), Quaternion.Euler (0f, 0f, 0f));
+				break;
+			case 1:
+				Instantiate (boat, new Vector3 (hexLocation.x + 2.85f, hexLocation.y -.218f, hexLocation.z + 1f), Quaternion.Euler (0f, 0f, 0f));
+				Instantiate (dock, new Vector3 (hexLocation.x + 2f, hexLocation.y - .1f, hexLocation.z + 1.3f), Quaternion.Euler (0f, 60f, 0f));
+				break;
+			case 2:
+				Instantiate (boat, new Vector3 (hexLocation.x + 2.3f, hexLocation.y -.218f, hexLocation.z -2.05f), Quaternion.Euler (0f, 60f, 0f));
+				Instantiate (dock, new Vector3 (hexLocation.x + 2f, hexLocation.y - .1f, hexLocation.z - 1.2f), Quaternion.Euler (0f, 120f, 0f));
+				break;
+			case 3:
+				Instantiate (boat, new Vector3 (hexLocation.x - .7f, hexLocation.y -.218f, hexLocation.z - 3f), Quaternion.Euler (0f, 120f, 0f));
+				Instantiate (dock, new Vector3 (hexLocation.x + .05f, hexLocation.y - .1f, hexLocation.z - 2.35f), Quaternion.Euler (0f, 180f, 0f));
+				break;
+			case 4:
+				Instantiate (boat, new Vector3 (hexLocation.x - 2.9f, hexLocation.y -.218f, hexLocation.z - .9f), Quaternion.Euler (0f, 180f, 0f));
+				Instantiate (dock, new Vector3 (hexLocation.x - 2.1f, hexLocation.y - .1f, hexLocation.z -1.2f), Quaternion.Euler (0f, -120f, 0f));
+				break;
+			case 5:
+				Instantiate (boat, new Vector3 (hexLocation.x - 2.4f, hexLocation.y -.218f, hexLocation.z + 1.9f), Quaternion.Euler (0f, -120f, 0f));
+				Instantiate (dock, new Vector3 (hexLocation.x - 2.05f, hexLocation.y - .1f, hexLocation.z + 1.15f), Quaternion.Euler (0f, -60f, 0f));
+				break;
+			default:
+				break;
+		}
+	}
+
+	IEnumerator FloatText(Vector3 spawnLocation, Color resourceColor, int numberChanged)
+	{
+		GameObject createdText = (GameObject)Instantiate (armyText, spawnLocation, Quaternion.Euler (30f, 0f, 0f));
+		createdText.GetComponent<Renderer>().material.color = resourceColor;  // set text color
+		createdText.GetComponent<TextMesh>().text = (numberChanged > 0 ? "+":"-") + numberChanged.ToString();
+		float alpha = 1.0f;
+
+		while (alpha > 0)
+		{
+			yield return new WaitForSeconds(.00001f);
+			Vector3 temp = new Vector3(0f, .5f, 0f);
 			createdText.transform.position += temp;
-			alpha -= Time.deltaTime/duration; 
-			Color color = TextToFloat.GetComponent<Renderer>().material.color;
+			alpha -= .05f; 
+			Color color = createdText.GetComponent<Renderer>().material.color;
 			color.a = alpha; 
-			createdText.GetComponent<Renderer>().material.color = color;        
+			createdText.GetComponent<Renderer>().material.color = color;
 		} 	
 
 		Destroy(createdText); // text vanished - destroy itself
-	} */
+	}
 
 	// Local building functions
 	public void BuildSettlement(Structure settlementTarget)
@@ -615,6 +703,30 @@ public class GameBoard : MonoBehaviour
 		MeshRenderer mr = settlementTarget.Structure_GO.GetComponentInChildren<MeshRenderer> ();
 		mr.material = GetPlayerMaterial(CurrentPlayer, 1);
 		settlementTarget.PlayerOwner = CurrentPlayer;
+
+		if (settlementTarget.portDiscount != -1) 
+		{
+			switch (settlementTarget.portDiscount) 
+			{
+				case 0:
+					LocalGame.PlayerList[CurrentPlayer].SetWoodDiscount();
+					break;	
+				case 1:
+					LocalGame.PlayerList[CurrentPlayer].SetOreDiscount();
+					break;	
+				case 2:
+					LocalGame.PlayerList[CurrentPlayer].SetWheatDiscount();
+					break;	
+				case 3:
+					LocalGame.PlayerList[CurrentPlayer].SetWoolDiscount();
+					break;	
+				case 4:
+					LocalGame.PlayerList[CurrentPlayer].SetBrickDiscount();
+					break;	
+				default:
+					break;
+			}
+		}
 
 		// Is not initial placement, charge player resources for building.
 		if (!InitialPlacement)
@@ -632,6 +744,9 @@ public class GameBoard : MonoBehaviour
 		mr.material = GetPlayerMaterial(CurrentPlayer, 2);
 		settlementTarget.IsCity = true;
 
+		if (LocalGame.PlayerList [CurrentPlayer].playerAbility == 5)
+			settlementTarget.Armies++;
+		
 		LocalGame.PlayerList[CurrentPlayer].BuildCity();
 	}
 
@@ -647,15 +762,16 @@ public class GameBoard : MonoBehaviour
 		// Cycles to the next player and shows initial settlements
 		if (InitialPlacement)
 		{
-			if (LocalGame.isNetwork == false)
-			{
 				NextPlayer();
-				// If still initial placement after cycling next player, show settlement locations
-				if (InitialPlacement)
-					ShowAvailableSettlementsInitial();
-			}
-			else
-				EndTurnNetwork();
+
+            // If still initial placement after cycling next player, show settlement locations
+            if (InitialPlacement)
+            {
+                if (!LocalGame.isNetwork)
+                    ShowAvailableSettlementsInitial();
+                else if (LocalPlayer == CurrentPlayer)
+                    ShowAvailableSettlementsInitial();
+            }
 		}
 		// Longest road logic
 		else
@@ -683,6 +799,8 @@ public class GameBoard : MonoBehaviour
 		targetCity.Armies++;
 		LocalGame.PlayerList[CurrentPlayer].HireArmy();
         targetCity.ArmyNumber_GO.GetComponent<TextMesh>().text = targetCity.Armies.ToString();
+		CalculateLargestArmy ();
+        GUIManager.UpdatePlayer();
     }
 
 	public void ExecuteAttack()
@@ -721,6 +839,7 @@ public class GameBoard : MonoBehaviour
 			AttackingCity.Armies = 0;
 			DefendingCity.Armies = 0;
 		}
+		CalculateLargestArmy ();
 	}
 
 	public void MoveRobber(Hex hexTarget)
@@ -814,15 +933,6 @@ public class GameBoard : MonoBehaviour
 	{
 		MoveRobber(template.hex[xCoord, yCoord]);
 	}
-
-	public void EndTurnNetwork()
-	{
-		// No code yet
-		NextPlayer();
-	}
-
-
-
 
 	public void ShowAvailableSettlementsInitial()
 	{
@@ -1256,6 +1366,9 @@ public class GameBoard : MonoBehaviour
 			}
 		}
 
+		if (LocalGame.PlayerList [playerNumber].playerAbility == 6)
+			finalRoadLength += Constants.LongestRoadBonus;
+
 		return finalRoadLength;
 	}
 
@@ -1323,6 +1436,30 @@ public class GameBoard : MonoBehaviour
 		roadLength += tempLargest;
 		return roadLength;
 	}
+		
+	public void CalculateLargestArmy()
+	{
+		int largestArmy = Constants.MinLargestArmy > LocalGame.MostArmies ? Constants.MinLargestArmy: LocalGame.MostArmies;
+		int largestArmyPlayer = -1;
+        int previousLargestArmyPlayer = LocalGame.MostArmiesPlayer;
+
+		for (int x = 0; x < LocalGame.PlayerList.Count; x++)
+		{
+			if ((LocalGame.PlayerList[x].Armies + LocalGame.PlayerList[x].playerAbility == 7 ? Constants.LargestArmyBonus:0) > largestArmy) 
+			{
+				largestArmy = (LocalGame.PlayerList[x].Armies + LocalGame.PlayerList[x].playerAbility == 7 ? Constants.LargestArmyBonus:0); 
+				largestArmyPlayer = x;
+			}
+		}
+
+		if (largestArmyPlayer != LocalGame.MostArmiesPlayer && largestArmyPlayer != -1) 
+		{
+			LocalGame.PlayerList [LocalGame.MostArmiesPlayer].LargestArmyWinner = false;
+            LocalGame.MostArmies = largestArmy;
+            LocalGame.MostArmiesPlayer = largestArmyPlayer;
+            GUIManager.SetLargestArmyWinner(previousLargestArmyPlayer, largestArmyPlayer);
+        }
+    }
 
 	public void ShowHexLocations()
 	{
@@ -1670,49 +1807,96 @@ public class GameBoard : MonoBehaviour
 
 	public void NextPlayer()
 	{
-		HideAvailableSettlementsToUpgrade();
-		HideAvailableRoads();
-		HideAvailableSettlements ();
+        HideAvailableSettlements();
+        HideAvailableSettlementsToUpgrade();
+        HideAvailableCitiesForArmies();
+        HideAvailableCitiesForAttack();
+        HideAvailableCitiesToAttack();
+        HideAvailableRoads();
+        HideHexLocations();
+        
 		BuildRoadButtonClicked = false;
 		BuildCityButtonClicked = false;
 		BuildSettlementButtonClicked = false;
+        BuyingArmy = false;
+        Attacking = false;
 
-		if (InitialPlacement)
+      if (LocalGame.isNetwork && CurrentPlayer == LocalPlayer)
+         NetManager.sendEndTurn();
+
+      if (InitialPlacement)
 		{
 			if (FirstTurn)
 			{
-				if (CurrentPlayer < 5)
-					CurrentPlayer++;
-				else
-				{
-					FirstTurn = false;
-				}
+                if (CurrentPlayer < LocalGame.PlayerList.Count - 1)
+                {
+                    CurrentPlayer++;
+                    //The swap player doesnt work for first turn for local... yet
+                    if (LocalGame.isNetwork)
+                        GUIManager.NextPlayerNetwork();
+                    //else
+                        //GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer);
+                    
+                }
+                else
+                {
+                    FirstTurn = false;
+                }
 
 			}
 			else
 			{
-				if (CurrentPlayer > 0)
-					CurrentPlayer--;
-				else
-				{
-					InitialPlacement = false;
-				}
+                if (CurrentPlayer > 0)
+                {
+                  CurrentPlayer--;
+                  //The swap player doesnt work for first turn for local... yet
+                  if (LocalGame.isNetwork)
+                        GUIManager.NextPlayerNetwork(true);
+                  //else
+                       // GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer, true);
+                    
+                }
+                else
+                {
+                    InitialPlacement = false;
+                    
+                    if (LocalGame.isNetwork)
+                    {
+                        // RollDiceNetwork
+                    }
+                    else
+                    {
+                        RollDiceClick();
+                        GUIManager.EnableGameCanvas();
+                    }
+                }
 
 			}
 		}
 		else
 		{
-			if (CurrentPlayer < 5)
+			if (CurrentPlayer < LocalGame.PlayerList.Count - 1)
 				CurrentPlayer++;
 			else
 			{
 				CurrentPlayer = 0;
 				DistributeGold();
 			}
-		}
 
-		GUIManager.UpdatePlayer();
-	}
+         if (LocalGame.isNetwork)
+         {
+            GUIManager.NextPlayerNetwork();
+            // RollDiceNetwork
+         }
+         else
+         {
+            GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer, (FirstTurn == false && InitialPlacement == true) ? true : false);
+            RollDiceClick();
+         }
+      }
+
+        GUIManager.UpdatePlayer();
+    }
 
 	public void DistributeResources(int rollNumber)
 	{
@@ -1727,7 +1911,7 @@ public class GameBoard : MonoBehaviour
 						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[0]))
 						{
 							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
 							break;
 						}
 					}
@@ -1737,7 +1921,7 @@ public class GameBoard : MonoBehaviour
 						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[1]))
 						{
 							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
 							break;
 						}
 					}
@@ -1747,7 +1931,7 @@ public class GameBoard : MonoBehaviour
 						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[2]))
 						{
 							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
 							break;
 						}
 					}
@@ -1757,7 +1941,7 @@ public class GameBoard : MonoBehaviour
 						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[3]))
 						{
 							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
 							break;
 						}
 					}
@@ -1767,7 +1951,7 @@ public class GameBoard : MonoBehaviour
 						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[4]))
 						{
 							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
 							break;
 						}
 					}
@@ -1777,7 +1961,7 @@ public class GameBoard : MonoBehaviour
 						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[5]))
 						{
 							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
 							break;
 						}
 					}
@@ -1787,27 +1971,37 @@ public class GameBoard : MonoBehaviour
         GUIManager.UpdatePlayer();
     }
 
-	public void DistributeResource(int resourceNumber, int playerNumber, bool isCity)
+	public void DistributeResource(Vector3 spawnLocation, int resourceNumber, int playerNumber, bool isCity)
 	{
+		int amountToDistribute = 0;
 		switch (resourceNumber)
 		{
 		case 0:
-			LocalGame.PlayerList[playerNumber].Wood += (isCity ? 2 : 1);
+			amountToDistribute = ((isCity ? 2 : 1) + (LocalGame.PlayerList [playerNumber].playerAbility == 0 ? 1 : 0));
+			LocalGame.PlayerList [playerNumber].Wood += amountToDistribute;
+			StartCoroutine(FloatText (spawnLocation, Color.black, amountToDistribute));
 			break;
 		case 1:
-			LocalGame.PlayerList[playerNumber].Ore += (isCity ? 2 : 1);
+			amountToDistribute = ((isCity ? 2 : 1) + (LocalGame.PlayerList [playerNumber].playerAbility == 5 ? 1 : 0));
+			LocalGame.PlayerList [playerNumber].Ore += amountToDistribute;
+			StartCoroutine(FloatText (spawnLocation, Color.grey, amountToDistribute));
 			break;
 		case 2:
-			// Desert, move robber code
+			LocalGame.PlayerList[playerNumber].Wheat += (isCity ? 2 : 1);
+			StartCoroutine(FloatText (spawnLocation, Color.yellow, (isCity ? 2 : 1)));
 			break;
 		case 3:
-			LocalGame.PlayerList[playerNumber].Wool += (isCity ? 2 : 1);
+			amountToDistribute = ((isCity ? 2 : 1) + (LocalGame.PlayerList [playerNumber].playerAbility == 6 ? 1 : 0));
+			LocalGame.PlayerList [playerNumber].Wool += amountToDistribute;
+			StartCoroutine(FloatText (spawnLocation, Color.white, amountToDistribute));
 			break;
 		case 4:
-			LocalGame.PlayerList[playerNumber].Brick += (isCity ? 2 : 1);
+			amountToDistribute = ((isCity ? 2 : 1) + (LocalGame.PlayerList [playerNumber].playerAbility == 7 ? 1 : 0));
+			LocalGame.PlayerList [playerNumber].Brick += amountToDistribute;
+			StartCoroutine(FloatText (spawnLocation, Color.red, amountToDistribute));
 			break;
 		case 5:
-			LocalGame.PlayerList[playerNumber].Wheat += (isCity ? 2 : 1);
+			// Desert, move robber code
 			break;
 		default:
 			break;
@@ -1915,18 +2109,18 @@ public class GameBoard : MonoBehaviour
 			}
 		}
 
-		if (stealFromPlayer[0] == true)
-			StealResources(0);
-		if (stealFromPlayer[1] == true)
-			StealResources(1);
-		if (stealFromPlayer[2] == true)
-			StealResources(2);
-		if (stealFromPlayer[3] == true)
-			StealResources(3);
-		if (stealFromPlayer[4] == true)
-			StealResources(4);
-		if (stealFromPlayer[5] == true)
-			StealResources(5);
+		if (stealFromPlayer[0] == true && LocalGame.PlayerList[0].playerAbility != 2)
+			StartCoroutine(StealResources(0, robbedHex.token_go.transform.position));
+		if (stealFromPlayer[1] == true && LocalGame.PlayerList[0].playerAbility != 2)
+			StartCoroutine(StealResources(1, robbedHex.token_go.transform.position));
+		if (stealFromPlayer[2] == true && LocalGame.PlayerList[0].playerAbility != 2)
+			StartCoroutine(StealResources(2, robbedHex.token_go.transform.position));
+		if (stealFromPlayer[3] == true && LocalGame.PlayerList[0].playerAbility != 2)
+			StartCoroutine(StealResources(3, robbedHex.token_go.transform.position));
+		if (stealFromPlayer[4] == true && LocalGame.PlayerList[0].playerAbility != 2)
+			StartCoroutine(StealResources(4, robbedHex.token_go.transform.position));
+		if (stealFromPlayer[5] == true && LocalGame.PlayerList[0].playerAbility != 2)
+			StartCoroutine(StealResources(5, robbedHex.token_go.transform.position));
 
 		GUIManager.UpdatePlayer();
 	}
@@ -1934,71 +2128,111 @@ public class GameBoard : MonoBehaviour
 
 	public void DistributeGold()
 	{
+		int goldToDistribute = 0;
 		foreach (Structure currentStructure in Structures)
 		{
 			if (currentStructure.PlayerOwner != -1)
 			{
+				goldToDistribute = (currentStructure.IsCity ? 100 : 50);
+				if (LocalGame.PlayerList [currentStructure.PlayerOwner].playerAbility == 4)
+					goldToDistribute = (int)(goldToDistribute * Constants.QueenGoldBonus);
 				LocalGame.PlayerList[currentStructure.PlayerOwner].Gold += (currentStructure.IsCity ? 100 : 50);
 			}
 		}
 	}
 
-	public void StealResources(int playerVictim)
+	IEnumerator StealResources(int playerVictim, Vector3 robberTokenLocation)
 	{
 		Player victim = LocalGame.PlayerList[playerVictim];
 		int resourceCount = victim.Brick + victim.Ore + victim.Wheat + victim.Wood + victim.Wool;
 		int resourceToSteal;
 		bool resourceStolen;
-		resourceCount /= 2;
+		int[] resourcesStolen = new int[5] {0, 0, 0, 0, 0};
 
-		for (int x = resourceCount; x > 0; x--)
+		if (resourceCount > 0)
 		{
-			resourceStolen = false;
-			do
+			resourceCount /= 2;
+			for (int x = resourceCount; x > 0; x--)
 			{
-				resourceToSteal = UnityEngine.Random.Range(1, 5);
-				switch (resourceToSteal)
+				resourceStolen = false;
+				do
 				{
-				case 1:
-					if (victim.Brick > 0)
+					resourceToSteal = UnityEngine.Random.Range(1, 6);
+					Debug.Log (resourceToSteal);
+					switch (resourceToSteal)
 					{
-						victim.Brick--;
+					case 1:
+						if (victim.Brick > 0)
+						{
+							victim.Brick--;
+							resourcesStolen[0]--;
+							resourceStolen = true;
+						}
+						break;
+					case 2:
+						if (victim.Ore > 0)
+						{
+							victim.Ore--;
+							resourcesStolen[1]--;
+							resourceStolen = true;
+						}
+						break;
+					case 3:
+						if (victim.Wheat > 0)
+						{
+							victim.Wheat--;
+							resourcesStolen[2]--;
+							resourceStolen = true;
+						}
+						break;
+					case 4:
+						if (victim.Wood > 0)
+						{
+							victim.Wood--;
+							resourcesStolen[3]--;
+							resourceStolen = true;
+						}
+						break;
+					case 5:
+						if (victim.Wool > 0)
+						{
+							victim.Wool--;
+							resourcesStolen[4]--;
+							resourceStolen = true;
+						}
+						break;
+					default:
 						resourceStolen = true;
+						break;
 					}
-					break;
-				case 2:
-					if (victim.Ore > 0)
-					{
-						victim.Ore--;
-						resourceStolen = true;
-					}
-					break;
-				case 3:
-					if (victim.Wheat > 0)
-					{
-						victim.Wheat--;
-						resourceStolen = true;
-					}
-					break;
-				case 4:
-					if (victim.Wood > 0)
-					{
-						victim.Wood--;
-						resourceStolen = true;
-					}
-					break;
-				case 5:
-					if (victim.Wool > 0)
-					{
-						victim.Wool--;
-						resourceStolen = true;
-					}
-					break;
-				default:
-					resourceStolen = true;
-					break;
-				}
-			} while (!resourceStolen);
+				} while (!resourceStolen);
+			}
+		}
+		
+		if (resourcesStolen[0] < 0)
+		{
+			FloatText(robberTokenLocation, Color.red, resourcesStolen[0]);
+			yield return new WaitForSeconds(1);
+		}
+		if (resourcesStolen[1] < 0)
+		{
+			FloatText(robberTokenLocation, Color.grey, resourcesStolen[1]);
+			yield return new WaitForSeconds(1);
+		}
+		if (resourcesStolen[2] < 0)
+		{
+			FloatText(robberTokenLocation, Color.yellow, resourcesStolen[2]);
+			yield return new WaitForSeconds(1);
+		}
+		if (resourcesStolen[3] < 0)
+		{
+			FloatText(robberTokenLocation, Color.black, resourcesStolen[3]);
+			yield return new WaitForSeconds(1);
+		}
+		if (resourcesStolen[4] < 0)
+		{
+			FloatText(robberTokenLocation, Color.white, resourcesStolen[4]);
+			yield return new WaitForSeconds(1);
 		}
 	}
 
@@ -2160,11 +2394,23 @@ public class GameBoard : MonoBehaviour
         int rollOne = Dice.Roll();
         int rollTwo = Dice.Roll();
 
-        GUIManager.rollDice(rollOne, rollTwo);
+        StartCoroutine(GUIManager.RollDice(rollOne, rollTwo));
         if (rollOne + rollTwo != 7)
-            DistributeResources(rollOne + rollTwo);
+           DistributeResources(rollOne + rollTwo);
         else
             ShowHexLocations();
+        if (LocalGame.isNetwork)
+        {
+           NetManager.sendDiceRoll(rollOne, rollTwo);
+        }
+    }
+
+    public void DiceRollNetwork(int rollOne, int rollTwo)
+    {
+        StartCoroutine(GUIManager.RollDice(rollOne, rollTwo));
+
+        if (rollOne + rollTwo != 7)
+            DistributeResources(rollOne + rollTwo);
     }
 
     public void ShowBarracksClick()

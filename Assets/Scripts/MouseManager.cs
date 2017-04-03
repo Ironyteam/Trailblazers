@@ -12,7 +12,11 @@ public class MouseManager : MonoBehaviour {
 	private void Start()
 	{
 		currentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
-		NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+      if (currentGameBoard.LocalGame.isNetwork)
+      {
+         NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+      }
+		
 	}
 
 	// Update is called once per frame
@@ -50,9 +54,13 @@ public class MouseManager : MonoBehaviour {
                                  Debug.Log(currentStructure.Location.X + currentStructure.Location.Y);
 											NetManager.sendBuildSettlement(currentStructure.Location.X, currentStructure.Location.Y);
                               }
-										// If initial placement, show first road to build
-										if (currentGameBoard.InitialPlacement)
-											currentGameBoard.ShowAvailableRoadsInitial (currentStructure.Location);
+                              // If initial placement, show first road to build
+                              if (currentGameBoard.InitialPlacement)
+                              {
+                                 currentGameBoard.ShowAvailableRoadsInitial(currentStructure.Location);
+                                 currentGameBoard.LocalGame.PlayerList[currentGameBoard.CurrentPlayer].Settlements++;
+                                 currentGameBoard.LocalGame.PlayerList[currentGameBoard.CurrentPlayer].UpdateVictoryPoints();
+                              }
 									}
 									// Current clicked settlement is owned by current player
 									else if (currentStructure.PlayerOwner == currentGameBoard.CurrentPlayer)

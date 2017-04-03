@@ -14,14 +14,14 @@ public class NetworkManager : MonoBehaviour
    int socketId;
    int socketPort = 5010;
    int connectionId;
-   const int serverConnectionID = 1; // Should always be zero but may need to reconfigure
-   const int hostConnectionID = 2; // Should be two may need to change
+   int serverConnectionID       = 1; // Updates when you connect to a server
+   const int hostConnectionID   = 2;
    const string myIP = "127.0.0.1";
    public List<Player> lobbyPlayers = new List<Player>();
    public Player myPlayer;
 
    bool isHostingGame = false;
-   bool inPlayerLobby   = false;
+   public static bool inPlayerLobby   = false;
    bool inGame        = false;
 
    List<string[]> gameList = new List<string[]>();
@@ -42,6 +42,7 @@ public class NetworkManager : MonoBehaviour
    public Button startGameBTN;
    public Button createGameBTN;
    public Button startGameCharacterSelectBTN;
+   public characterSelect characterScript;
 
    // Game settings input fields
    public Text gameName;
@@ -85,9 +86,6 @@ public class NetworkManager : MonoBehaviour
       requestGameList("172.16.51.127~Name~4~5~password~map");
       myGame = new NetworkGame();
       myPlayer = new Player("DefaultNAME");
-
-      // Hook up all buttons if in lobby screen
-      connectToGame("192.168.43.127");
    }
 
    private void OnEnable()
@@ -124,8 +122,24 @@ public class NetworkManager : MonoBehaviour
          createGameBTN.onClick.AddListener(() => createGame());
          startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
          startGameBTN.onClick.AddListener(() => startCharacterSelect());
+         startGameBTN.gameObject.SetActive(false);
          if (!isHostingGame)
+         {
             startGameBTN.gameObject.SetActive(false);
+         }
+         else
+         {
+            // Destroy the list of network games in the panel
+            foreach (Transform child in gameListCanvas.transform)
+            {
+               GameObject.Destroy(child.gameObject);
+            }
+
+            //startGameBTN.gameObject.SetActive(true);
+            createGameBTN.gameObject.SetActive(false);
+            refreshGameListBTN.gameObject.SetActive(false);
+            connectServerBTN.gameObject.SetActive(false);
+         }
 
          GameObject.Find("Network Handler").GetComponent<NetworkManager>();
          Debug.Log("Loaded Network Lobby");
@@ -139,6 +153,7 @@ public class NetworkManager : MonoBehaviour
       {
          startGameCharacterSelectBTN = GameObject.Find("Start Game").GetComponent<Button>();
          startGameCharacterSelectBTN.onClick.AddListener(() => characterSelectStartGame());
+         characterScript = GameObject.Find("Main Camera").GetComponent<characterSelect>();
          if (!isHostingGame)
             startGameCharacterSelectBTN.enabled = false;
       }
@@ -149,7 +164,7 @@ public class NetworkManager : MonoBehaviour
    {
       byte error;
       Debug.Log("\n" + "Connecting to server: " + ipField.text);
-      connectionId = NetworkTransport.Connect(socketId, ipField.text, socketPort, 0, out error);
+      serverConnectionID = NetworkTransport.Connect(socketId, ipField.text, socketPort, 0, out error);
       connectServerBTN.gameObject.SetActive(false);
       ipField.transform.parent.gameObject.SetActive(false);
       Debug.Log("\n" + "ConnectionID: " + connectionId);
@@ -163,6 +178,17 @@ public class NetworkManager : MonoBehaviour
       connectionId = NetworkTransport.Connect(socketId, ipAddress, socketPort, 0, out error);
       Debug.Log("\n" + "ConnectionID: " + connectionId);
    }
+
+   // Connect to game test with it returning connection id
+   public int connectToHost(string ipAddress)
+   {
+      byte error;
+      Debug.Log("\n" + "Trying to connect to: " + ipAddress);
+      int hostId = NetworkTransport.Connect(socketId, ipAddress, socketPort, 0, out error);
+      Debug.Log("\n" + "ConnectionID: " + connectionId);
+      return hostId;
+   }
+
 
    // Create a empty game
    public void createGame()
@@ -195,7 +221,7 @@ public class NetworkManager : MonoBehaviour
       {
          string gameInfo;
          isHostingGame = true;
-         startGameBTN.gameObject.SetActive(true);
+         myPlayer.connectionID = 0;
          lobbyPlayers.Add(myPlayer);
 
          gameInfo = Constants.addGame + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myGame.gameName +
@@ -211,13 +237,15 @@ public class NetworkManager : MonoBehaviour
    // Go to character select and tell the clients to go there
    public void startCharacterSelect()
    {
+      BoardManager.template          = myGame.gameMap;
+      BoardManager.numOfPlayers      = Int32.Parse(myGame.maxPlayers);
+      BoardManager.localPlayerIndex = myPlayer.playerIndex;
       sendActionToClients(Constants.goToCharacterSelect + Constants.commandDivider + Network.player.ipAddress, 0);
       sendPlayerNumbers();
-      BoardManager.template     = myGame.gameMap;
-      BoardManager.numOfPlayers = Int32.Parse(myGame.numberOfPlayers);
-      UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
+      SceneManager.LoadScene("Character Select");
    }
 
+   // Send all players what index they are on the player list
    public void sendPlayerNumbers()
    {
       for (int i = 1; i < lobbyPlayers.Count; i++)
@@ -226,9 +254,23 @@ public class NetworkManager : MonoBehaviour
       }
    }
 
+   // Create a player list and add myself in the correct index position
+   public void setupPlayersOnClient(int myIndex)
+   {
+      Debug.Log("Max players " + myGame.maxPlayers + " -  My index " + myIndex);
+      for (int i = 0; i < Int32.Parse(myGame.maxPlayers); i++)
+      {
+         Player player = new Player();
+         lobbyPlayers.Add(player);
+      }
+      myPlayer.playerIndex = myIndex;
+      lobbyPlayers[myIndex] = myPlayer;
+   }
+
    // Tell the clients to go to in game scene
    public void characterSelectStartGame()
    {
+      inGame = true;
       sendActionToClients(Constants.gameStarted + Constants.commandDivider + Network.player.ipAddress, 0);
    }
 
@@ -299,27 +341,32 @@ public class NetworkManager : MonoBehaviour
          case Constants.sendMap:
             getMapFromNetwork(gameInfo[1]);
             break;
+         case Constants.sendGameInfo:
+            setupGameInfoFromHost(gameInfo[1]);
+            break;
          case Constants.goToCharacterSelect:       // #, ipAddress
             Debug.Log("MapGame template is: " + myGame.gameMap);
-            BoardManager.template = myGame.gameMap;
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Character Select");
-            break;
-         case Constants.gameStarted:
-            UnityEngine.SceneManagement.SceneManager.LoadScene("In Game Scene");
-            break;
-         case Constants.gameEnded:         // #, ipAddress
-         case Constants.characterSelect:   // #, character
-            break;
-         case Constants.playerNumber:
-            myPlayer.playerIndex = Int32.Parse(gameInfo[1]);
+            BoardManager.template         = myGame.gameMap;
+            BoardManager.localPlayerIndex = myPlayer.playerIndex;
+            SceneManager.LoadScene("Character Select");
             break;
          case Constants.characterResult:   // #, characterResult
             break;
-         case Constants.diceRoll:          // #, number1, number2
+         case Constants.gameStarted:
+            SceneManager.LoadScene("In Game Scene");
+            break;
+         case Constants.gameEnded:         // #, ipAddress
+            break;
+         case Constants.playerNumber:
+            setupPlayersOnClient(Int32.Parse(gameInfo[1]));
             break;
          case Constants.networkError:      // #, info
             networkError(gameInfo[1]);
             break;
+         case Constants.diceRoll:          // #, number1, number2
+            // Fall through
+         case Constants.characterSelect:   // #, character, player index
+            // Fall through
          case Constants.buildSettlement:
             // Fall through
          case Constants.upgradeToCity:
@@ -346,22 +393,23 @@ public class NetworkManager : MonoBehaviour
    }
 
    // Send request to host to join game
-   public void requestGameJoin()
+   public void requestGameJoin(int hostId)
    {
       Debug.Log("\nRequesting to join game, connectionID:" + connectionId);
       string message = Constants.addPlayer + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myPlayer.Name;
-      sendSocketMessage(message, connectionId);
+      sendSocketMessage(message, hostId);
    }
+
    // Joined game, disable buttons
    public void onJoinGameClient()
    {
       inPlayerLobby = true;
 
-      // Destroy everything in the panel
+      /*// Destroy everything in the panel
       foreach (Transform child in gameListCanvas.transform)
       {
-         GameObject.Destroy(child.gameObject);
-      }
+         child.gameObject.SetActive(false);
+      }*/
 
       createGameBTN.gameObject.SetActive(false);
       refreshGameListBTN.gameObject.SetActive(false);
@@ -373,15 +421,13 @@ public class NetworkManager : MonoBehaviour
    {
       Debug.Log("\nInside add player");
       string[] playerInfo = gameInfo.Split(Convert.ToChar(Constants.gameDivider));
-      
+
+      // Send the player the game info
+      sendGameInfo(connectionID);
+
       // Send the player the map that is being played
       sendMap(myGame, connectionID);
 
-      // Destroy everything in the panel
-      foreach (Transform child in gameListCanvas.transform)
-      {
-         GameObject.Destroy(child.gameObject);
-      }
 
       // Tell connecting player he failed to to join lobby, either it is full or we are not hosting
       if (!isHostingGame || !myGame.addPlayer())
@@ -399,6 +445,10 @@ public class NetworkManager : MonoBehaviour
       };
 
       lobbyPlayers.Add(newplayer);
+      if (lobbyPlayers.Count == Int32.Parse(myGame.maxPlayers))
+      {
+         startGameBTN.gameObject.SetActive(true);
+      }
 
       // Create UI GameObject to list player
       GameObject newPlayer = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
@@ -406,6 +456,38 @@ public class NetworkManager : MonoBehaviour
       playerTexts[0].text = myGame.numberOfPlayers;
       playerTexts[1].text = playerInfo[1];
       playerTexts[3].text = playerInfo[0];
+   }
+
+   // Send the player the game info
+   public void sendGameInfo(int playerID)
+   {
+      string message = Constants.sendGameInfo + Constants.commandDivider + myGame.mapName + Constants.gameDivider +
+                       myGame.maxPlayers + Constants.gameDivider + myGame.turnTimer + Constants.gameDivider + myGame.numberOfVictoryPoints +
+                       Constants.gameDivider + myGame.abilitiesOn;
+      sendSocketMessage(message, playerID);
+   }
+
+   // Assign the values to myGame recieved from host, also assign them to BoardManager's static variables
+   public void setupGameInfoFromHost(string gameInfo)
+   {
+      // MapName, MaxPlayers, TurnTimer, VictoryPoints, AbilitesOn
+      string[] parameters = gameInfo.Split(Convert.ToChar(Constants.gameDivider));
+
+      myGame.mapName               = parameters[0];
+      myGame.maxPlayers            = parameters[1];
+      myGame.turnTimer             = parameters[2];
+      myGame.numberOfVictoryPoints = parameters[3];
+      myGame.abilitiesOn           = parameters[4];
+
+
+      BoardManager.numOfPlayers         = Int32.Parse(myGame.maxPlayers);
+      BoardManager.turnTimerMax         = Int32.Parse(myGame.turnTimer);
+      BoardManager.victoryPoints        = Int32.Parse(myGame.numberOfVictoryPoints);
+      if (Int32.Parse(myGame.abilitiesOn) == 1)
+         BoardManager.characterAbilitiesOn = true;
+      else
+         BoardManager.characterAbilitiesOn = false;
+
    }
 
    // Send the map over the network as a string
@@ -434,8 +516,7 @@ public class NetworkManager : MonoBehaviour
             break;
          case "4":
             myGame.mapPiece4 = mapStuff[1];
-            string map;
-            map = myGame.assembledMapStrings();
+            myGame.mapString = myGame.assembledMapStrings();
             // Save map to custom maps folder
             FileHandler fh = new FileHandler();
             fh.checkForFiles();
@@ -548,16 +629,25 @@ public class NetworkManager : MonoBehaviour
 
    }
 
-   // Send character select choice
-   void characterSelect(string[] gameInfo)
+   // Recieve message telling if character choice was successful
+   void characterResult()
    {
 
    }
 
-   // Recieve message telling if character choice was successful
-   void characterResult(string[] gameInfo)
+   // Assign a character pick to the correct player
+   // character, playerIndex
+   public void assignCharacter(string gameInfo)
    {
+      string[] parameters = gameInfo.Split(Convert.ToChar(Constants.gameDivider));
 
+      int index     = Int32.Parse(parameters[1]);
+      int character = Int32.Parse(parameters[0]);
+
+      lobbyPlayers[index].Character = character;
+      characterScript.playerChoiceImages[index].sprite = Resources.Load<Sprite>(Characters.Names[character]) as Sprite;
+      characterScript.currentPicker += 1;
+      characterSelect.selectedCharacters[index] = character;
    }
 
    // Get the result of a dice roll
@@ -587,8 +677,30 @@ public class NetworkManager : MonoBehaviour
 
    }
 
-   // Network commands exclusive to gameplay
-#region Game Commands
+   // Network commands called by external scripts
+ #region Game Commands
+   
+   // Send character select choice
+   // character, playerIndex
+   public void sendCharacterSelect(int character, int playerIndex)
+   {
+      string message = Constants.characterSelect + Constants.commandDivider + character + Constants.gameDivider + playerIndex;
+      if (!isHostingGame)
+         sendSocketMessage(message, hostConnectionID);
+      else
+         sendActionToClients(message, 0);
+   }
+
+   // Send the two numbers that make up the dice roll
+   // Number1, Number2
+   public void sendDiceRoll(int number1, int number2, int targetID = hostConnectionID)
+   {
+      string message = Constants.diceRoll + Constants.commandDivider + number1 + Constants.gameDivider + number2;
+      if (!isHostingGame)
+         sendSocketMessage(message, hostConnectionID);
+      else
+         sendActionToClients(message, 0);
+   }
 
    // Sends two coordinates of settlement
    public void sendBuildSettlement(int x, int y, int targetID = hostConnectionID)
@@ -691,6 +803,13 @@ public class NetworkManager : MonoBehaviour
 
       switch (commandCode)
       {
+         case Constants.characterSelect:
+            assignCharacter(commandInfo);
+            break;
+         case Constants.diceRoll:
+            // Number 1, Number2
+            mapObject.DiceRollNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
+            break;
          case Constants.buildSettlement:
             // X = gameInfo[0], Y = gameInfo[1]
 			   mapObject.BuildSettlementNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
@@ -717,7 +836,7 @@ public class NetworkManager : MonoBehaviour
             break;
          case Constants.endTurn:
             // No parameters
-            mapObject.EndTurnNetwork();
+            mapObject.NextPlayer();
             break;
          case Constants.startTurn:
             // No parameters
@@ -739,7 +858,10 @@ public class NetworkManager : MonoBehaviour
       foreach (Player player in lobbyPlayers)
       {
          if (player.connectionID != connectionID)
+         {
             sendSocketMessage(message, player.connectionID);
+            Debug.Log("Send action to " + player.connectionID + "  " + message);
+         }
       }
    }
 }

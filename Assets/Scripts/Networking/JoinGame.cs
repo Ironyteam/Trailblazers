@@ -18,14 +18,16 @@ public class JoinGame : MonoBehaviour
         
    IEnumerator joinGame()
    {
-      Text[] gameTextBoxes = joinBTN.transform.parent.transform.GetComponentsInChildren<Text>();
-      Debug.Log(gameTextBoxes.Length);
-      Debug.Log(gameTextBoxes[6].text);
-      networkThing = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
-      networkThing.connectToGame(gameTextBoxes[6].text);
-      networkThing.onJoinGameClient();
-      yield return new WaitForSecondsRealtime(2);
-      networkThing.requestGameJoin();
-      networkThing.myGame.mapName = gameTextBoxes[4].text;
+      if (NetworkManager.inPlayerLobby == false)
+      {
+         Text[] gameTextBoxes = joinBTN.transform.parent.transform.GetComponentsInChildren<Text>();
+         networkThing = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+         networkThing.myGame.mapName = gameTextBoxes[4].text;
+         NetworkManager.inPlayerLobby = true;
+         int hostId = networkThing.connectToHost(gameTextBoxes[6].text);
+         networkThing.onJoinGameClient();
+         yield return new WaitForSecondsRealtime(2);
+         networkThing.requestGameJoin(hostId);
+      }
    }
 }

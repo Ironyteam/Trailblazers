@@ -13,6 +13,7 @@ public class Player
 	 public int connectionID;   // Used to send a message to a player, linked with id number
     public int playerIndex;
 
+	public	int playerAbility = -1;
 
     public string Name;        // The player's name as entered.
     public int LongestRoad = 0;
@@ -64,6 +65,20 @@ public class Player
         turnOrder = 0;
         victoryPoints = 0;
     }
+
+    public Player(string NewName, int Ability)
+    {
+        Name = NewName;
+        playerAbility = Ability;
+        armies = 0;
+        character = 0;
+        cities = 0;
+        gold = Constants.StartingGold;
+        roads = 0;
+        settlements = 0;
+        turnOrder = 0;
+        victoryPoints = 0;
+    }
     #endregion Public constructors
 
     // Public accessors. Includes data validation.
@@ -94,7 +109,7 @@ public class Player
         }
         set
         {
-            if (value > 0)
+            if (value >= 0)
             {
                 character = value;
             }
@@ -239,19 +254,19 @@ public class Player
     }
 
     // Sets the specific Brick discount for when a player builds on a Brick port.
-    public void SetBrickDiscount() { brickDiscount = Constants.SpecificDiscount; }
+	public void SetBrickDiscount() { brickDiscount = Constants.StandardDiscount; }
 
     // Sets the specific Ore discount for when a player builds on an Ore port.
-    public void SetOreDiscount() { oreDiscount = Constants.SpecificDiscount; }
+	public void SetOreDiscount() { oreDiscount = Constants.StandardDiscount; }
 
     // Sets the specific Wheat discount for when a player builds on a Wheat port.
-    public void SetWheatDiscount() { wheatDiscount = Constants.SpecificDiscount; }
+	public void SetWheatDiscount() { wheatDiscount = Constants.StandardDiscount; }
 
     // Sets the specific Wood discount for when a player builds on a Wood port.
-    public void SetWoodDiscount() { woodDiscount = Constants.SpecificDiscount; }
+	public void SetWoodDiscount() { woodDiscount = Constants.StandardDiscount; }
 
     // Sets the specific Wool discount for when a player builds on a Wool port.
-    public void SetWoolDiscount() { woolDiscount = Constants.SpecificDiscount; }
+	public void SetWoolDiscount() { woolDiscount = Constants.StandardDiscount; }
 
 
     public bool CanBuyBrick()
@@ -469,14 +484,19 @@ public class Player
     {
         bool tempBool = true;
 
-        if (Brick < Constants.BricksPerRoad)
-            tempBool = false;
+		if (playerAbility != 0)
+        	if (Brick < Constants.BricksPerRoad )
+            	tempBool = false;
         if (Ore < Constants.OrePerRoad)
             tempBool = false;
         if (Wheat < Constants.WheatPerRoad)
             tempBool = false;
-        if (Wood < Constants.WoodPerRoad)
-            tempBool = false;
+		if (playerAbility == 0)
+	        if (Wood < 2 * Constants.WoodPerRoad)
+	            tempBool = false;
+		else
+			if (Wood < Constants.WoodPerRoad)
+				tempBool = false;
         if (Wool < Constants.WoolPerRoad)
             tempBool = false;
 
@@ -486,21 +506,30 @@ public class Player
     // Subtracts the cost for a Road from the player's resource inventory and adds a Road to items built.
     public void BuildRoad()
     {
-        if (Brick < Constants.BricksPerRoad)
-            throw new System.ArgumentOutOfRangeException("Player does not own enough Brick to build a Road.");
+		if (playerAbility != 0)
+	        if (Brick < Constants.BricksPerRoad)
+	            throw new System.ArgumentOutOfRangeException("Player does not own enough Brick to build a Road.");
         if (Ore < Constants.OrePerRoad)
             throw new System.ArgumentOutOfRangeException("Player does not own enough Ore to build a Road.");
         if (Wheat < Constants.WheatPerRoad)
             throw new System.ArgumentOutOfRangeException("Player does not own enough Wheat to build a Road.");
-        if (Wood < Constants.WoodPerRoad)
-            throw new System.ArgumentOutOfRangeException("Player does not own enough Wood to build a Road.");
+		if (playerAbility == 0)
+			if (Wood < 2 * Constants.WoodPerRoad)
+	            throw new System.ArgumentOutOfRangeException("Player does not own enough Wood to build a Road.");
+		else
+			if (Wood < Constants.WoodPerRoad)
+				throw new System.ArgumentOutOfRangeException("Player does not own enough Wood to build a Road.");
         if (Wool < Constants.WoolPerRoad)
             throw new System.ArgumentOutOfRangeException("Player does not own enough Wool to build a Road.");
 
-        Brick -= Constants.BricksPerRoad;
+		if (playerAbility != 0)
+        	Brick -= Constants.BricksPerRoad;
         Ore -= Constants.OrePerRoad;
         Wheat -= Constants.WheatPerRoad;
-        Wood -= Constants.WoodPerRoad;
+		if (playerAbility == 0)
+			Wood -= (2 * Constants.WoodPerRoad);
+		else 
+			Wood -= Constants.WoodPerRoad;
         Wool -= Constants.WoolPerRoad;
 
         Roads++;
@@ -598,8 +627,12 @@ public class Player
 
         float cost = Constants.ArmyGoldCost;
 
-        if (Gold < (int)cost)
-            canBuy = false;
+		if (playerAbility != 1)
+	        if (Gold < (int)cost)
+	            canBuy = false;
+		else
+			if (Gold < (int)(.5f * cost))
+				canBuy = false;
 
         return canBuy;
     }
@@ -607,10 +640,17 @@ public class Player
     // Subtracts the cost to hire an Army from the player's gold amount and adds a Army to the player's total armies.
     public void HireArmy()
     {
-        if (gold < Constants.ArmyGoldCost)
-            throw new System.ArgumentOutOfRangeException("Player does not own enough gold to hire an Army.");
+		if (playerAbility != 1)
+	        if (gold < Constants.ArmyGoldCost)
+	            throw new System.ArgumentOutOfRangeException("Player does not own enough gold to hire an Army.");
+		else 
+			if (gold < (Constants.ArmyGoldCost / 2))
+				throw new System.ArgumentOutOfRangeException("Player does not own enough gold to hire an Army.");
 
-        gold -= Constants.ArmyGoldCost;
+		if (playerAbility != 1)
+        	gold -= Constants.ArmyGoldCost;
+		else
+			gold -= (Constants.ArmyGoldCost / 2);
         Armies++;
 
 		UpdateVictoryPoints();

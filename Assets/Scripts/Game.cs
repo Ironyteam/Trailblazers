@@ -18,9 +18,9 @@ public class Game
 
     private bool gameOver;              // Is the game over or not.
 
-    private int longestRoad = 4;            // The length of the longest road.
+    private int longestRoad = -1;            // The length of the longest road.
     private int longestRoadPlayer = -1;      // The player number who owns the longest road.
-    private int mostArmies = 7;             // The size of the largest army.
+    private int mostArmies = -1;             // The size of the largest army.
     private int mostArmiesPlayer = -1;       // The player number who owns the largest army.
     private int victoryPointsToWin = 10;     // Winning condition for the game. Will be adjusted based on the map chosen.
 

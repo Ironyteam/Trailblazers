@@ -20,6 +20,7 @@ public class NetworkGame
 	public string mapName;
    public string numberOfVictoryPoints;
    public string turnTimer;
+   public string abilitiesOn = "1"; // On by default
    public HexTemplate gameMap;
    public string mapString;
    public string mapPiece1;
@@ -29,8 +30,7 @@ public class NetworkGame
 
    public string assembledMapStrings()
    {
-      mapString = mapPiece1 + mapPiece2 + mapPiece3 + mapPiece4;
-      return mapString;
+      return mapPiece1 + mapPiece2 + mapPiece3 + mapPiece4;
    }
 
    public bool addPlayer()
