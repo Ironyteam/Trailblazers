@@ -72,7 +72,7 @@ public class GameBoard : MonoBehaviour
 	{
 		MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
 		GUIManager = GameObject.Find("Main Camera").GetComponent<GuiManager>();
-      NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+   //   NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
       MKGlowObject.BlurSpread = .125f;
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
