@@ -86,6 +86,9 @@ public class NetworkManager : MonoBehaviour
       requestGameList("172.16.51.127~Name~4~5~password~map");
       myGame = new NetworkGame();
       myPlayer = new Player("DefaultNAME");
+      lobbyPlayers.Add(myPlayer);
+      lobbyPlayers.Add(myPlayer);
+      lobbyPlayers.Add(myPlayer);
    }
 
    private void OnEnable()
@@ -267,6 +270,15 @@ public class NetworkManager : MonoBehaviour
       lobbyPlayers[myIndex] = myPlayer;
    }
 
+   // A player either left of joined a game refresh the players panel
+   public void lobbyPlayerChange(int numPlayers)
+   {
+      for (int i = 1; i < numPlayers; i++)
+      {
+         GameObject newPlayer = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
+      }
+   }
+
    // Tell the clients to go to in game scene
    public void characterSelectStartGame()
    {
@@ -318,6 +330,7 @@ public class NetworkManager : MonoBehaviour
             break;
          case NetworkEventType.DisconnectEvent:
             Debug.Log("\n" + "Remote client event disconnected");
+            playerDisconnected(recConnectionId);
             break;
       }
    }
@@ -331,6 +344,9 @@ public class NetworkManager : MonoBehaviour
          case Constants.addPlayer:         // #, ipAddress, password
             addPlayer(gameInfo[1], recConnectionID);
             Debug.Log("\nAdding Player");
+            break;
+         case Constants.playerEvent:
+            lobbyPlayerChange(Int32.Parse(gameInfo[1]));
             break;
          case Constants.requestGameList:   // #, game, game, game, game...
             requestGameList(gameInfo[1]);
@@ -400,6 +416,13 @@ public class NetworkManager : MonoBehaviour
       sendSocketMessage(message, hostId);
    }
 
+   // Player disconnected from the game
+   public void playerDisconnected(int playerConnectionID)
+   {
+      Player player = lobbyPlayers.Find(item => item.connectionID > 20);
+      
+   }
+
    // Joined game, disable buttons
    public void onJoinGameClient()
    {
@@ -456,6 +479,9 @@ public class NetworkManager : MonoBehaviour
       playerTexts[0].text = myGame.numberOfPlayers;
       playerTexts[1].text = playerInfo[1];
       playerTexts[3].text = playerInfo[0];
+
+      // Send the player join event to all the players
+      sendActionToClients(Constants.playerEvent + Constants.commandDivider + lobbyPlayers.Count, -1);
    }
 
    // Send the player the game info

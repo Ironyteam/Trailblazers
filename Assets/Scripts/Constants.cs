@@ -29,6 +29,7 @@ public static class Constants
    public const string goToCharacterSelect = "22";
    public const string sendGameInfo = "24";
    public const string playerNumber = "23";
+   public const string playerEvent  = "25";
    public const string gameStarted = "5";
    public const string gameEnded = "6";
    public const string characterSelect = "7";
