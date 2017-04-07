@@ -15,10 +15,11 @@ public class NetworkManager : MonoBehaviour
    int socketPort = 5010;
    int connectionId;
    int serverConnectionID       = 1; // Updates when you connect to a server
-   const int hostConnectionID   = 2;
+   public int hostConnectionID   = -1;
    const string myIP = "127.0.0.1";
    public List<Player> lobbyPlayers = new List<Player>();
    public Player myPlayer;
+   GameObject newPlayerPNL;
 
    bool isHostingGame = false;
    public static bool inPlayerLobby   = false;
@@ -85,10 +86,8 @@ public class NetworkManager : MonoBehaviour
 		// Create an fake game on launch for testing TEST
       requestGameList("172.16.51.127~Name~4~5~password~map");
       myGame = new NetworkGame();
-      myPlayer = new Player("DefaultNAME");
-      lobbyPlayers.Add(myPlayer);
-      lobbyPlayers.Add(myPlayer);
-      lobbyPlayers.Add(myPlayer);
+      myPlayer = new Player("Silas");
+      connectToServer("192.168.0.11");
    }
 
    private void OnEnable()
@@ -114,7 +113,7 @@ public class NetworkManager : MonoBehaviour
 
          // Buttons linkup
          connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
-         connectServerBTN.onClick.AddListener(() => connectToServer());
+         connectServerBTN.onClick.AddListener(() => connectToServer("192.168.0.11"));
          //hostGameBTN = GameObject.Find("HostGameBTN").GetComponent<Button>();
          //hostGameBTN.onClick.AddListener(() => hostGame());
          refreshGameListBTN = GameObject.Find("RefreshBTN").GetComponent<Button>();
@@ -163,11 +162,11 @@ public class NetworkManager : MonoBehaviour
    }
 
    // Connect to the server
-   public void connectToServer()
+   public void connectToServer(string ip)
    {
       byte error;
       Debug.Log("\n" + "Connecting to server: " + ipField.text);
-      serverConnectionID = NetworkTransport.Connect(socketId, ipField.text, socketPort, 0, out error);
+      serverConnectionID = NetworkTransport.Connect(socketId, ip, socketPort, 0, out error);
       connectServerBTN.gameObject.SetActive(false);
       ipField.transform.parent.gameObject.SetActive(false);
       Debug.Log("\n" + "ConnectionID: " + connectionId);
@@ -178,8 +177,8 @@ public class NetworkManager : MonoBehaviour
    {
       byte error;
       Debug.Log("\n" + "Trying to connect to: " + ipAddress);
-      connectionId = NetworkTransport.Connect(socketId, ipAddress, socketPort, 0, out error);
-      Debug.Log("\n" + "ConnectionID: " + connectionId);
+      hostConnectionID = NetworkTransport.Connect(socketId, ipAddress, socketPort, 0, out error);
+      Debug.Log("\n" + "Connected to host ID = " + hostConnectionID);
    }
 
    // Connect to game test with it returning connection id
@@ -223,17 +222,13 @@ public class NetworkManager : MonoBehaviour
       if (isHostingGame)
       {
          string gameInfo;
-         isHostingGame = true;
          myPlayer.connectionID = 0;
+         myPlayer.playerIndex  = 0;
          lobbyPlayers.Add(myPlayer);
 
          gameInfo = Constants.addGame + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myGame.gameName +
          Constants.gameDivider + "0" + Constants.gameDivider + myGame.maxPlayers + Constants.gameDivider + myGame.password + Constants.gameDivider + myGame.mapName;
          sendSocketMessage(gameInfo, serverConnectionID);
-      }
-      else
-      {
-         Debug.Log("\nError: Already hosting a game.");
       }
    }
 
@@ -242,7 +237,8 @@ public class NetworkManager : MonoBehaviour
    {
       BoardManager.template          = myGame.gameMap;
       BoardManager.numOfPlayers      = Int32.Parse(myGame.maxPlayers);
-      BoardManager.localPlayerIndex = myPlayer.playerIndex;
+      BoardManager.localPlayerIndex  = myPlayer.playerIndex;
+      Debug.Log("BoardManager.locaplayerindex = " + BoardManager.localPlayerIndex);
       sendActionToClients(Constants.goToCharacterSelect + Constants.commandDivider + Network.player.ipAddress, 0);
       sendPlayerNumbers();
       SceneManager.LoadScene("Character Select");
@@ -268,15 +264,28 @@ public class NetworkManager : MonoBehaviour
       }
       myPlayer.playerIndex = myIndex;
       lobbyPlayers[myIndex] = myPlayer;
+      BoardManager.localPlayerIndex = myPlayer.playerIndex;
+      Debug.Log("BoardManager.locaplayerindex = " + BoardManager.localPlayerIndex);
    }
 
-   // A player either left of joined a game refresh the players panel
-   public void lobbyPlayerChange(int numPlayers)
+   // A player joined the lobby
+   public void lobbyPlayerAdded(int numPlayers)
    {
-      for (int i = 1; i < numPlayers; i++)
-      {
-         GameObject newPlayer = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
-      }
+      GameObject newPlayerPNL = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
+   }
+
+   // A player left the lobby
+   public void lobbyPlayerLeft(int numPlayers)
+   {
+      if (newPlayerPNL != null)
+         Destroy(newPlayerPNL);
+   }
+
+   // The host left the game
+   public void hostDisconnected()
+   {
+      SceneManager.LoadScene("Menu");
+      // Tell the user somehow
    }
 
    // Tell the clients to go to in game scene
@@ -330,7 +339,10 @@ public class NetworkManager : MonoBehaviour
             break;
          case NetworkEventType.DisconnectEvent:
             Debug.Log("\n" + "Remote client event disconnected");
-            playerDisconnected(recConnectionId);
+            if (isHostingGame)
+               playerDisconnected(recConnectionId);
+            else
+               hostDisconnected();
             break;
       }
    }
@@ -346,7 +358,7 @@ public class NetworkManager : MonoBehaviour
             Debug.Log("\nAdding Player");
             break;
          case Constants.playerEvent:
-            lobbyPlayerChange(Int32.Parse(gameInfo[1]));
+            lobbyPlayerAdded(Int32.Parse(gameInfo[1]));
             break;
          case Constants.requestGameList:   // #, game, game, game, game...
             requestGameList(gameInfo[1]);
@@ -362,8 +374,7 @@ public class NetworkManager : MonoBehaviour
             break;
          case Constants.goToCharacterSelect:       // #, ipAddress
             Debug.Log("MapGame template is: " + myGame.gameMap);
-            BoardManager.template         = myGame.gameMap;
-            BoardManager.localPlayerIndex = myPlayer.playerIndex;
+            BoardManager.template = myGame.gameMap;
             SceneManager.LoadScene("Character Select");
             break;
          case Constants.characterResult:   // #, characterResult
@@ -719,17 +730,17 @@ public class NetworkManager : MonoBehaviour
 
    // Send the two numbers that make up the dice roll
    // Number1, Number2
-   public void sendDiceRoll(int number1, int number2, int targetID = hostConnectionID)
+   public void sendDiceRoll(int number1, int number2, int targetID)
    {
       string message = Constants.diceRoll + Constants.commandDivider + number1 + Constants.gameDivider + number2;
       if (!isHostingGame)
-         sendSocketMessage(message, hostConnectionID);
+         sendSocketMessage(message, targetID);
       else
          sendActionToClients(message, 0);
    }
 
    // Sends two coordinates of settlement
-   public void sendBuildSettlement(int x, int y, int targetID = hostConnectionID)
+   public void sendBuildSettlement(int x, int y, int targetID)
    {
       string message = Constants.buildSettlement + Constants.commandDivider + x + Constants.gameDivider + y;
       if (!isHostingGame)
@@ -738,7 +749,7 @@ public class NetworkManager : MonoBehaviour
          sendActionToClients(message, 0);
    }
 
-   public void sendUpgradeToCity(int x, int y, int targetID = hostConnectionID)
+   public void sendUpgradeToCity(int x, int y, int targetID)
    {
       string message = Constants.upgradeToCity + Constants.commandDivider + x + Constants.gameDivider + y;  
       if (!isHostingGame)
@@ -747,7 +758,7 @@ public class NetworkManager : MonoBehaviour
          sendActionToClients(message, 0);
    }
 
-   public void sendBuildRoad(int ax, int ay, int bx, int by, int targetID = hostConnectionID)
+   public void sendBuildRoad(int ax, int ay, int bx, int by, int targetID)
    {
       string message = Constants.buildRoad + Constants.commandDivider + ax + Constants.gameDivider + ay
                                               + Constants.gameDivider + bx + Constants.gameDivider + by;
@@ -758,7 +769,7 @@ public class NetworkManager : MonoBehaviour
          sendActionToClients(message, 0);
    }
 
-   public void sendBuildArmy(int x, int y, int targetID = hostConnectionID)
+   public void sendBuildArmy(int x, int y, int targetID)
    {
       string message = Constants.buildArmy + Constants.commandDivider + x + Constants.gameDivider + y;
       // May need to send a random int as Unity might think they are the same message
@@ -769,7 +780,7 @@ public class NetworkManager : MonoBehaviour
          sendActionToClients(message, 0);
    }
 
-   public void sendAttackCity(int attackerX, int attackerY, int defenderX, int defenderY, int targetID = hostConnectionID)
+   public void sendAttackCity(int attackerX, int attackerY, int defenderX, int defenderY, int targetID)
    {
       string message = Constants.attackCity + Constants.commandDivider + attackerX + Constants.gameDivider + attackerY
                                                + Constants.gameDivider + defenderX + Constants.gameDivider + defenderY;
@@ -780,7 +791,7 @@ public class NetworkManager : MonoBehaviour
          sendActionToClients(message, 0);
    }
 
-   public void sendMoveRobber(int x, int y, int targetID = hostConnectionID)
+   public void sendMoveRobber(int x, int y, int targetID)
    {
       string message = Constants.moveRobber + Constants.commandDivider + x + Constants.gameDivider + y;
 
@@ -790,17 +801,23 @@ public class NetworkManager : MonoBehaviour
          sendActionToClients(message, 0);
    }
 
-   public void sendEndTurn(int targetID = hostConnectionID)
+   public void sendEndTurn(int targetID)
    {
       string message = Constants.endTurn + Constants.commandDivider;
-
+      Debug.Log("Sending end turn");
       if (!isHostingGame)
+      {
+         Debug.Log("as Client");
          sendSocketMessage(message, targetID);
+      }
       else
+      {
+         Debug.Log("as Host");
          sendActionToClients(message, 0);
+      }
    }
 
-   public void sendStartTurn(int targetID = hostConnectionID)
+   public void sendStartTurn(int targetID)
    {
       String message = Constants.startTurn + Constants.commandDivider;
 
@@ -810,7 +827,7 @@ public class NetworkManager : MonoBehaviour
          sendActionToClients(message, 0);
    }
 
-   public void sendSendChat(int chatMessageNumber, int targetID = hostConnectionID)
+   public void sendSendChat(int chatMessageNumber, int targetID)
    {
       string message = Constants.sendChat + Constants.commandDivider + chatMessageNumber;
 
@@ -862,6 +879,7 @@ public class NetworkManager : MonoBehaviour
             break;
          case Constants.endTurn:
             // No parameters
+            Debug.Log("End turn recieved Player index = " + myPlayer.playerIndex + " hostConnectionID = " + hostConnectionID);
             mapObject.NextPlayer();
             break;
          case Constants.startTurn:
@@ -879,14 +897,18 @@ public class NetworkManager : MonoBehaviour
    }
 
    // Distributes a network message to all clients
-   void sendActionToClients(string message, int connectionID)
+   void sendActionToClients(string message, int ignoredID)
    {
-      foreach (Player player in lobbyPlayers)
+      if (isHostingGame)
       {
-         if (player.connectionID != connectionID)
+         Debug.Log("Is Hosting = " + isHostingGame);
+         foreach (Player player in lobbyPlayers)
          {
-            sendSocketMessage(message, player.connectionID);
-            Debug.Log("Send action to " + player.connectionID + "  " + message);
+            if (player.connectionID != ignoredID || player.connectionID != myPlayer.connectionID)
+            {
+               sendSocketMessage(message, player.connectionID);
+               Debug.Log("Client Loop Sending to " + player.connectionID + "  " + message);
+            }
          }
       }
    }
