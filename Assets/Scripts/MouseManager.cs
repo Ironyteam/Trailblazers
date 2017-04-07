@@ -116,15 +116,15 @@ public class MouseManager : MonoBehaviour {
 						{
 							if (currentRoad.Road_GO == ourHitObject)
 							{
-								// Build road
-								currentGameBoard.BuildRoad(currentRoad);
-								currentGameBoard.HideAvailableRoads();
-
                         if (currentGameBoard.LocalGame.isNetwork)
                         {
                            Debug.Log("Sending Road");
                            NetManager.sendBuildRoad(currentRoad.SideA.X, currentRoad.SideA.Y, currentRoad.SideB.X, currentRoad.SideB.Y, NetManager.hostConnectionID);
                         }
+
+								// Build road
+								currentGameBoard.BuildRoad(currentRoad);
+								currentGameBoard.HideAvailableRoads();
 
 								break;
 							}
