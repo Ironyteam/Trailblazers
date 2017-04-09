@@ -1818,12 +1818,12 @@ public class GameBoard : MonoBehaviour
        Debug.Log("NextPlayer: Turn changed");
 
       HideAvailableSettlements();
-        HideAvailableSettlementsToUpgrade();
-        HideAvailableCitiesForArmies();
-        HideAvailableCitiesForAttack();
-        HideAvailableCitiesToAttack();
-        HideAvailableRoads();
-        HideHexLocations();
+      HideAvailableSettlementsToUpgrade();
+      HideAvailableCitiesForArmies();
+      HideAvailableCitiesForAttack();
+      HideAvailableCitiesToAttack();
+      HideAvailableRoads();
+      HideHexLocations();
         
 		BuildRoadButtonClicked = false;
 		BuildCityButtonClicked = false;
@@ -1909,6 +1909,8 @@ public class GameBoard : MonoBehaviour
       }
       Debug.Log("NextPlayer: The current player index is: " + CurrentPlayer);
         GUIManager.UpdatePlayer();
+      if (LocalGame.PlayerList[CurrentPlayer].isConnected == false && LocalGame.isNetwork)
+         NextPlayer();
     }
 
 	public void DistributeResources(int rollNumber)

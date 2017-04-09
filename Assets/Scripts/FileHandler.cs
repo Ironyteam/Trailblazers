@@ -192,7 +192,7 @@ public class FileHandler
             {
                 for (int z = 0; z < HEIGHT; z++)
                 {
-                    int portSide = -1;
+                    //int portSide = -1;
 
                     // Loop passed additional spaces
                     while ((readChar = reader.Read()) != EOF &&
@@ -232,7 +232,7 @@ public class FileHandler
                     if (numbers.Count >= 1 && Int32.TryParse(numbers[2], out result) &&
                         result >= -1 && result <= 5)
                     {
-                        portSide = result;
+                        //portSide = result;
                     }
                     else
                     {

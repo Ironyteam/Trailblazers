@@ -20,6 +20,7 @@ public class NetworkManager : MonoBehaviour
    public List<Player> lobbyPlayers = new List<Player>();
    public Player myPlayer;
    GameObject newPlayerPNL;
+   Player player;
 
    bool isHostingGame = false;
    public static bool inPlayerLobby   = false;
@@ -250,7 +251,7 @@ public class NetworkManager : MonoBehaviour
       Debug.Log("Max players " + myGame.maxPlayers + " -  My index " + myIndex);
       for (int i = 0; i < Int32.Parse(myGame.maxPlayers); i++)
       {
-         Player player = new Player();
+         player = new Player();
          lobbyPlayers.Add(player);
       }
       myPlayer.playerIndex = myIndex;
@@ -262,7 +263,7 @@ public class NetworkManager : MonoBehaviour
    // A player joined the lobby
    public void lobbyPlayerAdded(int numPlayers)
    {
-      GameObject newPlayerPNL = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
+      newPlayerPNL = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
    }
 
    // A player left the lobby
@@ -335,7 +336,7 @@ public class NetworkManager : MonoBehaviour
             else if (lobbyPlayers[0] != null && recConnectionId == hostConnectionID)
                hostDisconnected();
             else if (recConnectionId == serverConnectionID)
-               ;
+               Debug.Log("Server disconnected");
                // Server disconnected
             break;
       }
@@ -422,8 +423,9 @@ public class NetworkManager : MonoBehaviour
    // Player disconnected from the game
    public void playerDisconnected(int playerConnectionID)
    {
-      Player player = lobbyPlayers.Find(item => item.connectionID > 20);
-      
+      if (inGame)
+         Debug.Log("Player disconnected in game");
+      player = lobbyPlayers.Find(item => item.connectionID == playerConnectionID); 
    }
 
    // Joined game, disable buttons
