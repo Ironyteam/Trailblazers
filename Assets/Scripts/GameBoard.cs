@@ -28,8 +28,8 @@ public class GameBoard : MonoBehaviour
 	float zOffset = 3.4f;
 	float zPos;
 
-   System.Diagnostics.StackTrace stacktrace = new System.Diagnostics.StackTrace();
-   public List<Road> Roads			  = new List<Road>();
+
+	public List<Road> Roads			  = new List<Road>();
 	public List<Structure> Structures = new List<Structure>();
 	public List<GameObject> Tokens    = new List<GameObject>();
 	public Coordinate hexCoordinate;
@@ -70,9 +70,9 @@ public class GameBoard : MonoBehaviour
     */
 	void Start()
 	{
-      MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
+		MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
 		GUIManager = GameObject.Find("Main Camera").GetComponent<GuiManager>();
-      MKGlowObject.BlurSpread = .125f;
+        MKGlowObject.BlurSpread = .125f;
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
         GUIManager.DisableGameCanvas();
