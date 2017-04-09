@@ -48,6 +48,7 @@ public static class Constants
    public const string sendChat = "18";
    public const string networkError = "19";
    public const string lobbyFull = "20";
+   public const string leaveGame = "26";
    public const string sendMap   = "21";
    public const string serverKillCode = "1234";
 

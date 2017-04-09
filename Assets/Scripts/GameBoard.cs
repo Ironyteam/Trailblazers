@@ -376,7 +376,7 @@ public class GameBoard : MonoBehaviour
          if (LocalPlayer == CurrentPlayer)
             GUIManager.EnableGameCanvas();
          else
-            GUIManager.EnableGameCanvas();
+            GUIManager.DisableGameCanvas();
    }
 
 	void spawnStructureOne(int xCoord, int yCoord)
@@ -766,11 +766,11 @@ public class GameBoard : MonoBehaviour
 		{
             if (LocalGame.isNetwork && CurrentPlayer != LocalPlayer)
             {
-					Debug.Log("Build Road CurrentPlayer != LocalPlayer");
+					Debug.Log("BuildRoad: (LocalGame.isNetwork && CurrentPlayer != LocalPlayer) = true");
             }
             else
             {
-               Debug.Log("NextTurn GameBoard");
+               Debug.Log("BuildRoad: (LocalGame.isNetwork && CurrentPlayer != LocalPlayer) = fals");
 				   NextPlayer();
             }
 
@@ -778,8 +778,6 @@ public class GameBoard : MonoBehaviour
             if (InitialPlacement)
             {
                 if (!LocalGame.isNetwork)
-                    ShowAvailableSettlementsInitial();
-                else if (LocalPlayer == CurrentPlayer)
                     ShowAvailableSettlementsInitial();
             }
 		}
@@ -1817,7 +1815,7 @@ public class GameBoard : MonoBehaviour
 
 	public void NextPlayer()
 	{
-       Debug.Log("Turn changed");
+       Debug.Log("NextPlayer: Turn changed");
 
       HideAvailableSettlements();
         HideAvailableSettlementsToUpgrade();
@@ -1883,8 +1881,11 @@ public class GameBoard : MonoBehaviour
                     }
                 }
 
-			}
-		}
+            }
+            
+            if (InitialPlacement && LocalGame.isNetwork && LocalPlayer == CurrentPlayer)
+                ShowAvailableSettlementsInitial();
+        }
 		else
 		{
 			if (CurrentPlayer < LocalGame.PlayerList.Count - 1)
@@ -1906,7 +1907,7 @@ public class GameBoard : MonoBehaviour
             RollDiceClick();
          }
       }
-      Debug.Log("The current player is: " + CurrentPlayer);
+      Debug.Log("NextPlayer: The current player index is: " + CurrentPlayer);
         GUIManager.UpdatePlayer();
     }
 

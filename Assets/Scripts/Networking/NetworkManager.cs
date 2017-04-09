@@ -13,7 +13,6 @@ public class NetworkManager : MonoBehaviour
    int myReliableChannelId;
    int socketId;
    int socketPort = 5010;
-   int connectionId;
    int serverConnectionID       = 1; // Updates when you connect to a server
    public int hostConnectionID   = -1;
    const string myIP = "127.0.0.1";
@@ -80,14 +79,13 @@ public class NetworkManager : MonoBehaviour
       ConnectionConfig config = new ConnectionConfig();
       myReliableChannelId = config.AddChannel(QosType.Reliable);
       HostTopology topology = new HostTopology(config, maxConnections);
-      socketId = NetworkTransport.AddHost(topology, socketPort);
-      Debug.Log("\n" + "Socket open. Socket ID is : " + socketId);
+        socketId = NetworkTransport.AddHost(topology, socketPort);
 
 		// Create an fake game on launch for testing TEST
       requestGameList("172.16.51.127~Name~4~5~password~map");
       myGame = new NetworkGame();
       myPlayer = new Player("Silas");
-      connectToServer("192.168.0.11");
+      connectToServer("192.168.43.127");
    }
 
    private void OnEnable()
@@ -114,8 +112,6 @@ public class NetworkManager : MonoBehaviour
          // Buttons linkup
          connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
          connectServerBTN.onClick.AddListener(() => connectToServer("192.168.0.11"));
-         //hostGameBTN = GameObject.Find("HostGameBTN").GetComponent<Button>();
-         //hostGameBTN.onClick.AddListener(() => hostGame());
          refreshGameListBTN = GameObject.Find("RefreshBTN").GetComponent<Button>();
          refreshGameListBTN.onClick.AddListener(() => requestGameListServer());
          cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
@@ -144,7 +140,6 @@ public class NetworkManager : MonoBehaviour
          }
 
          GameObject.Find("Network Handler").GetComponent<NetworkManager>();
-         Debug.Log("Loaded Network Lobby");
       }
       else if (scene.name == "In Game Scene")
       {
@@ -165,30 +160,27 @@ public class NetworkManager : MonoBehaviour
    public void connectToServer(string ip)
    {
       byte error;
-      Debug.Log("\n" + "Connecting to server: " + ipField.text);
       serverConnectionID = NetworkTransport.Connect(socketId, ip, socketPort, 0, out error);
       connectServerBTN.gameObject.SetActive(false);
       ipField.transform.parent.gameObject.SetActive(false);
-      Debug.Log("\n" + "ConnectionID: " + connectionId);
+      Debug.Log("\n Connecting to server: " + ipField.text + "  Server ConnectionID: " + serverConnectionID);
    }
 
    // Connect to ipAddress, target auto connects in return
    public void connectToGame(string ipAddress)
    {
       byte error;
-      Debug.Log("\n" + "Trying to connect to: " + ipAddress);
       hostConnectionID = NetworkTransport.Connect(socketId, ipAddress, socketPort, 0, out error);
-      Debug.Log("\n" + "Connected to host ID = " + hostConnectionID);
+      Debug.Log("\n" + "connectToGame assigned hostConnectionID = " + hostConnectionID);
    }
 
    // Connect to game test with it returning connection id
    public int connectToHost(string ipAddress)
    {
       byte error;
-      Debug.Log("\n" + "Trying to connect to: " + ipAddress);
-      int hostId = NetworkTransport.Connect(socketId, ipAddress, socketPort, 0, out error);
-      Debug.Log("\n" + "ConnectionID: " + connectionId);
-      return hostId;
+      hostConnectionID = NetworkTransport.Connect(socketId, ipAddress, socketPort, 0, out error);
+      Debug.Log("\n" + "connectToGame assigned & returned hostConnectionID = " + hostConnectionID);
+      return hostConnectionID;
    }
 
 
@@ -213,7 +205,6 @@ public class NetworkManager : MonoBehaviour
       myGame.mapPiece3  = myGame.mapString.Substring(800, 400);
       myGame.mapPiece4  = myGame.mapString.Substring(1200, myGame.mapString.Length - 1200);
       hostGame();
-      Debug.Log("Setting up game" + gameName + totalPlayers.ToString() + turnTimer.ToString() + victoryPoints.ToString());
    }
 
    // Send game info to the server
@@ -238,7 +229,6 @@ public class NetworkManager : MonoBehaviour
       BoardManager.template          = myGame.gameMap;
       BoardManager.numOfPlayers      = Int32.Parse(myGame.maxPlayers);
       BoardManager.localPlayerIndex  = myPlayer.playerIndex;
-      Debug.Log("BoardManager.locaplayerindex = " + BoardManager.localPlayerIndex);
       sendActionToClients(Constants.goToCharacterSelect + Constants.commandDivider + Network.player.ipAddress, 0);
       sendPlayerNumbers();
       SceneManager.LoadScene("Character Select");
@@ -334,15 +324,18 @@ public class NetworkManager : MonoBehaviour
             Stream stream = new MemoryStream(recBuffer);
             BinaryFormatter formatter = new BinaryFormatter();
             string message = formatter.Deserialize(stream) as string;
-            Debug.Log("\nIncoming: " + message);
+            Debug.Log("\nMessage Recieved: " + message);
             processNetworkMessage(message, recConnectionId);
             break;
          case NetworkEventType.DisconnectEvent:
-            Debug.Log("\n" + "Remote client event disconnected");
+            Debug.Log("\n" + "Remote client disconnected");
             if (isHostingGame)
                playerDisconnected(recConnectionId);
-            else
+            else if (lobbyPlayers[0] != null && recConnectionId == hostConnectionID)
                hostDisconnected();
+            else if (recConnectionId == serverConnectionID)
+               ;
+               // Server disconnected
             break;
       }
    }
@@ -355,7 +348,6 @@ public class NetworkManager : MonoBehaviour
       {
          case Constants.addPlayer:         // #, ipAddress, password
             addPlayer(gameInfo[1], recConnectionID);
-            Debug.Log("\nAdding Player");
             break;
          case Constants.playerEvent:
             lobbyPlayerAdded(Int32.Parse(gameInfo[1]));
@@ -373,7 +365,6 @@ public class NetworkManager : MonoBehaviour
             setupGameInfoFromHost(gameInfo[1]);
             break;
          case Constants.goToCharacterSelect:       // #, ipAddress
-            Debug.Log("MapGame template is: " + myGame.gameMap);
             BoardManager.template = myGame.gameMap;
             SceneManager.LoadScene("Character Select");
             break;
@@ -422,7 +413,7 @@ public class NetworkManager : MonoBehaviour
    // Send request to host to join game
    public void requestGameJoin(int hostId)
    {
-      Debug.Log("\nRequesting to join game, connectionID:" + connectionId);
+      Debug.Log("\nrequestGameJoin: Connecting to game, hostConnectionID = " + hostConnectionID);
       string message = Constants.addPlayer + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myPlayer.Name;
       sendSocketMessage(message, hostId);
    }
@@ -453,7 +444,7 @@ public class NetworkManager : MonoBehaviour
    // Player connecting to your lobby
    public void addPlayer(string gameInfo, int connectionID)
    {
-      Debug.Log("\nInside add player");
+      Debug.Log("\naddPlayer called");
       string[] playerInfo = gameInfo.Split(Convert.ToChar(Constants.gameDivider));
 
       // Send the player the game info
@@ -566,7 +557,6 @@ public class NetworkManager : MonoBehaviour
                   int endOfFirstLine = myGame.mapString.IndexOf("\r\n");
                   myGame.mapName += "(" + numberToAppend + ")";
                   myGame.mapString = myGame.mapName + myGame.mapString.Substring(endOfFirstLine, myGame.mapString.Length - endOfFirstLine);
-                  Debug.Log("SAVING MAP: " + myGame.mapString);
                   fh.saveMap(myGame.mapString);
                }
                else
@@ -599,14 +589,10 @@ public class NetworkManager : MonoBehaviour
    {
       gameList.Clear();
       string[] gameInfo = serverGameList.Split(Convert.ToChar(Constants.gameListDivider));
-      Debug.Log("\n" + "Adding Games\n");
+      Debug.Log("\n" + "requestGameList: Adding Games\n");
       foreach (string game in gameInfo)
       {
          string[] tempGame = game.Split(Convert.ToChar(Constants.gameDivider));
-         foreach (string item in tempGame)
-         {
-            Debug.Log(item);
-         }
          gameList.Add(tempGame);
       }
       refreshGameList();
@@ -618,7 +604,7 @@ public class NetworkManager : MonoBehaviour
       if (gameInfo == Constants.serverKillCode)
       {
          isHostingGame = false;
-         Debug.Log("\n Your game has been canceled by the server");
+         Debug.Log("\nremoveGame: Your game has been canceled by the server");
       }
    }
 
@@ -804,15 +790,15 @@ public class NetworkManager : MonoBehaviour
    public void sendEndTurn(int targetID)
    {
       string message = Constants.endTurn + Constants.commandDivider;
-      Debug.Log("Sending end turn");
+
       if (!isHostingGame)
       {
-         Debug.Log("as Client");
+         Debug.Log("sendEndTurn: Sending end turn as Client");
          sendSocketMessage(message, targetID);
       }
       else
       {
-         Debug.Log("as Host");
+         Debug.Log("sendEndTurn: Sending end turn as Host");
          sendActionToClients(message, 0);
       }
    }
@@ -879,7 +865,7 @@ public class NetworkManager : MonoBehaviour
             break;
          case Constants.endTurn:
             // No parameters
-            Debug.Log("End turn recieved Player index = " + myPlayer.playerIndex + " hostConnectionID = " + hostConnectionID);
+            Debug.Log("gameCommandProcessing: End turn constant recieved Player index = " + myPlayer.playerIndex + " hostConnectionID = " + hostConnectionID);
             mapObject.NextPlayer();
             break;
          case Constants.startTurn:
@@ -901,13 +887,12 @@ public class NetworkManager : MonoBehaviour
    {
       if (isHostingGame)
       {
-         Debug.Log("Is Hosting = " + isHostingGame);
          foreach (Player player in lobbyPlayers)
          {
-            if (player.connectionID != ignoredID || player.connectionID != myPlayer.connectionID)
+            if (player.connectionID != ignoredID && player.connectionID != myPlayer.connectionID && player.connectionID != serverConnectionID)
             {
                sendSocketMessage(message, player.connectionID);
-               Debug.Log("Client Loop Sending to " + player.connectionID + "  " + message);
+               Debug.Log("sendActionToClients: Sending to ID" + player.connectionID + " Player index = " + player.playerIndex + "  :" + message);
             }
          }
       }
