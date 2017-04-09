@@ -25,10 +25,13 @@ public static class Constants
    public const string addGame = "1";
    public const string addPlayer = "2";
    public const string requestGameList = "3";
-   public const string cancelGame = "4";
+   public const string cancelGame          = "4";
    public const string goToCharacterSelect = "22";
+   public const string inGameSceneLoaded   = "27"; // SILAS
+   public const string goToInGameScene     = "28"; // SILAS
    public const string sendGameInfo = "24";
    public const string playerNumber = "23";
+   public const string playerEvent  = "25";
    public const string gameStarted = "5";
    public const string gameEnded = "6";
    public const string characterSelect = "7";
@@ -47,6 +50,7 @@ public static class Constants
    public const string sendChat = "18";
    public const string networkError = "19";
    public const string lobbyFull = "20";
+   public const string leaveGame = "26";
    public const string sendMap   = "21";
    public const string serverKillCode = "1234";
 

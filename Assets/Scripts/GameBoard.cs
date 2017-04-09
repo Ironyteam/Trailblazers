@@ -72,8 +72,7 @@ public class GameBoard : MonoBehaviour
 	{
 		MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
 		GUIManager = GameObject.Find("Main Camera").GetComponent<GuiManager>();
-   //   NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
-      MKGlowObject.BlurSpread = .125f;
+        MKGlowObject.BlurSpread = .125f;
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
         GUIManager.DisableGameCanvas();
@@ -83,7 +82,10 @@ public class GameBoard : MonoBehaviour
 
         LocalGame.isNetwork = NavigationScript.networkGame;
 
-        foreach (int selectedCharacter in characterSelect.selectedCharacters)
+      if (LocalGame.isNetwork)
+         NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+
+      foreach (int selectedCharacter in characterSelect.selectedCharacters)
 		    LocalGame.PlayerList.Add(new Player(Characters.Names[selectedCharacter], BoardManager.characterAbilitiesOn ? selectedCharacter:-1));
 
 		foreach (Player currentPlayer in LocalGame.PlayerList) 
@@ -374,7 +376,7 @@ public class GameBoard : MonoBehaviour
          if (LocalPlayer == CurrentPlayer)
             GUIManager.EnableGameCanvas();
          else
-            GUIManager.EnableGameCanvas();
+            GUIManager.DisableGameCanvas();
    }
 
 	void spawnStructureOne(int xCoord, int yCoord)
@@ -762,14 +764,20 @@ public class GameBoard : MonoBehaviour
 		// Cycles to the next player and shows initial settlements
 		if (InitialPlacement)
 		{
-				NextPlayer();
+            if (LocalGame.isNetwork && CurrentPlayer != LocalPlayer)
+            {
+					Debug.Log("BuildRoad: (LocalGame.isNetwork && CurrentPlayer != LocalPlayer) = true");
+            }
+            else
+            {
+               Debug.Log("BuildRoad: (LocalGame.isNetwork && CurrentPlayer != LocalPlayer) = fals");
+				   NextPlayer();
+            }
 
             // If still initial placement after cycling next player, show settlement locations
             if (InitialPlacement)
             {
                 if (!LocalGame.isNetwork)
-                    ShowAvailableSettlementsInitial();
-                else if (LocalPlayer == CurrentPlayer)
                     ShowAvailableSettlementsInitial();
             }
 		}
@@ -1807,7 +1815,9 @@ public class GameBoard : MonoBehaviour
 
 	public void NextPlayer()
 	{
-        HideAvailableSettlements();
+       Debug.Log("NextPlayer: Turn changed");
+
+      HideAvailableSettlements();
         HideAvailableSettlementsToUpgrade();
         HideAvailableCitiesForArmies();
         HideAvailableCitiesForAttack();
@@ -1822,7 +1832,7 @@ public class GameBoard : MonoBehaviour
         Attacking = false;
 
       if (LocalGame.isNetwork && CurrentPlayer == LocalPlayer)
-         NetManager.sendEndTurn();
+         NetManager.sendEndTurn(NetManager.hostConnectionID);
 
       if (InitialPlacement)
 		{
@@ -1871,8 +1881,11 @@ public class GameBoard : MonoBehaviour
                     }
                 }
 
-			}
-		}
+            }
+            
+            if (InitialPlacement && LocalGame.isNetwork && LocalPlayer == CurrentPlayer)
+                ShowAvailableSettlementsInitial();
+        }
 		else
 		{
 			if (CurrentPlayer < LocalGame.PlayerList.Count - 1)
@@ -1894,7 +1907,7 @@ public class GameBoard : MonoBehaviour
             RollDiceClick();
          }
       }
-
+      Debug.Log("NextPlayer: The current player index is: " + CurrentPlayer);
         GUIManager.UpdatePlayer();
     }
 
@@ -2401,7 +2414,7 @@ public class GameBoard : MonoBehaviour
             ShowHexLocations();
         if (LocalGame.isNetwork)
         {
-           NetManager.sendDiceRoll(rollOne, rollTwo);
+           NetManager.sendDiceRoll(rollOne, rollTwo, NetManager.hostConnectionID);
         }
     }
 
@@ -2432,7 +2445,7 @@ public class GameBoard : MonoBehaviour
         {
             BuyArmy(BuyingArmyCity);
             if (LocalGame.isNetwork)
-                NetManager.sendBuildArmy(BuyingArmyCity.Location.X, BuyingArmyCity.Location.Y);
+                NetManager.sendBuildArmy(BuyingArmyCity.Location.X, BuyingArmyCity.Location.Y, NetManager.hostConnectionID);
         }
     }
 }

@@ -52,7 +52,7 @@ public class MouseManager : MonoBehaviour {
 										if (currentGameBoard.LocalGame.isNetwork)
                               {
                                  Debug.Log(currentStructure.Location.X + currentStructure.Location.Y);
-											NetManager.sendBuildSettlement(currentStructure.Location.X, currentStructure.Location.Y);
+											NetManager.sendBuildSettlement(currentStructure.Location.X, currentStructure.Location.Y, NetManager.hostConnectionID);
                               }
                               // If initial placement, show first road to build
                               if (currentGameBoard.InitialPlacement)
@@ -69,7 +69,7 @@ public class MouseManager : MonoBehaviour {
 										currentGameBoard.HideAvailableSettlementsToUpgrade();
 
 										if (currentGameBoard.LocalGame.isNetwork)
-											NetManager.sendUpgradeToCity(currentStructure.Location.X, currentStructure.Location.Y);
+											NetManager.sendUpgradeToCity(currentStructure.Location.X, currentStructure.Location.Y, NetManager.hostConnectionID);
 									}
 									break;
 								}
@@ -101,7 +101,7 @@ public class MouseManager : MonoBehaviour {
 											currentGameBoard.HideAvailableCitiesToAttack ();
 
 											if (currentGameBoard.LocalGame.isNetwork)
-												NetManager.sendAttackCity(currentGameBoard.AttackingCity.Location.X, currentGameBoard.AttackingCity.Location.Y, currentGameBoard.DefendingCity.Location.X, currentGameBoard.DefendingCity.Location.Y);
+												NetManager.sendAttackCity(currentGameBoard.AttackingCity.Location.X, currentGameBoard.AttackingCity.Location.Y, currentGameBoard.DefendingCity.Location.X, currentGameBoard.DefendingCity.Location.Y, NetManager.hostConnectionID);
 
 										}
 									}
@@ -116,12 +116,15 @@ public class MouseManager : MonoBehaviour {
 						{
 							if (currentRoad.Road_GO == ourHitObject)
 							{
+                                if (currentGameBoard.LocalGame.isNetwork)
+                                {
+                                    Debug.Log("Sending Road");
+                                    NetManager.sendBuildRoad(currentRoad.SideA.X, currentRoad.SideA.Y, currentRoad.SideB.X, currentRoad.SideB.Y, NetManager.hostConnectionID);
+                                }
+
 								// Build road
 								currentGameBoard.BuildRoad(currentRoad);
 								currentGameBoard.HideAvailableRoads();
-
-								if (currentGameBoard.LocalGame.isNetwork)
-									NetManager.sendBuildRoad(currentRoad.SideA.X, currentRoad.SideA.Y, currentRoad.SideB.X, currentRoad.SideB.Y);
 
 								break;
 							}
@@ -140,7 +143,7 @@ public class MouseManager : MonoBehaviour {
 									currentGameBoard.HideHexLocations();
 
 									if (currentGameBoard.LocalGame.isNetwork)
-										NetManager.sendMoveRobber(x, z);
+										NetManager.sendMoveRobber(x, z, NetManager.hostConnectionID);
 								}
 							}
 						}

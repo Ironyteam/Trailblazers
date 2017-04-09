@@ -10,8 +10,11 @@ using System.IO;
 
 public class BoardManager : MonoBehaviour
 {
+    public Tutorial tutorial;  
+    
     public Camera mainCamera; //++++++++++++++++++++++++++
     public Camera screenShotCamera; //++++++++++++++++++++++++++
+	public Camera lookAtIslandCamera; //++++++++++++++++++++++++++
 
     public GameObject hexPrefab;
     public GameObject diceNumText;
@@ -20,6 +23,8 @@ public class BoardManager : MonoBehaviour
     public GameObject mapListPanelMOD;
     public GameObject portPrefab;
 
+    public Color ORANGE = new Color(1, .3f, 0);
+    
     private int numToAppendToName; // The number that will have to appended to the map name for it to be saved
 
     public Sprite[] DiceNumImages;
@@ -32,19 +37,31 @@ public class BoardManager : MonoBehaviour
 
     private List<int> mapErrors = new List<int>();
 
-    public Slider numOfPlayersSlider, //*****************
+    public Slider numOfPlayersSlider,
 				  numOfVPSlider,
 				  turnTimerSlider;
 	public Toggle turnTimerToggleLocal,
 				  characterAbilitiesToggle;
 	public InputField gameLobbyNameNetwork;
-	public Text turnTimerToggleText,
+	public Text createCanvasMapName, //********************
+				createCanvasRecommendedVpTop,
+				createCanvasRecommendedVpBottom,
+			    turnTimerToggleText, 
 				turnTimerValueText,
 				numOfPlayersValueText,
 				numOfVPValueText;
 	public Button gameLobbyButtonNetwork,
 				  characterSelectButtonLocal;
+	public Image createCanvasScreenShot;
+	public Light boardManagerDirectionalLight;
+	public StylizedWater boardManagerOcean;
 
+    // Confirm map deletion panel elements
+    public Canvas confirmDeletionCanvas;
+    public Button confirmDeletionBtn;
+    public Button cancelDeletionBtn;
+    public Text deleteMapText;
+    
 	public static int  numOfPlayers  = 2;
 	public static int  victoryPoints = 5;
 	public static int  turnTimerMax  = 30;
@@ -127,6 +144,9 @@ public class BoardManager : MonoBehaviour
 
     public const int SCREEN_SHOT_WIDTH = 1000;
     public const int SCREEN_SHOT_LENGTH = 1000;
+    
+    public const int OFFSCREEN_X_OFFSET = 500;
+    public const int OFFSCREEN_Z_OFFSET = 500;
 
     private int[] resourceCounts = new int[6];
     private int[] diceNumCounts = new int[11];
@@ -145,20 +165,33 @@ public class BoardManager : MonoBehaviour
     {
         FileHandler handler = new FileHandler();
         handler.checkForFiles();             //++++++++++++++++++++++++++++
+        
+        tutorial = GameObject.Find("BoardManager").GetComponent<Tutorial>();
 
-        mainCamera.enabled = true; //++++++++++++++++++++++++++
+		numOfPlayers = (int)numOfPlayersSlider.value;
+		victoryPoints = (int)numOfVPSlider.value;
+		turnTimerMax = (int)turnTimerSlider.value;
+        
+
+		lookAtIslandCamera.enabled = true; //**************************
+		boardManagerDirectionalLight.gameObject.SetActive(false);
+		boardManagerOcean.gameObject.SetActive(false);
+        mainCamera.enabled = false; //++++++++++++++++++++++++++
         screenShotCamera.enabled = false; //++++++++++++++++++++++++++
         boardCreationCanvas.enabled = false;
         boardSelctionCanvasPG.enabled = false;
         boardSelctionCanvasMOD.enabled = false;
 		createCanvas.enabled = false;
         errorsCanvas.enabled = false;
+		showConditionalButtons();
 
         if (startingGame == true)
             preGameBoardSelectOn();
         else
             MapEditorSelectOn();
         startingGame = false;
+        
+        tutorial.showSelectResourceTutorialBox();
     }
 
     void Update()
@@ -260,6 +293,11 @@ public class BoardManager : MonoBehaviour
     public void preGameBoardSelectOn()
     {
         boardSelctionCanvasPG.enabled = true;
+		createCanvas.enabled = false;
+		mainCamera.enabled = false;
+		boardManagerDirectionalLight.gameObject.SetActive(false);
+		boardManagerOcean.gameObject.SetActive(false);
+		lookAtIslandCamera.enabled = true;		
         displayMaps();
     }
 
@@ -274,6 +312,10 @@ public class BoardManager : MonoBehaviour
 
     public void ReturnToMapEditorSelect()
     {
+		mainCamera.enabled = false;
+		boardManagerDirectionalLight.gameObject.SetActive(false);
+		boardManagerOcean.gameObject.SetActive(false);
+		lookAtIslandCamera.enabled = true;
         for (int x = 0; x < WIDTH; x++)
         {
             for (int y = 0; y < HEIGHT; y++)
@@ -301,9 +343,39 @@ public class BoardManager : MonoBehaviour
             template = reader.retrieveMap(maps[board_index].mapName, true);
         else
             template = reader.retrieveMap(maps[board_index].mapName, false);
+        
+        createCanvasScreenShot.sprite = screenShots[board_index];
+		createCanvasRecommendedVpTop.text    = "Recommended Minimum Vp: " + template.minVP;
+		createCanvasRecommendedVpBottom.text = "Recommended Maximum Vp: " + template.maxVP;
+        createCanvasMapName.text = maps[board_index].mapName;
         createCanvas.enabled = true;
     }
 
+        public void revertHex(GameObject hex)        // Temp function to simulate glow
+    {
+        switch (template.hex[hex.GetComponent<HexData>().x_index, hex.GetComponent<HexData>().y_index].resource)
+        {
+            case 0:
+                hex.GetComponentInChildren<Renderer>().material.color = Color.black;
+                break;
+            case 1:
+                hex.GetComponentInChildren<Renderer>().material.color = Color.grey;
+                break;
+            case 2:
+                hex.GetComponentInChildren<Renderer>().material.color = Color.green;
+                break;
+            case 3:
+                hex.GetComponentInChildren<Renderer>().material.color = Color.white;
+                break;
+            case 4:
+                hex.GetComponentInChildren<Renderer>().material.color = Color.red;
+                break;
+            case 5:
+                hex.GetComponentInChildren<Renderer>().material.color = Color.yellow;
+                break;
+        }
+    }
+    
     public void displayMaps()
     {
         List<string> mapNames = new List<string>();
@@ -403,8 +475,11 @@ public class BoardManager : MonoBehaviour
         // Add glowing effect to hexagons that are bordered by water
         foreach(GameObject hex in hexesBorderingWater)
         {
-            changeGlowEffect(hex, true);
+            //changeGlowEffect(hex, true);
+            hex.GetComponentInChildren<Renderer>().material.color = ORANGE;
         }
+        
+        tutorial.showSelectHexForPortTutorialBox();
     }      
 
     public void chooseHexForPort(GameObject chosenHex)       // Glowing effect code added
@@ -416,7 +491,8 @@ public class BoardManager : MonoBehaviour
         // Remove glowing effect from hexagons that are bordered by water
         foreach (GameObject hex in hexesBorderingWater)
         {
-            changeGlowEffect(hex, false);
+            //changeGlowEffect(hex, false);
+            revertHex(hex);
         }
 
         // Find each water hexagon surrounding the chosen hexagon and add a glowing effect to them
@@ -425,11 +501,14 @@ public class BoardManager : MonoBehaviour
         {
             if (template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].resource == -1)
             {
-                changeGlowEffect(hexes[index], true);
+                //changeGlowEffect(hexes[index], true);
+                hexes[index].GetComponentInChildren<Renderer>().material.color = ORANGE;
                 availablePortHexes.Add(hexes[index], index);
             }
         }
 
+        tutorial.showAddPortTutorialBox();
+        
         choosingPort = true;
         hexToReceivePort = chosenHex;
         currentHexTrans = hexToReceivePort.transform.position;
@@ -505,7 +584,8 @@ public class BoardManager : MonoBehaviour
         template.hex[hex_x, hex_y].waterPortHex = chosenHex;
         template.hex[chosenHex.GetComponent<HexData>().x_index, chosenHex.GetComponent<HexData>().y_index].hexOwningPort = template.hex[hex_x, hex_y].hex_go;
 
-        //chosenHex.GetComponentInChildren<Renderer>().material.color = Color.magenta;
+        tutorial.endTutorial();
+        
         resetPortAddingChanges();
     }
 
@@ -517,7 +597,8 @@ public class BoardManager : MonoBehaviour
             Dictionary<GameObject, int>.KeyCollection hexes = availablePortHexes.Keys;
             foreach(GameObject hex in hexes)
             {
-                changeGlowEffect(hex, false);
+                //changeGlowEffect(hex, false);
+                hex.GetComponentInChildren<Renderer>().material.color = Color.blue;
             }
         }
 
@@ -526,7 +607,8 @@ public class BoardManager : MonoBehaviour
         {
             foreach (GameObject hex in hexesBorderingWater)
             {
-                changeGlowEffect(hex, false);
+                //changeGlowEffect(hex, false);
+                revertHex(hex);
             }
         }
 
@@ -969,16 +1051,24 @@ public class BoardManager : MonoBehaviour
 
     public void CreateNewBoard()
     {
+		lookAtIslandCamera.enabled = false;
+		boardManagerDirectionalLight.gameObject.SetActive(true);
+		boardManagerOcean.gameObject.SetActive(true);
+		mainCamera.enabled = true;
         boardSelctionCanvasPG.enabled = false;
         boardSelctionCanvasMOD.enabled = false;
         boardCreationCanvas.enabled = true;
         boardCreationCanvas.gameObject.SetActive(true);
         mapNameField.text = "";
-        SpawnBoard(null);
+        SpawnBoard(null, false);
     }
 
     public void ModifyMap()
     {
+		lookAtIslandCamera.enabled = false;
+		boardManagerDirectionalLight.gameObject.SetActive(true);
+		boardManagerOcean.gameObject.SetActive(true);
+		mainCamera.enabled = true;
         nameAppended = false;
         boardSelctionCanvasMOD.enabled = false;
         boardCreationCanvas.enabled = true;
@@ -989,7 +1079,7 @@ public class BoardManager : MonoBehaviour
             template = reader.retrieveMap(maps[board_index].mapName, true);
         else
             template = reader.retrieveMap(maps[board_index].mapName, false);
-        SpawnBoard(template);
+        SpawnBoard(template, false);
     }
 
     public void changeSelectedResource(int resrouceNum)
@@ -1030,12 +1120,29 @@ public class BoardManager : MonoBehaviour
         template.hex[hexOwningPortGO_x, hexOwningPortGO_y].portSide = -1;
         template.hex[waterHex_x, waterHex_y].hexOwningPort = null;
     }
+    
+    public void confirmDeletionPanelOn()
+    {
+        confirmDeletionCanvas.enabled = true;
+        confirmDeletionBtn.gameObject.SetActive(true);
+        cancelDeletionBtn.gameObject.SetActive(true);
+        deleteMapText.enabled = true;
+        deleteMapText.fontSize = 16;
+        deleteMapText.text = "Are you sure you want to delete " + maps[board_index].mapName;
+    }
 
     public void changeHex(int x, int y)
     {
         if (template.hex[x, y].resource == -1 && template.hex[x, y].hexOwningPort != null)
             deletePort(x, y);
 
+        if (template.hex[x, y].resource == 5)
+        {
+            template.hex[x, y].hex_go.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = null;
+            template.hex[x, y].setDiceNum(-1);
+            diceNumCounts[5] -= 1;
+        }
+        
         switch (currentResource)
         {
             case 0:
@@ -1102,6 +1209,7 @@ public class BoardManager : MonoBehaviour
                 break;
         }
         printAnyWarnings();
+        tutorial.showSelectDiceNumTutorialBox();
     }
 
     public void changeDiceNumber(int x, int y)
@@ -1114,6 +1222,8 @@ public class BoardManager : MonoBehaviour
             template.hex[x, y].hex_go.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = DiceNumImages[currentDiceNum - 2];
             diceNumCounts[template.hex[x, y].dice_number - 2] += 1;
             printAnyWarnings();
+            
+            tutorial.showClickAddPortTutorialBox();
         }
     }
 
@@ -1127,6 +1237,8 @@ public class BoardManager : MonoBehaviour
 
     public void ChangeDisplayedMap(int desiredIndex)
     {
+        FileHandler fh = new FileHandler();
+
         MissingScreenShotTextPG.enabled = false;
         MissingScreenShotTextMOD.enabled = false;
 
@@ -1143,7 +1255,22 @@ public class BoardManager : MonoBehaviour
             mapDetailsTextPG.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
                                     "Maximum Victory Points: " + maps[board_index].maxVP;
 
-            if (screenShots[board_index] != null)                  //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            if (screenShots[board_index] == null)                  //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            {
+                template = fh.retrieveMap(maps[board_index].mapName, false);
+                screenShots[board_index] = saveMapScreenShotOffScreen(template);
+
+                for (int x = 0; x < WIDTH; x++)
+                {
+                    for (int y = 0; y < HEIGHT; y++)
+                    {
+                        Destroy(template.hex[x, y].portGO);
+                        Destroy(template.hex[x, y].hex_go);
+                    }
+                }
+            }
+
+            if (screenShots[board_index] != null)
                 MapScreenShortImagePG.sprite = screenShots[board_index];
             else
             {
@@ -1159,6 +1286,21 @@ public class BoardManager : MonoBehaviour
             mapDetailsTextMOD.text = "Minimum Victory Points: " + maps[board_index].minVP + "\n" +
                                     "Maximum Victory Points: " + maps[board_index].maxVP;
 
+            if (screenShots[board_index] == null)                  //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            {
+                template = fh.retrieveMap(maps[board_index].mapName, false);
+                screenShots[board_index] = saveMapScreenShotOffScreen(template);
+
+                for (int x = 0; x < WIDTH; x++)
+                {
+                    for (int y = 0; y < HEIGHT; y++)
+                    {
+                        Destroy(template.hex[x, y].portGO);
+                        Destroy(template.hex[x, y].hex_go);
+                    }
+                }
+            }
+
             if (screenShots[board_index] != null)                 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                 MapScreenShortImageMOD.sprite = screenShots[board_index];
             else
@@ -1168,7 +1310,6 @@ public class BoardManager : MonoBehaviour
                 MissingScreenShotTextMOD.enabled = true;
             }
         }
-        
     }
 
     private List<int> getAnyErrors(string newMapName, string warnings)
@@ -1266,7 +1407,7 @@ public class BoardManager : MonoBehaviour
             else
             {
                 calculateVictoryPoints(out minVP, out maxVP);
-                saveMapScreenShot();
+                saveMapScreenShot(mapName, screenShotCamera);
                 
                 FileHandler writer = new FileHandler();
                 writer.saveMap(template, mapName, "Bob", minVP, maxVP);             // Get user name for creator parameter
@@ -1351,13 +1492,19 @@ public class BoardManager : MonoBehaviour
         return template;
     }
 
-    public void SpawnBoard(HexTemplate template)
+    public HexTemplate SpawnBoard(HexTemplate template, bool spawningOffScreen)
     {
         float xOffset = 0.766f;
         float yOffset = 0.891f;
-        float initial_x = 450;
         float initial_y = 0.5f;
+        float initial_x = 450;
         float initial_z = 100;
+
+        if (spawningOffScreen)
+        {
+            initial_x += OFFSCREEN_X_OFFSET;
+            initial_z += OFFSCREEN_Z_OFFSET;
+        }
 
         ignoreWarnings = false;
 
@@ -1478,14 +1625,28 @@ public class BoardManager : MonoBehaviour
                 }
             }
         }
-        printAnyWarnings();
-        BoardManager.template = template;
+        return template;
     }
 
-    public void saveMapScreenShot()
+    public Sprite saveMapScreenShotOffScreen(HexTemplate template)
     {
-        string mapName = mapNameField.text;
+        // Call retrieve map before calling this function
 
+        screenShotCamera.transform.Translate(new Vector3(OFFSCREEN_X_OFFSET, OFFSCREEN_Z_OFFSET, 0));
+        template = SpawnBoard(template, true);
+        byte[] bytes = saveMapScreenShot(template.mapName, screenShotCamera);
+
+        Texture2D texture = new Texture2D(SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH);
+        texture.filterMode = FilterMode.Trilinear;
+        texture.LoadImage(bytes);
+        screenShots.Add(Sprite.Create(texture, new Rect(0, 0, SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH), new Vector2(0.5f, 0.0f), 1.0f));
+        screenShotCamera.transform.Translate(new Vector3(-OFFSCREEN_X_OFFSET, -OFFSCREEN_Z_OFFSET, 0));
+
+        return Sprite.Create(texture, new Rect(0, 0, SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH), new Vector2(0.5f, 0.0f), 1.0f);
+    }
+
+    public byte[] saveMapScreenShot(string mapName, Camera screenShotCamera)
+    {
         errorsCanvas.enabled = false;
 
         RenderTexture rt = new RenderTexture(SCREEN_SHOT_WIDTH, SCREEN_SHOT_LENGTH, 24);
@@ -1502,6 +1663,8 @@ public class BoardManager : MonoBehaviour
         System.IO.File.WriteAllBytes(filename, bytes);
         Debug.Log(string.Format("Took screenshot to: {0}", filename));
         boardCreationCanvas.gameObject.SetActive(false);
+
+        return bytes;
     }
 
    public void goToGameLobby()

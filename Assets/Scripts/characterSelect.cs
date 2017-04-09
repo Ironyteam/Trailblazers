@@ -12,23 +12,29 @@ public class characterSelect : MonoBehaviour
    public int currentPicker = 0; // The current player choosing a character.
    public int selectedCharacter = 0; // This is what shows the preview of the player.
    public Image selectedCharacterImage;      // The image preview of the character
-   public Canvas[] characterCanvasArray = new Canvas[NUM_OF_CHARACTERS]; // These are the character images that can be clicked and selected.
-   public Image[] playerChoiceImages = new Image[MAX_PLAYERS]; // These are the images that have been selected.
-   public static int[] selectedCharacters; // These are the indexes for the characters chosen.
-   public Switch[] isAi = new Switch[MAX_PLAYERS]; // The AI switch for local play. 
+   public Image[] playerChoiceImages = new Image[Constants.MaxPlayers]; // These are the images that have been selected.
+   public static int[] selectedCharacters; // These are the indexes for the characters chosen. 
+   public Switch[] isAi = new Switch[Constants.MaxPlayers]; // The AI switch for local play.
+   public static bool[] isAiBool = new bool[Constants.MaxPlayers];
    public bool CanChoose = true;
    public Button SelectCharacterBTN;
    public NetworkManager NetworkObject;
+   public Text characterAbilitiesText;
 
    void Awake()
-   {
-      // Disables all of the player choice iamges.
-      for (int count = 0; count < MAX_PLAYERS; count++)
-         playerChoiceImages[count].enabled = false;
+   {   
+        for(int count = 0; count < Constants.MaxPlayers; count++)
+		{
+			isAi[count].gameObject.SetActive(false);
+            playerChoiceImages[count].enabled = false;
+		}
    }
 
    void Start()
    {
+      // Sets the number of characters chosen from BoardManager.
+      selectedCharacters = new int[BoardManager.numOfPlayers];
+
       // Setup the gameobjects if in a network game
       SelectCharacterBTN = GameObject.Find("Select Character").GetComponent<Button>();
       if (NavigationScript.networkGame)
@@ -37,16 +43,24 @@ public class characterSelect : MonoBehaviour
          NetworkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
       }
 
-
-      // Sets the number of characters chosen from BoardManager.
-      selectedCharacters = new int[BoardManager.numOfPlayers];
-
-      // Enables as many player choice images as the BoadManager has set, and initializes the character choice to unchosen.
-      for (int count = 0; count < BoardManager.numOfPlayers; count++)
-      {
-         playerChoiceImages[count].enabled = true;
-         selectedCharacters[count] = -1;
-      }
+		selectedCharacters = new int[BoardManager.numOfPlayers];
+		if(NavigationScript.networkGame == true)
+		{
+			for(int count = 0; count < BoardManager.numOfPlayers; count++)
+			{
+				playerChoiceImages[count].enabled = true;
+				selectedCharacters[count] = -1;
+			}
+		}
+		else
+		{
+			for(int count = 0; count < BoardManager.numOfPlayers; count++)
+			{
+				playerChoiceImages[count].enabled = true;
+				selectedCharacters[count] = -1;
+				isAi[count].gameObject.SetActive(true);
+			}
+		}
    }
 
    private void Update()
@@ -70,7 +84,7 @@ public class characterSelect : MonoBehaviour
    }
 
    // After all players have chosen, proceed to the in-game scene. If a player has not been chosen, chooses a random unchosen character.
-   public void startGame()
+   public static void startGame()
    {
       // Checks if all players have chosen a player.
       for (int count = 0; count < BoardManager.numOfPlayers; count++)
@@ -92,59 +106,64 @@ public class characterSelect : MonoBehaviour
 
       // Resets all players to unchosen.
       Characters.ResetPlayers();
-
-      UnityEngine.SceneManagement.SceneManager.LoadScene("In Game Scene");
    }
 
    // This function shows the preview of the character.
    public void showNattyBumppoCharacterSelection()
    {
       selectedCharacter = Characters.Frontiersman;
-      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[Characters.Frontiersman]) as Sprite;
+      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
+	  characterAbilitiesText.text = Characters.abilitiesText[selectedCharacter];
    }
 
    public void showGamlyTheRedCharacterSelection()
    {
       selectedCharacter = Characters.General;
-      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[Characters.General]) as Sprite;
+      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
+	  characterAbilitiesText.text = Characters.abilitiesText[selectedCharacter];
    }
 
    public void showScaryHarryCharacterSelection()
    {
       selectedCharacter = Characters.ConspiracyTheorist;
-      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[Characters.ConspiracyTheorist]) as Sprite;
-
+      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
+	  characterAbilitiesText.text = Characters.abilitiesText[selectedCharacter];
    }
 
    public void showGanzoCharacterSelection()
    {
       selectedCharacter = Characters.Merchant;
-      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[Characters.Merchant]) as Sprite;
+      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
+	  characterAbilitiesText.text = Characters.abilitiesText[selectedCharacter];
    }
 
    public void showQueenApalaCharacterSelection()
    {
       selectedCharacter = Characters.Queen;
-      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[Characters.Queen]) as Sprite;
+      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
+	  characterAbilitiesText.text = Characters.abilitiesText[selectedCharacter];
    }
 
 
    public void showRosaDelFuegoSelection()
    {
       selectedCharacter = Characters.Engineer;
-      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[Characters.Engineer]) as Sprite;
+      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
+	  characterAbilitiesText.text = Characters.abilitiesText[selectedCharacter];
    }
 
    public void showAbihaTheExiledSelection()
    {
       selectedCharacter = Characters.Nomad;
-      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[Characters.Nomad]) as Sprite;
+      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
+	  characterAbilitiesText.text = Characters.abilitiesText[selectedCharacter];
    }
 
    public void showMaidenOfDunshireCharacterSelection()
    {
       selectedCharacter = Characters.Knight;
-      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[Characters.Knight]) as Sprite;
+      selectedCharacterImage.sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
+	  characterAbilitiesText.text = Characters.abilitiesText[selectedCharacter];
    }
 
    public void selectCharacter()
@@ -154,6 +173,7 @@ public class characterSelect : MonoBehaviour
          playerChoiceImages[currentPicker].sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
          selectedCharacters[currentPicker] = selectedCharacter;
          Characters.PlayerChosen[selectedCharacter] = true;
+         
          if (NavigationScript.networkGame)
          {
             SelectCharacterBTN.gameObject.SetActive(false);
@@ -161,6 +181,9 @@ public class characterSelect : MonoBehaviour
             GameObject.Find("Network Handler").GetComponent<NetworkManager>().sendCharacterSelect(selectedCharacter, currentPicker);
          }
          currentPicker++;
+         
+         if(currentPicker >= BoardManager.numOfPlayers)
+            SelectCharacterBTN.interactable = false;
       }
    }
 

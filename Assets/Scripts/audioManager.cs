@@ -10,7 +10,18 @@ public class audioManager : MonoBehaviour {
 	nearLossTheme,
 	victoryTheme,
 	lossTheme,
-	beginWar;
+	beginWar,
+	placeArmy,
+	battleSound,
+	lumberSound,
+	woolSound,
+	brickSound,
+	oreSound,
+	grainSound,
+	winSound,
+	loseSound,
+	buySound,
+	sellSound;
 	AudioSource audio;
 	GameObject ParentAudio;
 	GameObject soundFX;
@@ -142,5 +153,103 @@ public class audioManager : MonoBehaviour {
 		audio.Play ();
 	}
 
+	public void playBuySound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = buySound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playSellSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = sellSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playBattleSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = battleSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playPlaceArmy()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = placeArmy;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playLumberSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = lumberSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playWoolSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = woolSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playBrickSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = brickSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playOreSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = oreSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playGrainSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = grainSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playWinSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = winSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
+
+	public void playLoseSound()
+	{
+		audio = soundFX.GetComponent<AudioSource> ();
+		audio.clip = loseSound;
+		audio.Play ();
+		AudioWait (audio.clip.length);
+		audio.Stop ();
+	}
 
 }

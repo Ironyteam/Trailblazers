@@ -28,6 +28,7 @@ public class JoinGame : MonoBehaviour
          networkThing.onJoinGameClient();
          yield return new WaitForSecondsRealtime(2);
          networkThing.requestGameJoin(hostId);
+         Destroy(gameObject);
       }
    }
 }

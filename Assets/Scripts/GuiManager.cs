@@ -27,6 +27,7 @@ public class GuiManager : MonoBehaviour {
 		public bool longestRoadIndicator = false;
 		public string characterPictureName;
 		public int uiPosition;
+		public string playerColourName;
     }
 
     [System.Serializable]
@@ -41,6 +42,7 @@ public class GuiManager : MonoBehaviour {
 		public Text longestRoadLengthDisplay;
 		public Text victoryPoints;
 		public Text playerName;
+		public Image playerColour;
 	}
 
     public InputField chatInput;
@@ -58,26 +60,37 @@ public class GuiManager : MonoBehaviour {
 				  shopCanvas,
 				  barracksCanvas;
            int currentPlayer  = 0,
- 			   playerNumberCurrent = 1;
+ 			   playerNumberCurrent = 0;
     
     public playerIndicatorClassLocal[] playerClassLocalArray = new playerIndicatorClassLocal[MAX_NUM_OF_PLAYERS];
 	public screenElements[] screenElementsArray = new screenElements[MAX_NUM_OF_PLAYERS];
-
+	public string[] playerColourNames = new string[Constants.MaxPlayers] {"red box", "blue box", "purple box", "yellow box", "green box", "white box"};
     public GameBoard CurrentGameBoard;
     
     void Awake()
     {
+		Destroy (GameObject.Find("ISLAND"));
+		Destroy (GameObject.Find("Particle System"));
+		Destroy (GameObject.Find("Directional light"));
+		Destroy (GameObject.Find("Ocean"));
         CurrentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
 
         for (int count = 0; count < BoardManager.numOfPlayers; count++)
 		{
 			playerClassLocalArray[count].characterPictureName = Characters.Names[characterSelect.selectedCharacters[count]];
+			playerClassLocalArray[count].playerColourName = playerColourNames[count];
 			playerClassLocalArray[count].uiPosition = count;
             screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite> (playerClassLocalArray[count].characterPictureName) as Sprite;
+			screenElementsArray[count].playerColour.sprite = Resources.Load<Sprite>(playerClassLocalArray[count].playerColourName) as Sprite;
 			screenElementsArray[count].largestArmyIndicator.enabled = false;
 			screenElementsArray[count].longestRoadIndicator.enabled = false;
             screenElementsArray[count].characterSelected.enabled = false;
         }
+       
+	/*	if(NavigationScript.networkGame == true)
+		{
+			putLocalPlayerFirst((Player number received from network) here);
+		} */
 
         screenElementsArray[0].characterSelected.enabled = true;
 
@@ -177,6 +190,11 @@ public class GuiManager : MonoBehaviour {
 	{
         if (reverse == false)
         {
+            if (playerNumberCurrent < BoardManager.numOfPlayers)
+                playerNumberCurrent++;
+            else
+                playerNumberCurrent = 1;
+            
             for (int count = 0; count < BoardManager.numOfPlayers; count++)
             {
                 screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite>(playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].characterPictureName) as Sprite;
@@ -209,19 +227,57 @@ public class GuiManager : MonoBehaviour {
                     screenElementsArray[playerClassLocalArray[previousLargestArmy].uiPosition - (BoardManager.numOfPlayers - 1)].largestArmyIndicator.enabled = false;
                 }
             }
-            if (playerNumberCurrent < BoardManager.numOfPlayers)
-                playerNumberCurrent++;
-            else
-                playerNumberCurrent = 1;
 
             if (currentPlayer < BoardManager.numOfPlayers - 1)
                 currentPlayer++;
             else
                 currentPlayer = 0;
         }
-        else
+        else //********************************
         {
-            // Code to reverse current player
+            if(playerNumberCurrent > 0)
+                playerNumberCurrent--;
+            else
+                playerNumberCurrent = BoardManager.numOfPlayers-1;
+
+            for(int count = BoardManager.numOfPlayers-1; count >= 0; count--)
+            {
+                screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite> (playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].characterPictureName) as Sprite;
+                playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].uiPosition = count;
+            }
+
+            if(previousLongestRoad > -1)
+            {
+                if(playerClassLocalArray[previousLongestRoad].uiPosition >= 0)
+                {
+                    screenElementsArray[playerClassLocalArray[previousLongestRoad].uiPosition].longestRoadIndicator.enabled = true;
+                    screenElementsArray[playerClassLocalArray[previousLongestRoad].uiPosition-1].longestRoadIndicator.enabled = false;
+                }
+                else
+                {
+                    screenElementsArray[playerClassLocalArray[previousLongestRoad].uiPosition].longestRoadIndicator.enabled = true;
+                    screenElementsArray[playerClassLocalArray[previousLongestRoad].uiPosition + (BoardManager.numOfPlayers-1)].longestRoadIndicator.enabled = false;
+                }
+            }
+
+            if(previousLargestArmy > -1)
+            {
+                if(playerClassLocalArray[previousLargestArmy].uiPosition >= 0)
+                {
+                    screenElementsArray[playerClassLocalArray[previousLargestArmy].uiPosition].largestArmyIndicator.enabled = true;
+                    screenElementsArray[playerClassLocalArray[previousLargestArmy].uiPosition-1].largestArmyIndicator.enabled = false;
+                }
+                else
+                {
+                    screenElementsArray[playerClassLocalArray[previousLargestArmy].uiPosition].largestArmyIndicator.enabled = true;
+                    screenElementsArray[playerClassLocalArray[previousLargestArmy].uiPosition + (BoardManager.numOfPlayers-1)].largestArmyIndicator.enabled = false;
+                }
+            }
+
+            if(currentPlayer > 0)
+                currentPlayer--;
+            else
+                currentPlayer = BoardManager.numOfPlayers-1;
         }
 
         UpdatePlayer();
@@ -356,5 +412,28 @@ public class GuiManager : MonoBehaviour {
             screenElementsArray[playerClassLocalArray[x].uiPosition].victoryPoints.text = CurrentGameBoard.LocalGame.PlayerList[x].VictoryPoints.ToString();
         }
 
-}
+	}
+
+	public void putLocalPlayerFirst(int networkPlayerNumberIndex)
+	{
+		if(networkPlayerNumberIndex > 0)
+		{
+			screenElements tempScreenElement = screenElementsArray[networkPlayerNumberIndex];
+	
+			for(int count = 0; count < networkPlayerNumberIndex; count++)
+			{
+				screenElementsArray[count+1] = screenElementsArray[count];
+				playerClassLocalArray[count].uiPosition = count+1;
+			}
+			
+			screenElementsArray[0] = tempScreenElement;
+			playerClassLocalArray[networkPlayerNumberIndex].uiPosition = 0;
+		}
+	}
+
+	public void showVictoryScreen()
+	{
+	
+
+	}
 }
