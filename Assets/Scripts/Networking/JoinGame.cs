@@ -26,9 +26,10 @@ public class JoinGame : MonoBehaviour
          NetworkManager.inPlayerLobby = true;
          int hostId = networkThing.connectToHost(gameTextBoxes[6].text);
          networkThing.onJoinGameClient();
-         yield return new WaitForSecondsRealtime(2);
+         yield return new WaitForSecondsRealtime(1);
          networkThing.requestGameJoin(hostId);
          Destroy(gameObject);
+         networkThing.clearGamePanel();
       }
    }
 }
