@@ -6,28 +6,23 @@ using UnityEngine.SceneManagement;
 public class musicPlayer : MonoBehaviour {
 
 	static bool AudioBegin = true;
-	public GameObject menuAudio;
-	public GameObject oceanFX;
+	public GameObject audioPlayer;
 	//public AudioClip beginGame;
 
 	void Update()
 	{
 		Scene currentScene = SceneManager.GetActiveScene ();
-		AudioSource menu = GetComponent<AudioSource> ();
-		AudioSource waves = GetComponentInChildren<AudioSource> ();
+		AudioSource audio = GetComponent<AudioSource> ();
 
 		string sceneName = currentScene.name;
 
-		if (sceneName == "In Game") 
+		if (sceneName == "hexboard") 
 		{
 			//audio.volume = 0.5f;
 			//audio.clip = beginGame;
 			//audio.Play();
 			//AudioWait (audio.clip.length);
-			waves.Stop ();
-			menu.Stop ();
-			Destroy (menuAudio);
-			Destroy (oceanFX);
+			audio.Stop ();
 			AudioBegin = false;
 		}
 
@@ -39,24 +34,21 @@ public class musicPlayer : MonoBehaviour {
 	{
 		if (AudioBegin) {
 			//When the scene loads it checks if there is an object called "MUSIC".
-			menuAudio = GameObject.Find ("MUSIC");
-			if (menuAudio == null) {
+			audioPlayer = GameObject.Find ("MUSIC");
+			if (audioPlayer == null) {
 				//If this object does not exist then it does the following:
 				//1. Sets the object this script is attached to as the music player
-				menuAudio = this.gameObject;
-				oceanFX = transform.GetChild (0).gameObject;
+				audioPlayer = this.gameObject;
 				//2. Renames THIS object to "MUSIC" for next time
-				menuAudio.name = "MUSIC";
+				audioPlayer.name = "MUSIC";
 				//3. Tells THIS object not to die when changing scenes.
-				DontDestroyOnLoad (menuAudio);
-				DontDestroyOnLoad (oceanFX);
+				DontDestroyOnLoad (audioPlayer);
 			} else {
 				if (this.gameObject.name != "MUSIC") {
 					//If there WAS an object in the scene called "MUSIC" (because we have come back to
 					//the scene where the music was started) then it just tells this object to 
 					//destroy itself if this is not the original
 					Destroy (this.gameObject);
-					Destroy (transform.GetChild (0).gameObject);
 				}
 			}
 		}

@@ -19,11 +19,6 @@ public class loadMapEditor : MonoBehaviour {
 	{
 		loadingCanvas.enabled = false;
 		spinnerTransform = spinner.GetComponent<RectTransform>();
-
-		//Destroy (GameObject.Find("ISLAND"));
-		//Destroy (GameObject.Find("Particle System"));
-		//Destroy (GameObject.Find("Directional light"));
-		//Destroy (GameObject.Find("Ocean"));
 	}
 
 	private void Update()

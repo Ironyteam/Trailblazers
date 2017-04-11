@@ -161,14 +161,14 @@ public class BoardManager : MonoBehaviour
 
     public static HexTemplate template = new HexTemplate();
 
-    void Awake()
+    void Start()
     {
         FileHandler handler = new FileHandler();
         handler.checkForFiles();             //++++++++++++++++++++++++++++
-        
+
         tutorial = GameObject.Find("BoardManager").GetComponent<Tutorial>();
 
-		numOfPlayers = (int)numOfPlayersSlider.value;
+        numOfPlayers = (int)numOfPlayersSlider.value;
 		victoryPoints = (int)numOfVPSlider.value;
 		turnTimerMax = (int)turnTimerSlider.value;
         
@@ -190,8 +190,6 @@ public class BoardManager : MonoBehaviour
         else
             MapEditorSelectOn();
         startingGame = false;
-        
-        tutorial.showSelectResourceTutorialBox();
     }
 
     void Update()
@@ -1061,6 +1059,8 @@ public class BoardManager : MonoBehaviour
         boardCreationCanvas.gameObject.SetActive(true);
         mapNameField.text = "";
         SpawnBoard(null, false);
+        tutorial.init();
+        tutorial.showSelectResourceTutorialBox();
     }
 
     public void ModifyMap()
@@ -1080,6 +1080,7 @@ public class BoardManager : MonoBehaviour
         else
             template = reader.retrieveMap(maps[board_index].mapName, false);
         SpawnBoard(template, false);
+        
     }
 
     public void changeSelectedResource(int resrouceNum)
@@ -1521,13 +1522,11 @@ public class BoardManager : MonoBehaviour
         if (template == null)
         {
             template = new HexTemplate();
-            
 
             for (int x = 0; x < WIDTH; x++)
             {
                 for (int y = 0; y < HEIGHT; y++)
                 {
-                    
                     template.hex[x, y] = new Hex(); // Be aware that these values could have change
                 }
             }

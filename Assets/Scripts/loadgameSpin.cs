@@ -19,12 +19,6 @@ public class loadgameSpin : MonoBehaviour {
 	{
 		loadingCanvas.enabled = false;
 		spinnerTransform = spinner.GetComponent<RectTransform>();
-
-		Destroy (GameObject.Find("ISLAND"));
-		Destroy (GameObject.Find("Particle System"));
-		Destroy (GameObject.Find("Sailboat Ingame"));
-		Destroy (GameObject.Find("Directional light"));
-		Destroy (GameObject.Find("Ocean"));
 	}
 
 	private void Update()
@@ -49,16 +43,17 @@ public class loadgameSpin : MonoBehaviour {
 		characterSelect.startGame();
 		yield return new WaitForSeconds (1);
 		async = SceneManager.LoadSceneAsync ("In Game Scene");
+	}
+	
+	public IEnumerator networkLoad()
+	{
+		characterSelect.startGame();
+		yield return new WaitForSeconds (1);
+		async = SceneManager.LoadSceneAsync ("In Game Scene");
 		async.allowSceneActivation = false;
 
-		while (!async.isDone)
+		while (!async.isDone && !async.allowSceneActivation)
 		{
-			if (async.progress == 0.9f)
-			{
-				Destroy (GameObject.Find("MUSIC"));
-			    Destroy (GameObject.Find("Ocean Sound"));
-				async.allowSceneActivation = true;
-			}
 			yield return null;
 		}
 	}

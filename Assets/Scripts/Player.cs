@@ -20,6 +20,7 @@ public class Player
     public int LongestRoad = 0;
 	 public bool LongestRoadWinner = false;
 	 public bool LargestArmyWinner = false;
+	 public bool GameWinner = false;
 
     private int armies;         // The number of armies deployed by this player over the entire map.
     private int character;      // The character player has chosen to play as, 0 for no character.
