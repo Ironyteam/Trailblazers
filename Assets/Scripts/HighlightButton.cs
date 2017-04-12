@@ -5,12 +5,12 @@ using UnityEngine.UI;
 
 public class HighlightButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler 
 {
-
+	Color32 titleColor = new Color32(255,122,51,238);
 	public Text theText;
 
 	public void OnPointerEnter(PointerEventData eventData)
 	{
-		theText.color = Color.red; //Or however you do your color
+		theText.color = titleColor; //Or however you do your color
 	}
 
 	public void OnPointerExit(PointerEventData eventData)

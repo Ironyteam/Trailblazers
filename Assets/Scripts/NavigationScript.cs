@@ -6,7 +6,6 @@ using System.Collections.Generic;
 
 public class NavigationScript : MonoBehaviour
 {
-    public Canvas createCanvas;
     public Canvas creditCanvas;
     public Canvas mainCanvas;
     public Canvas optionsCanvas;
@@ -18,7 +17,6 @@ public class NavigationScript : MonoBehaviour
     void Awake()
     {
        optionsCanvas.enabled   = false;
-       createCanvas.enabled    = false;
        creditCanvas.enabled    = false;
        quitCanvas.enabled      = false;
 	   playNowCanvas.enabled   = false;
@@ -39,8 +37,7 @@ public class NavigationScript : MonoBehaviour
     public void optionsOn()
     {
        optionsCanvas.enabled = true;
-       mainCanvas.enabled    = false;
-       createCanvas.enabled  = false;
+       mainCanvas.enabled    = false;;
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
@@ -51,29 +48,16 @@ public class NavigationScript : MonoBehaviour
 	{
 		optionsCanvas.enabled = false;
 		mainCanvas.enabled    = false;
-		createCanvas.enabled  = false;
 		creditCanvas.enabled  = false;
 		quitCanvas.enabled    = false;
 	    gameRulesCanvas.enabled = false;
 		playNowCanvas.enabled = true;
 	}
 
-    public void createOn()
-    {
-       optionsCanvas.enabled = false;
-       mainCanvas.enabled    = false;
-       createCanvas.enabled  = true;
-       creditCanvas.enabled  = false;
-       quitCanvas.enabled    = false;
-	   playNowCanvas.enabled = false;
-	   gameRulesCanvas.enabled = false;
-    }
-
     public void creditOn()
     {
        optionsCanvas.enabled = false;
-       mainCanvas.enabled    = false;
-       createCanvas.enabled  = false;
+       mainCanvas.enabled    = false;;
        creditCanvas.enabled  = true;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
@@ -83,8 +67,7 @@ public class NavigationScript : MonoBehaviour
     public void returnOn()
     {
        optionsCanvas.enabled = false;
-       mainCanvas.enabled    = true;
-       createCanvas.enabled  = false;
+       mainCanvas.enabled    = true;;
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
@@ -94,8 +77,7 @@ public class NavigationScript : MonoBehaviour
     public void quitOn()
     {
        optionsCanvas.enabled = false;
-       mainCanvas.enabled    = false;
-       createCanvas.enabled  = false;
+       mainCanvas.enabled    = false;;
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = true;
 	   playNowCanvas.enabled = false;
@@ -105,8 +87,7 @@ public class NavigationScript : MonoBehaviour
 	public void rulesOn()
 	{
 	   optionsCanvas.enabled = false;
-       mainCanvas.enabled    = false;
-       createCanvas.enabled  = false;
+       mainCanvas.enabled    = false;;
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;

@@ -28,6 +28,7 @@ public class GameBoard : MonoBehaviour
 	float zOffset = 3.4f;
 	float zPos;
 
+    Tutorial tutorial;
 
 	public List<Road> Roads			  = new List<Road>();
 	public List<Structure> Structures = new List<Structure>();
@@ -342,6 +343,20 @@ public class GameBoard : MonoBehaviour
             ShowAvailableSettlementsInitial();
         else if (LocalPlayer == CurrentPlayer)
             ShowAvailableSettlementsInitial();
+
+        tutorial = GameObject.Find("Tutorial").GetComponent<Tutorial>();
+        tutorial.showPlaceInitialSettlementMessage();
+        tutorial.showPlaceInitialRoadMessage();
+        tutorial.showPlaceInitialSettlementMessage();
+        tutorial.showPlaceInitialRoadMessage();
+        tutorial.showBuildRoadTutorialBox();
+		tutorial.showBuildSettlementTutorialBox();
+		tutorial.showExplainVPTutorialBox();
+		tutorial.showExplainResourcesTutorialBox();
+		tutorial.showExplainGoldTutorialBox();
+		tutorial.showUpgradeToCityTutorialBox();
+		tutorial.showBarracksTutorialBox();
+		tutorial.showAttackTutorialBox();
     }
 
 	void FixedUpdate () {
@@ -1818,12 +1833,21 @@ public class GameBoard : MonoBehaviour
        Debug.Log("NextPlayer: Turn changed");
 
       HideAvailableSettlements();
+<<<<<<< HEAD
         HideAvailableSettlementsToUpgrade();
         HideAvailableCitiesForArmies();
         HideAvailableCitiesForAttack();
         HideAvailableCitiesToAttack();
         HideAvailableRoads();
         HideHexLocations();
+=======
+      HideAvailableSettlementsToUpgrade();
+      HideAvailableCitiesForArmies();
+      HideAvailableCitiesForAttack();
+      HideAvailableCitiesToAttack();
+      HideAvailableRoads();
+      HideHexLocations();
+>>>>>>> master
         
 		BuildRoadButtonClicked = false;
 		BuildCityButtonClicked = false;
@@ -1909,6 +1933,8 @@ public class GameBoard : MonoBehaviour
       }
       Debug.Log("NextPlayer: The current player index is: " + CurrentPlayer);
         GUIManager.UpdatePlayer();
+      if (LocalGame.PlayerList[CurrentPlayer].isConnected == false && LocalGame.isNetwork)
+         NextPlayer();
     }
 
 	public void DistributeResources(int rollNumber)

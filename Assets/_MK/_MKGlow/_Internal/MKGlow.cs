@@ -201,7 +201,7 @@ using System.Collections;
                 return;
             }
 
-            if(!SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Default) || !SystemInfo.supportsImageEffects || !SystemInfo.supportsRenderTextures)
+            if(!SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Default) || !SystemInfo.supportsImageEffects)
             {
                 enabled = false;
                 Debug.LogWarning("Glow not supported by platform");
