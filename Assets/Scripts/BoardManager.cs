@@ -14,7 +14,7 @@ public class BoardManager : MonoBehaviour
     
     public Camera mainCamera; //++++++++++++++++++++++++++
     public Camera screenShotCamera; //++++++++++++++++++++++++++
-	 public Camera lookAtIslandCamera; //++++++++++++++++++++++++++
+	public Camera lookAtIslandCamera; //++++++++++++++++++++++++++
 
     public GameObject hexPrefab;
     public GameObject diceNumText;

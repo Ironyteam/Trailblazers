@@ -35,11 +35,9 @@ public class loadgameSpin : MonoBehaviour {
 
 		loadingCanvas.enabled = true;
 
-      // If network game the networking calls load
-      if (!NavigationScript.networkGame)
-         StartCoroutine(loadWithSpin());
-
-   }
+        if (!NavigationScript.networkGame)    // SILAS
+    		StartCoroutine (loadWithSpin ());
+	}
 
 	IEnumerator loadWithSpin()
 	{

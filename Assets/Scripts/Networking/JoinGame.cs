@@ -29,10 +29,7 @@ public class JoinGame : MonoBehaviour
          yield return new WaitForSecondsRealtime(1);
          networkThing.requestGameJoin(hostId);
          Destroy(gameObject);
-<<<<<<< HEAD
-=======
          networkThing.clearGamePanel();
->>>>>>> master
       }
    }
 }

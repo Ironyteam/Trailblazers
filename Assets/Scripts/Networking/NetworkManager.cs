@@ -14,18 +14,15 @@ public class NetworkManager : MonoBehaviour
    int myReliableChannelId;
    int socketId;
    int socketPort = 5010;
-   int serverConnectionID       = 1; // Updates when you connect to a server
+   int serverConnectionID        = 1; // Updates when you connect to a server
    public int hostConnectionID   = -1;
    const string myIP = "127.0.0.1";
-   public string serverIP = "192.168.0.13";
+   public string serverIP = "192.168.0.11";
    public int loadedPlayers = 0;
    public List<Player> lobbyPlayers = new List<Player>();
    public Player myPlayer;
    GameObject newPlayerPNL;
-<<<<<<< HEAD
-=======
    Player player;
->>>>>>> master
 
    bool isHostingGame                 = false;
    public static bool inPlayerLobby   = false;
@@ -88,22 +85,14 @@ public class NetworkManager : MonoBehaviour
       ConnectionConfig config = new ConnectionConfig();
       myReliableChannelId = config.AddChannel(QosType.Reliable);
       HostTopology topology = new HostTopology(config, maxConnections);
-<<<<<<< HEAD
-        socketId = NetworkTransport.AddHost(topology, socketPort);
-=======
       socketId = NetworkTransport.AddHost(topology, socketPort);
->>>>>>> master
 
       // Create an fake game on launch for testing TEST
       requestGameList("172.16.51.124~FakeGame1~4~5~password~map;172.16.51.127~FakeGame2~4~5~password~map");
       myGame = new NetworkGame();
       myPlayer = new Player("Silas");
-<<<<<<< HEAD
-      connectToServer("192.168.43.127");
-=======
-      connectToServer(serverIP);
+      //connectToServer(serverIP);
       // requestGameListServer();
->>>>>>> master
    }
 
    private void OnEnable()
@@ -131,11 +120,7 @@ public class NetworkManager : MonoBehaviour
 
          // Buttons linkup
          connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
-<<<<<<< HEAD
-         connectServerBTN.onClick.AddListener(() => connectToServer("192.168.0.11"));
-=======
          connectServerBTN.onClick.AddListener(() => connectToServer(serverIP));
->>>>>>> master
          refreshGameListBTN = GameObject.Find("RefreshBTN").GetComponent<Button>();
          refreshGameListBTN.onClick.AddListener(() => requestGameListServer());
          cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
@@ -159,16 +144,6 @@ public class NetworkManager : MonoBehaviour
             refreshGameListBTN.gameObject.SetActive(false);
             connectServerBTN.gameObject.SetActive(false);
          }
-<<<<<<< HEAD
-
-         GameObject.Find("Network Handler").GetComponent<NetworkManager>();
-      }
-      else if (scene.name == "In Game Scene")
-      {
-         mapObject = GameObject.Find("Map").GetComponent<GameBoard>();
-         mapObject.LocalGame.isNetwork = true;
-=======
->>>>>>> master
       }
       else if (scene.name == "Character Select")
       {
@@ -190,17 +165,10 @@ public class NetworkManager : MonoBehaviour
    public void connectToServer(string ip)
    {
       byte error;
-<<<<<<< HEAD
-      serverConnectionID = NetworkTransport.Connect(socketId, ip, socketPort, 0, out error);
-      connectServerBTN.gameObject.SetActive(false);
-      ipField.transform.parent.gameObject.SetActive(false);
-      Debug.Log("\n Connecting to server: " + ipField.text + "  Server ConnectionID: " + serverConnectionID);
-=======
       serverConnectionID = NetworkTransport.Connect(socketId, serverIP, socketPort, 0, out error);
       connectServerBTN.gameObject.SetActive(false);
       ipField.transform.parent.gameObject.SetActive(false);
       Debug.Log("\n Connecting to server: " + serverIP + "  Server ConnectionID: " + serverConnectionID);
->>>>>>> master
    }
 
    // Connect to ipAddress, target auto connects in return
@@ -251,10 +219,7 @@ public class NetworkManager : MonoBehaviour
       if (isHostingGame)
       {
          string gameInfo;
-<<<<<<< HEAD
-=======
          loadedPlayers = 0;
->>>>>>> master
          myPlayer.connectionID = 0;
          myPlayer.playerIndex  = 0;
          lobbyPlayers.Add(myPlayer);
@@ -322,7 +287,6 @@ public class NetworkManager : MonoBehaviour
    // A player joined the lobby
    public void lobbyPlayerAdded(int numPlayers)
    {
-<<<<<<< HEAD
       GameObject newPlayerPNL = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
    }
 
@@ -331,7 +295,6 @@ public class NetworkManager : MonoBehaviour
    {
       if (newPlayerPNL != null)
          Destroy(newPlayerPNL);
-=======
       clearGamePanel();
       for (int i = 0; i < numPlayers; i++)
          newPlayerPNL = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
@@ -344,16 +307,11 @@ public class NetworkManager : MonoBehaviour
       {
          GameObject.Destroy(child.gameObject);
       }
->>>>>>> master
    }
 
    // The host left the game
    public void hostDisconnected()
    {
-<<<<<<< HEAD
-      SceneManager.LoadScene("Menu");
-      // Tell the user somehow
-=======
       SceneManager.LoadScene("Network Lobby");
       showLobbyMessage("Error Host Disconnected\nReturning To Lobby");
       onLeaveGameClient();
@@ -366,7 +324,6 @@ public class NetworkManager : MonoBehaviour
    public void clientPlayerDisconnected(int playerIndex)
    {
       mapObject.LocalGame.PlayerList[playerIndex].isConnected = false;
->>>>>>> master
    }
 
    // Tell the clients to go to in game scene
@@ -456,15 +413,6 @@ public class NetworkManager : MonoBehaviour
             break;
          case NetworkEventType.DisconnectEvent:
             Debug.Log("\n" + "Remote client disconnected");
-<<<<<<< HEAD
-            if (isHostingGame)
-               playerDisconnected(recConnectionId);
-            else if (lobbyPlayers[0] != null && recConnectionId == hostConnectionID)
-               hostDisconnected();
-            else if (recConnectionId == serverConnectionID)
-               ;
-               // Server disconnected
-=======
             player = lobbyPlayers.Find(item => item.connectionID == recConnectionId);
             if (player != null && isHostingGame && inGame)
             {
@@ -482,7 +430,6 @@ public class NetworkManager : MonoBehaviour
             }
             else if (inPlayerLobby)
                joinGameFull();
->>>>>>> master
             break;
       }
    }
@@ -497,17 +444,13 @@ public class NetworkManager : MonoBehaviour
             // Player requesting to join game
             addPlayer(gameInfo[1], recConnectionID);
             break;
-<<<<<<< HEAD
-         case Constants.playerEvent:
-=======
          case Constants.lobbyFull:
             joinGameFull();
             break;
          case Constants.playerDisconnect:
-            clientPlayerDisconnected(Int32.Parse(gameInfo[1]));
+
             break;
          case Constants.playerAdded:
->>>>>>> master
             lobbyPlayerAdded(Int32.Parse(gameInfo[1]));
             break;
          case Constants.requestGameList:   // #, game, game, game, game...
@@ -525,22 +468,13 @@ public class NetworkManager : MonoBehaviour
          case Constants.goToCharacterSelect:       // #, ipAddress
             BoardManager.template = myGame.gameMap;
             SceneManager.LoadScene("Character Select");
-            inGame = true;
-            break;
-         case Constants.inGameSceneLoaded:
-            clientInGameLoaded();
-            break;
-         case Constants.enterInGameScene:
-            enterInGameScene();
             break;
          case Constants.characterResult:   // #, characterResult
             break;
          case Constants.gameStarted:
-            startInGameLoad();
+            SceneManager.LoadScene("In Game Scene");
             break;
          case Constants.gameEnded:         // #, ipAddress
-            SceneManager.LoadScene("End Game Stats"); // WIP need name
-            inGame = false;
             break;
          case Constants.playerNumber:
             setupPlayersOnClient(Int32.Parse(gameInfo[1]));
@@ -595,26 +529,9 @@ public class NetworkManager : MonoBehaviour
    }
 
    // Player disconnected from the game
-<<<<<<< HEAD
-   public void playerDisconnected(int playerConnectionID)
-   {
-      Player player = lobbyPlayers.Find(item => item.connectionID > 20);
-      
-=======
    public void playerDisconnected(Player player)
    {
-      Debug.Log("Local Player = " + mapObject.CurrentPlayer + " Player Index = " + player.playerIndex);
-      mapObject.LocalGame.PlayerList[player.playerIndex].isConnected = false;
-      if (mapObject.CurrentPlayer == player.playerIndex)
-      {
-         Debug.Log("playerDisconnected: Player was current turn");
-         // End the players turn on my computer
-         mapObject.NextPlayer();
-         // End the turn on the remaining players
-         sendEndTurn(player.connectionID);
-      }
       sendActionToClients(Constants.playerDisconnect + Constants.commandDivider + player.playerIndex, player.connectionID);  
->>>>>>> master
    }
 
    // Joined game, disable buttons
@@ -627,18 +544,18 @@ public class NetworkManager : MonoBehaviour
       cancelHostingBTN.gameObject.SetActive(false);
    }
 
-   // Left game, enable buttons
-   public void onLeaveGameClient()
-   {
-      inPlayerLobby = false;
+    // Joined game, disable buttons
+    public void onLeaveGameClient()
+    {
+        inPlayerLobby = false;
 
-      createGameBTN.gameObject.SetActive(false);
-      refreshGameListBTN.gameObject.SetActive(false);
-      cancelHostingBTN.gameObject.SetActive(false);
-   }
+        createGameBTN.gameObject.SetActive(true);
+        refreshGameListBTN.gameObject.SetActive(true);
+        cancelHostingBTN.gameObject.SetActive(true);
+    }
 
-   // The lobby requested to join is full go back to the in game lobby and request the game list
-   public void joinGameFull()
+    // The lobby requested to join is full go back to the in game lobby and request the game list
+    public void joinGameFull()
    {
       inPlayerLobby = false;
       requestGameListServer();
@@ -685,17 +602,6 @@ public class NetworkManager : MonoBehaviour
             startGameBTN.gameObject.SetActive(true);
          }
 
-<<<<<<< HEAD
-      // Create UI GameObject to list player
-      GameObject newPlayer = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
-      Text[] playerTexts = newPlayer.GetComponentsInChildren<Text>();
-      playerTexts[0].text = myGame.numberOfPlayers;
-      playerTexts[1].text = playerInfo[1];
-      playerTexts[3].text = playerInfo[0];
-
-      // Send the player join event to all the players
-      sendActionToClients(Constants.playerEvent + Constants.commandDivider + lobbyPlayers.Count, -1);
-=======
          // Create UI GameObject to list player
          GameObject newPlayer = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
          Text[] playerTexts = newPlayer.GetComponentsInChildren<Text>();
@@ -706,7 +612,6 @@ public class NetworkManager : MonoBehaviour
          // Send the player join event to all the players
          sendActionToClients(Constants.playerAdded + Constants.commandDivider + lobbyPlayers.Count, -1);
       }
->>>>>>> master
    }
 
    // Send the player the game info
@@ -804,7 +709,7 @@ public class NetworkManager : MonoBehaviour
    // Ask server to send list of games
    public void requestGameListServer()
    {
-      StartCoroutine(showLobbyMessage("Refreshing Game List\nFrom Server"));
+      StartCoroutine(showLobbyMessage("Failed to join game\nGame Full"));
       sendSocketMessage(Constants.requestGameList + Constants.commandDivider + myIP, serverConnectionID);
    }
 
@@ -895,7 +800,6 @@ public class NetworkManager : MonoBehaviour
       characterScript.playerChoiceImages[index].sprite = Resources.Load<Sprite>(Characters.Names[character]) as Sprite;
       characterScript.currentPicker += 1;
       characterSelect.selectedCharacters[index] = character;
-      Characters.PlayerChosen[index] = true;
    }
 
    // Get the result of a dice roll
@@ -1024,11 +928,7 @@ public class NetworkManager : MonoBehaviour
       else
       {
          Debug.Log("sendEndTurn: Sending end turn as Host");
-<<<<<<< HEAD
          sendActionToClients(message, 0);
-=======
-         sendActionToClients(message, -1);
->>>>>>> master
       }
    }
 

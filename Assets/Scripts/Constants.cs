@@ -22,71 +22,39 @@ public static class Constants
    public const string gameListDivider = ";";
 
    // Server browser and network lobby commands
-<<<<<<< HEAD
-   public const string addGame = "1";
-   public const string addPlayer = "2";
-   public const string requestGameList = "3";
-   public const string cancelGame = "4";
-   public const string goToCharacterSelect = "22";
-   public const string sendGameInfo = "24";
-   public const string playerNumber = "23";
-   public const string playerEvent  = "25";
-   public const string gameStarted = "5";
-   public const string gameEnded = "6";
-   public const string characterSelect = "7";
-   public const string characterResult = "8";
-   public const string diceRoll = "9";
-
-   // In game turn commands
-   public const string buildSettlement = "10";
-   public const string upgradeToCity = "11";
-   public const string buildRoad = "12";
-   public const string buildArmy = "13";
-   public const string attackCity = "14";
-   public const string moveRobber = "15";
-   public const string endTurn = "16";
-   public const string startTurn = "17";
-   public const string sendChat = "18";
-   public const string networkError = "19";
-   public const string lobbyFull = "20";
-   public const string leaveGame = "26";
-   public const string sendMap   = "21";
-   public const string serverKillCode = "1234";
-=======
    public const string addGame              = "1";
    public const string addPlayer            = "2";
    public const string requestGameList      = "3";
    public const string cancelGame           = "4";
-   public const string goToCharacterSelect  = "5";
-   public const string inGameSceneLoaded    = "6";
-   public const string enterInGameScene     = "30";
-   public const string goToInGameScene      = "7";
-   public const string sendGameInfo         = "8";
-   public const string playerNumber         = "9";
-   public const string playerDisconnect     = "10";
-   public const string playerAdded          = "11";
-   public const string lobbyFull            = "12";
-   public const string leaveGame            = "13";
-   public const string gameStarted          = "14";
-   public const string gameEnded            = "15";
-   public const string characterSelect      = "16";
-   public const string characterResult      = "17";
-   public const string diceRoll             = "18";
+   public const string goToCharacterSelect = "22";
+   public const string inGameSceneLoaded   = "27";
+   public const string goToInGameScene     = "28";
+    public const string enterInGameScene   = "30";
+   public const string sendGameInfo        = "24";
+   public const string playerNumber        = "23";
+   public const string playerDisconnect    = "25";
+   public const string playerAdded         = "29";
+   public const string lobbyFull           = "20";
+   public const string leaveGame           = "26";
+   public const string gameStarted          = "5";
+   public const string gameEnded            = "6";
+   public const string characterSelect      = "7";
+   public const string characterResult      = "8";
+   public const string diceRoll             = "9";
 
    // In game turn commands
-   public const string buildSettlement     = "19";
-   public const string upgradeToCity       = "20";
-   public const string buildRoad           = "21";
-   public const string buildArmy           = "22";
-   public const string attackCity          = "23";
-   public const string moveRobber          = "24";
-   public const string endTurn             = "25";
-   public const string startTurn           = "26";
-   public const string sendChat            = "27";
-   public const string networkError        = "28";
-   public const string sendMap             = "29";
+   public const string buildSettlement     = "10";
+   public const string upgradeToCity       = "11";
+   public const string buildRoad           = "12";
+   public const string buildArmy           = "13";
+   public const string attackCity          = "14";
+   public const string moveRobber          = "15";
+   public const string endTurn             = "16";
+   public const string startTurn           = "17";
+   public const string sendChat            = "18";
+   public const string networkError        = "19";
+   public const string sendMap             = "21";
    public const string serverKillCode    = "1234";
->>>>>>> master
 
 
    public const int StartingGold      = 150;

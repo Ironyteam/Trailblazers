@@ -244,19 +244,14 @@ public class GuiManager : MonoBehaviour {
     // Sets the passed player number to the current winner of the largest army.
     public void SetLargestArmyWinner(int previousLargestArmy, int playerNumber)
     {
-		if(previousLargestArmy <= -1)
-		{
-			playerClassLocalArray[playerNumber].largestArmyIndicator = true;
-			screenElementsArray[playerClassLocalArray[playerNumber].uiPosition].largestArmyIndicator.enabled = true;
-		}
-		else 
+		if(previousLargestArmy > -1)
 		{
 			playerClassLocalArray[previousLargestArmy].largestArmyIndicator = false;
 			screenElementsArray[playerClassLocalArray[previousLargestArmy].uiPosition].largestArmyIndicator.enabled = false;
-            playerClassLocalArray[playerNumber].largestArmyIndicator = true;
-			screenElementsArray[playerClassLocalArray[playerNumber].uiPosition].largestArmyIndicator.enabled = true;
 		}
-
+		
+		playerClassLocalArray[playerNumber].largestArmyIndicator = true;
+		screenElementsArray[playerClassLocalArray[playerNumber].uiPosition].largestArmyIndicator.enabled = true;
     }
 
 	public void NextPlayerLocal(int previousLongestRoad, int previousLargestArmy, bool reverse = false)

@@ -43,12 +43,12 @@ public class GameBoard : MonoBehaviour
 	public int roadIndex = 0;
 	public MKGlow MKGlowObject;
 	public GuiManager GUIManager;
-   public NetworkManager NetManager;
-   public int glowCounter = 0;
+    public NetworkManager NetManager;
+    public int glowCounter = 0;
 
 	public int CurrentPlayer = 0;
-   public int LocalPlayer = 0;
-   public bool InitialPlacement = true;
+    public int LocalPlayer = 0;
+    public bool InitialPlacement = true;
 	public bool FirstTurn = true;
 	public bool goingUp = true;
 	public Game LocalGame;
@@ -61,8 +61,8 @@ public class GameBoard : MonoBehaviour
 
 	public Structure AttackingCity = null;
 	public Structure DefendingCity = null;
-   public Structure BuyingArmyCity = null;
-   public Hex RobberLocation = null;
+    public Structure BuyingArmyCity = null;
+    public Hex RobberLocation = null;
    /*
   sendEndTurn()
   sendStartTurn()
@@ -77,16 +77,16 @@ public class GameBoard : MonoBehaviour
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
         GUIManager.DisableGameCanvas();
-      LocalPlayer = BoardManager.localPlayerIndex;
+        LocalPlayer = BoardManager.localPlayerIndex;
 
 		LocalGame = new Game();
 
         LocalGame.isNetwork = NavigationScript.networkGame;
 
-      if (LocalGame.isNetwork)
-         NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
+        if (LocalGame.isNetwork)
+			NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
 
-      foreach (int selectedCharacter in characterSelect.selectedCharacters)
+        foreach (int selectedCharacter in characterSelect.selectedCharacters)
 		    LocalGame.PlayerList.Add(new Player(Characters.Names[selectedCharacter], BoardManager.characterAbilitiesOn ? selectedCharacter:-1));
 
 		foreach (Player currentPlayer in LocalGame.PlayerList) 
@@ -311,7 +311,6 @@ public class GameBoard : MonoBehaviour
 					template.hex[x, z].token_go = (GameObject)Instantiate(token, new Vector3(x * xOffset, 2f, zPos), Quaternion.Euler(0, -20, 0));
 					Tokens.Add(template.hex[x, z].token_go);
 
-					Instantiate (armyText, new Vector3 (x * xOffset, 2f, zPos), Quaternion.Euler (0, -20, 0));
 					if (template.hex[x, z].dice_number == 7)
 					{
 						RobberLocation = template.hex[x, z];
@@ -387,11 +386,14 @@ public class GameBoard : MonoBehaviour
 		}
 		glowCounter++;
 
-      if (LocalGame.isNetwork)
-         if (LocalPlayer == CurrentPlayer)
-            GUIManager.EnableGameCanvas();
-         else
-            GUIManager.DisableGameCanvas();
+		if (LocalGame.isNetwork)
+			if (LocalPlayer == CurrentPlayer)
+				GUIManager.EnableGameCanvas();
+			else
+				GUIManager.DisableGameCanvas();
+		
+		if (!InitialPlacement)
+			GUIManager.UpdatePlayer();
    }
 
 	void spawnStructureOne(int xCoord, int yCoord)
@@ -773,32 +775,28 @@ public class GameBoard : MonoBehaviour
 		targetRoad.PlayerOwner = CurrentPlayer;
 		mr.material = GetPlayerMaterial(CurrentPlayer, 0);
 
-		if (!InitialPlacement)
-			LocalGame.PlayerList[CurrentPlayer].BuildRoad();
-
-		// Cycles to the next player and shows initial settlements
-		if (InitialPlacement)
+		if (InitialPlacement)// Cycles to the next player and shows initial settlements
 		{
-            if (LocalGame.isNetwork && CurrentPlayer != LocalPlayer)
+            if (LocalGame.isNetwork)
             {
-					Debug.Log("BuildRoad: (LocalGame.isNetwork && CurrentPlayer != LocalPlayer) = true");
+				if (CurrentPlayer == LocalPlayer)
+					NextPlayer();
             }
-            else
-            {
-               Debug.Log("BuildRoad: (LocalGame.isNetwork && CurrentPlayer != LocalPlayer) = fals");
-				   NextPlayer();
-            }
-
-            // If still initial placement after cycling next player, show settlement locations
-            if (InitialPlacement)
-            {
-                if (!LocalGame.isNetwork)
-                    ShowAvailableSettlementsInitial();
-            }
+			else
+			{
+				NextPlayer();
+				
+				// If still initial placement after cycling next player, show settlement locations.
+				if (InitialPlacement)
+					ShowAvailableSettlementsInitial();
+			}
 		}
-		// Longest road logic
-		else
+	
+		else // Charge player for road and calculate longest road.
 		{
+			LocalGame.PlayerList[CurrentPlayer].BuildRoad();
+			
+			// Longest road logic.
 			int tempRoadLength = 0;
 			tempRoadLength = CalculateLongestRoad(CurrentPlayer);
 			if (tempRoadLength > LocalGame.PlayerList[CurrentPlayer].LongestRoad)
@@ -807,10 +805,13 @@ public class GameBoard : MonoBehaviour
 
 				if (tempRoadLength > LocalGame.LongestRoad)
 				{
+					int temp  = LocalGame.LongestRoadPlayer;
 					LocalGame.PlayerList[CurrentPlayer].LongestRoadWinner = true;
 					if (LocalGame.LongestRoadPlayer != -1)
-						LocalGame.PlayerList[LocalGame.LongestRoadPlayer].LongestRoadWinner = true;
+						LocalGame.PlayerList[LocalGame.LongestRoadPlayer].LongestRoadWinner = false;
 					LocalGame.LongestRoadPlayer = CurrentPlayer;
+					LocalGame.LongestRoad = tempRoadLength;
+					GUIManager.SetLongestRoadWinner(temp, CurrentPlayer);
 				}
 
 			}
@@ -823,7 +824,6 @@ public class GameBoard : MonoBehaviour
 		LocalGame.PlayerList[CurrentPlayer].HireArmy();
         targetCity.ArmyNumber_GO.GetComponent<TextMesh>().text = targetCity.Armies.ToString();
 		CalculateLargestArmy ();
-        GUIManager.UpdatePlayer();
     }
 
 	public void ExecuteAttack()
@@ -1047,7 +1047,6 @@ public class GameBoard : MonoBehaviour
 			}
 			currentStructure.Structure_GO.GetComponent<Collider>().enabled = false;
 		}
-		GUIManager.UpdatePlayer();
 	}
 
 	public void ShowAvailableSettlementsToUpgrade()
@@ -1077,7 +1076,6 @@ public class GameBoard : MonoBehaviour
 			}
 			currentStructure.Structure_GO.GetComponent<Collider>().enabled = false;
 		}
-		GUIManager.UpdatePlayer();
 	}
 
 	public void ShowAvailableCitiesForArmies()
@@ -1365,7 +1363,6 @@ public class GameBoard : MonoBehaviour
 			}
 			currentRoad.Road_GO.GetComponent<Collider>().enabled = false;
 		}
-		GUIManager.UpdatePlayer();
 	}
 
 	public int CalculateLongestRoad(int playerNumber)
@@ -1462,13 +1459,13 @@ public class GameBoard : MonoBehaviour
 		
 	public void CalculateLargestArmy()
 	{
-		int largestArmy = Constants.MinLargestArmy > LocalGame.MostArmies ? Constants.MinLargestArmy: LocalGame.MostArmies;
+		int largestArmy = LocalGame.MostArmies;
 		int largestArmyPlayer = -1;
         int previousLargestArmyPlayer = LocalGame.MostArmiesPlayer;
 
 		for (int x = 0; x < LocalGame.PlayerList.Count; x++)
 		{
-			if ((LocalGame.PlayerList[x].Armies + LocalGame.PlayerList[x].playerAbility == 7 ? Constants.LargestArmyBonus:0) > largestArmy) 
+			if ((LocalGame.PlayerList[x].Armies + (LocalGame.PlayerList[x].playerAbility == 7 ? Constants.LargestArmyBonus:0)) > largestArmy) 
 			{
 				largestArmy = (LocalGame.PlayerList[x].Armies + LocalGame.PlayerList[x].playerAbility == 7 ? Constants.LargestArmyBonus:0); 
 				largestArmyPlayer = x;
@@ -1477,7 +1474,9 @@ public class GameBoard : MonoBehaviour
 
 		if (largestArmyPlayer != LocalGame.MostArmiesPlayer && largestArmyPlayer != -1) 
 		{
-			LocalGame.PlayerList [LocalGame.MostArmiesPlayer].LargestArmyWinner = false;
+			if (LocalGame.MostArmiesPlayer != -1)
+				LocalGame.PlayerList [LocalGame.MostArmiesPlayer].LargestArmyWinner = false;
+			
             LocalGame.MostArmies = largestArmy;
             LocalGame.MostArmiesPlayer = largestArmyPlayer;
             GUIManager.SetLargestArmyWinner(previousLargestArmyPlayer, largestArmyPlayer);
@@ -1833,21 +1832,12 @@ public class GameBoard : MonoBehaviour
        Debug.Log("NextPlayer: Turn changed");
 
       HideAvailableSettlements();
-<<<<<<< HEAD
-        HideAvailableSettlementsToUpgrade();
-        HideAvailableCitiesForArmies();
-        HideAvailableCitiesForAttack();
-        HideAvailableCitiesToAttack();
-        HideAvailableRoads();
-        HideHexLocations();
-=======
       HideAvailableSettlementsToUpgrade();
       HideAvailableCitiesForArmies();
       HideAvailableCitiesForAttack();
       HideAvailableCitiesToAttack();
       HideAvailableRoads();
       HideHexLocations();
->>>>>>> master
         
 		BuildRoadButtonClicked = false;
 		BuildCityButtonClicked = false;
@@ -1868,8 +1858,8 @@ public class GameBoard : MonoBehaviour
                     //The swap player doesnt work for first turn for local... yet
                     if (LocalGame.isNetwork)
                         GUIManager.NextPlayerNetwork();
-                    //else
-                        //GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer);
+                    else
+                        GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer);
                     
                 }
                 else
@@ -1886,8 +1876,8 @@ public class GameBoard : MonoBehaviour
                   //The swap player doesnt work for first turn for local... yet
                   if (LocalGame.isNetwork)
                         GUIManager.NextPlayerNetwork(true);
-                  //else
-                       // GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer, true);
+                  else
+                       GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer, true);
                     
                 }
                 else
@@ -1931,8 +1921,6 @@ public class GameBoard : MonoBehaviour
             RollDiceClick();
          }
       }
-      Debug.Log("NextPlayer: The current player index is: " + CurrentPlayer);
-        GUIManager.UpdatePlayer();
       if (LocalGame.PlayerList[CurrentPlayer].isConnected == false && LocalGame.isNetwork)
          NextPlayer();
     }
@@ -2007,7 +1995,6 @@ public class GameBoard : MonoBehaviour
 				}
 			}
 		}
-        GUIManager.UpdatePlayer();
     }
 
 	public void DistributeResource(Vector3 spawnLocation, int resourceNumber, int playerNumber, bool isCity)
@@ -2161,7 +2148,6 @@ public class GameBoard : MonoBehaviour
 		if (stealFromPlayer[5] == true && LocalGame.PlayerList[0].playerAbility != 2)
 			StartCoroutine(StealResources(5, robbedHex.token_go.transform.position));
 
-		GUIManager.UpdatePlayer();
 	}
 
 
@@ -2280,7 +2266,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyWheat())
 		{
 			LocalGame.PlayerList[CurrentPlayer].BuyWheat();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2289,7 +2274,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].Wheat > 0)
 		{
 			LocalGame.PlayerList[CurrentPlayer].SellWheat();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2298,7 +2282,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyBrick())
 		{
 			LocalGame.PlayerList[CurrentPlayer].BuyBrick();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2307,7 +2290,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].Brick > 0)
 		{
 			LocalGame.PlayerList[CurrentPlayer].SellBrick();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2316,7 +2298,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyWool())
 		{
 			LocalGame.PlayerList[CurrentPlayer].BuyWool();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2325,7 +2306,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].Wool > 0)
 		{
 			LocalGame.PlayerList[CurrentPlayer].SellWool();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2334,7 +2314,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyWood())
 		{
 			LocalGame.PlayerList[CurrentPlayer].BuyWood();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2343,7 +2322,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].Wood > 0)
 		{
 			LocalGame.PlayerList[CurrentPlayer].SellWood();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2352,7 +2330,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyOre())
 		{
 			LocalGame.PlayerList[CurrentPlayer].BuyOre();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
@@ -2361,7 +2338,6 @@ public class GameBoard : MonoBehaviour
 		if (LocalGame.PlayerList[CurrentPlayer].Ore > 0)
 		{
 			LocalGame.PlayerList[CurrentPlayer].SellOre();
-			GUIManager.UpdatePlayer();
 		}
 	}
 
