@@ -84,8 +84,6 @@ public class audioManager : MonoBehaviour {
 				ParentAudio.name = "MUSIC";
 				//3. Tells THIS object not to die when changing scenes.
 				DontDestroyOnLoad (ParentAudio);
-				DontDestroyOnLoad (soundFX);
-			    DontDestroyOnLoad (conditionalThemes);
         } 
         else
         {
@@ -103,7 +101,7 @@ public class audioManager : MonoBehaviour {
 
 	private void playTitleTheme ()
 	{
-		if (mainAudio.clip != titleTheme) 
+		/*if (mainAudio.clip != titleTheme) 
 		{
 			mainAudio.Stop ();
 			conditionalAudio.Stop ();
@@ -113,7 +111,7 @@ public class audioManager : MonoBehaviour {
             conditionalAudio.volume = 0.3f;
             mainAudio.Play ();
             conditionalAudio.Play ();
-		}
+		}*/
 	}
 
 	private IEnumerator playInGameTheme ()

@@ -29,7 +29,7 @@ public static class Constants
    public const string goToCharacterSelect = "22";
    public const string inGameSceneLoaded   = "27";
    public const string goToInGameScene     = "28";
-    public const string enterInGameScene   = "30";
+   public const string enterInGameScene   = "30";
    public const string sendGameInfo        = "24";
    public const string playerNumber        = "23";
    public const string playerDisconnect    = "25";

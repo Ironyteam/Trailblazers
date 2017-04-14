@@ -17,6 +17,7 @@ public class loadgameSpin : MonoBehaviour {
 
 	private void Start()
 	{
+        DontDestroyOnLoad(this.gameObject);
 		loadingCanvas.enabled = false;
 		spinnerTransform = spinner.GetComponent<RectTransform>();
 	}
@@ -49,13 +50,14 @@ public class loadgameSpin : MonoBehaviour {
 	public IEnumerator networkLoad()
 	{
 		characterSelect.startGame();
-		yield return new WaitForSeconds (1);
-		async = SceneManager.LoadSceneAsync ("In Game Scene");
-		async.allowSceneActivation = false;
+        yield return new WaitForSeconds (1);
+        async = SceneManager.LoadSceneAsync("In Game Scene");
+        async.allowSceneActivation = false;
 
 		while (!async.isDone && !async.allowSceneActivation)
 		{
 			yield return null;
 		}
-	}
+        Destroy(gameObject);
+    }
 }

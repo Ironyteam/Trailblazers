@@ -129,7 +129,7 @@ public class NetworkManager : MonoBehaviour
          createGameBTN.onClick.AddListener(() => createGame());
          startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
          startGameBTN.onClick.AddListener(() => startCharacterSelect());
-         startGameBTN.gameObject.SetActive(false);
+         //startGameBTN.gameObject.SetActive(false);
          if (!isHostingGame)
          {
             startGameBTN.gameObject.SetActive(false);
@@ -165,6 +165,7 @@ public class NetworkManager : MonoBehaviour
    public void connectToServer(string ip)
    {
       byte error;
+      serverIP = ipField.text;
       serverConnectionID = NetworkTransport.Connect(socketId, serverIP, socketPort, 0, out error);
       connectServerBTN.gameObject.SetActive(false);
       ipField.transform.parent.gameObject.SetActive(false);
@@ -331,28 +332,39 @@ public class NetworkManager : MonoBehaviour
    {
       inGame = true;
       sendActionToClients(Constants.gameStarted + Constants.commandDivider + Network.player.ipAddress, 0);
-      startInGameLoad();
+      StartCoroutine(startInGameLoad());
    }
 
    // Start loading the in game scene
-   public void startInGameLoad()
+   public IEnumerator startInGameLoad()
    {
+      Debug.Log("startInGameLoad: load started");
+      int count = 0;
       StartCoroutine(loadGameSpin.networkLoad());
-      while (!loadGameSpin.async.isDone)
+      yield return new WaitForSeconds(1.5f);
+      while (loadGameSpin.async.progress < 0.9f)
       {
+         count++;
          // Do nothing, wait for it to finish loading
       }
+      Debug.Log("startInGameLoad: count reached " + count);
 
       if (isHostingGame)
+      { 
          loadedPlayers += 1;
+         Debug.Log("startInGameLoad: Host load finished");
+      }
       else
+      {
          sendSocketMessage(Constants.inGameSceneLoaded + Constants.commandDivider + Network.player.ipAddress, hostConnectionID);
+      }
    }
 
    // A player told host he finished loading the in game scene
    public void clientInGameLoaded()
    {
       loadedPlayers += 1;
+      Debug.Log("clientInGameLoaded: Player In Game load finished");
       if (loadedPlayers >= lobbyPlayers.Count)
       {
          // Tell the clients to enter game
@@ -380,7 +392,7 @@ public class NetworkManager : MonoBehaviour
       formatter.Serialize(stream, message);
 
       int bufferSize = 1024;
-      Debug.Log("\nSending to ID " + connectionNum + " : " + message);
+      Debug.Log("\nSending message to ID " + connectionNum + " : " + message);
       NetworkTransport.Send(socketId, connectionNum, myReliableChannelId, buffer, bufferSize, out error);
    }
 
@@ -472,7 +484,13 @@ public class NetworkManager : MonoBehaviour
          case Constants.characterResult:   // #, characterResult
             break;
          case Constants.gameStarted:
-            SceneManager.LoadScene("In Game Scene");
+            StartCoroutine(startInGameLoad());
+            break;
+         case Constants.inGameSceneLoaded:
+            clientInGameLoaded();
+            break;
+         case Constants.enterInGameScene:
+            loadGameSpin.async.allowSceneActivation = true;
             break;
          case Constants.gameEnded:         // #, ipAddress
             break;
