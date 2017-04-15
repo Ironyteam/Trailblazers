@@ -16,7 +16,7 @@ public class audioManager : MonoBehaviour {
 	                 nearLossTheme,
 	                 victoryTheme,
 	                 lossTheme,
-	                 beginWar,
+	                 beginGame,
 	                 placeArmy,
 	                 battleSound,
 	                 lumberSound,
@@ -47,6 +47,8 @@ public class audioManager : MonoBehaviour {
 		mainAudio        = ParentAudio.GetComponent<AudioSource> ();
 		effectsAudio     = soundFX.GetComponent<AudioSource> ();
 		conditionalAudio = conditionalThemes.GetComponent<AudioSource> ();
+		
+		conditionalAudio.volume = 0;
 
 		playTitleTheme ();
 	}
@@ -63,8 +65,11 @@ public class audioManager : MonoBehaviour {
 
 	private void sceneChange (Scene currentScene, LoadSceneMode mode)
 	{
-		if (currentScene.name == "In Game Scene") 
+		if (currentScene.name == "In Game Scene")
+        {
+			playBeginGame();
 			StartCoroutine(playInGameTheme ());
+        }
 
 		if (currentScene.name == "Menu")
 			playTitleTheme ();
@@ -84,6 +89,8 @@ public class audioManager : MonoBehaviour {
 				ParentAudio.name = "MUSIC";
 				//3. Tells THIS object not to die when changing scenes.
 				DontDestroyOnLoad (ParentAudio);
+				DontDestroyOnLoad (soundFX);
+			    DontDestroyOnLoad (conditionalThemes);
         } 
         else
         {
@@ -101,7 +108,7 @@ public class audioManager : MonoBehaviour {
 
 	private void playTitleTheme ()
 	{
-		/*if (mainAudio.clip != titleTheme) 
+		if (mainAudio.clip != titleTheme) 
 		{
 			mainAudio.Stop ();
 			conditionalAudio.Stop ();
@@ -111,7 +118,7 @@ public class audioManager : MonoBehaviour {
             conditionalAudio.volume = 0.3f;
             mainAudio.Play ();
             conditionalAudio.Play ();
-		}*/
+		}
 	}
 
 	private IEnumerator playInGameTheme ()
@@ -158,7 +165,7 @@ public class audioManager : MonoBehaviour {
 
 	public void playBeginGame()
 	{
-		effectsAudio.clip = beginWar;
+		effectsAudio.clip = beginGame;
 		effectsAudio.Play ();
 	}
 
@@ -186,9 +193,25 @@ public class audioManager : MonoBehaviour {
 			mainAudio.volume -= fadeVolumeOut;
 			yield return new WaitForSeconds(fadeTimeOut);
 		}
-
+		
 		conditionalAudio.clip = battleTheme;
 		conditionalAudio.Play ();
+		
+		while (conditionalAudio.volume < 1f)
+		{
+			conditionalAudio.volume += fadeVolumeIn;
+			yield return new WaitForSeconds(fadeTimeIn);
+		}
+		
+		yield return new WaitForSeconds(10);
+		
+		while (conditionalAudio.volume > 0f)
+		{
+			conditionalAudio.volume -= fadeVolumeOut;
+			yield return new WaitForSeconds(fadeTimeOut);
+		}
+		
+		StartCoroutine(playMainTheme());
 	}
 
 	public IEnumerator playNearLoss()
@@ -198,9 +221,25 @@ public class audioManager : MonoBehaviour {
 			mainAudio.volume -= fadeVolumeOut;
 			yield return new WaitForSeconds(fadeTimeOut);
 		}
-
+		
 		conditionalAudio.clip = nearLossTheme;
 		conditionalAudio.Play ();
+		
+		while (conditionalAudio.volume < 1f)
+		{
+			conditionalAudio.volume += fadeVolumeIn;
+			yield return new WaitForSeconds(fadeTimeIn);
+		}
+		
+		yield return new WaitForSeconds(10);
+		
+		while (conditionalAudio.volume > 0f)
+		{
+			conditionalAudio.volume -= fadeVolumeOut;
+			yield return new WaitForSeconds(fadeTimeOut);
+		}
+		
+		StartCoroutine(playMainTheme());
 	}
 
 	public IEnumerator playNearWin()
@@ -210,9 +249,25 @@ public class audioManager : MonoBehaviour {
 			mainAudio.volume -= fadeVolumeOut;
 			yield return new WaitForSeconds(fadeTimeOut);
 		}
-
+		
 		conditionalAudio.clip = nearWinTheme;
 		conditionalAudio.Play ();
+		
+		while (conditionalAudio.volume < 1f)
+		{
+			conditionalAudio.volume += fadeVolumeIn;
+			yield return new WaitForSeconds(fadeTimeIn);
+		}
+		
+		yield return new WaitForSeconds(10);
+		
+		while (conditionalAudio.volume > 0f)
+		{
+			conditionalAudio.volume -= fadeVolumeOut;
+			yield return new WaitForSeconds(fadeTimeOut);
+		}
+		
+		StartCoroutine(playMainTheme());
 	}
 
 	private void playLossTheme()

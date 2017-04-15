@@ -43,6 +43,32 @@ public static class Characters
 														"\tto get by.\r\n\r\n" +
 														"\tAbility: Bonus four points is added to the largest army score.\r\n" +
  												        "\tBrick resource tiles give one extra brick."};
+														
+	public static readonly string[] condensedAbilitiesText =
+    {
+          "Road cost: 2 wood" +
+        "\nReceive extra wood",
+
+          "Army cost: 50% less",
+                                                     
+          "Immune to robber",
+
+          "Start with 2 of" +
+        "\nevery resource",
+
+          "50% more gold from" +
+        "\nsettlements and cities",
+                                                     
+          "Cities start with 1 army" +
+        "\nReceive Extra ore",
+                                   
+          "Longest road score: +2" +
+        "\nReceive extra wool",                  
+          
+          "Largest army score: +4" +
+        "\nReceive extra brick"
+    };
+	
     public static bool[] PlayerChosen = new bool[8];
 
     public static void ResetPlayers()

@@ -304,7 +304,6 @@ public class NetworkManager : MonoBehaviour
          case Constants.characterResult:   // #, characterResult
             break;
          case Constants.gameStarted:
-            inCharacterSelect = false;
             startInGameLoad();
             break;
          case Constants.inGameSceneLoaded:
@@ -532,12 +531,14 @@ public class NetworkManager : MonoBehaviour
    public void characterSelectStartGame()
    {
       inGame = true;
+      inCharacterSelect = false;
       sendActionToClients(Constants.gameStarted + Constants.commandDivider + Network.player.ipAddress, 0);
    }
 
    // Start loading the in game scene
    public void startInGameLoad()
    {
+      inCharacterSelect = false;
       Debug.Log("startInGameLoad: load started");
       Debug.Log("Load script name " + loadGameSpin.name);
       int count = 0;

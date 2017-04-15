@@ -44,6 +44,7 @@ public class GameBoard : MonoBehaviour
 	public MKGlow MKGlowObject;
 	public GuiManager GUIManager;
     public NetworkManager NetManager;
+	public audioManager AudioManager;
     public int glowCounter = 0;
 
 	public int CurrentPlayer = 0;
@@ -73,6 +74,7 @@ public class GameBoard : MonoBehaviour
 	{
 		MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
 		GUIManager = GameObject.Find("Main Camera").GetComponent<GuiManager>();
+		AudioManager = GameObject.Find("MUSIC").GetComponent<audioManager>();
         MKGlowObject.BlurSpread = .125f;
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
@@ -338,24 +340,13 @@ public class GameBoard : MonoBehaviour
 
 		InitialPlacement = true;
 
+		tutorial = GameObject.Find("Tutorial").GetComponent<Tutorial>();
+		tutorial.init();
+		
         if (!LocalGame.isNetwork)
             ShowAvailableSettlementsInitial();
         else if (LocalPlayer == CurrentPlayer)
             ShowAvailableSettlementsInitial();
-
-        tutorial = GameObject.Find("Tutorial").GetComponent<Tutorial>();
-        tutorial.showPlaceInitialSettlementMessage();
-        tutorial.showPlaceInitialRoadMessage();
-        tutorial.showPlaceInitialSettlementMessage();
-        tutorial.showPlaceInitialRoadMessage();
-        tutorial.showBuildRoadTutorialBox();
-		tutorial.showBuildSettlementTutorialBox();
-		tutorial.showExplainVPTutorialBox();
-		tutorial.showExplainResourcesTutorialBox();
-		tutorial.showExplainGoldTutorialBox();
-		tutorial.showUpgradeToCityTutorialBox();
-		tutorial.showBarracksTutorialBox();
-		tutorial.showAttackTutorialBox();
     }
 
 	void FixedUpdate () {
@@ -411,7 +402,7 @@ public class GameBoard : MonoBehaviour
 		newStructure.Structure_GO = (GameObject)Instantiate (structure, new Vector3 (xCoord * xOffset - 1f, 0.4f, zPos + 1.6f), Quaternion.identity);
 		newStructure.Structure_GO.GetComponent<Collider>().enabled = false;
 		newStructure.ArmySprite_GO = (GameObject)Instantiate (armySprite, new Vector3 (xCoord * xOffset - 1f, 1.6f, zPos + 1.6f), Quaternion.Euler (60f, 0f, 0f));
-		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset -.6f, 1.8f, zPos + 1.8f), Quaternion.Euler (60f, 0f, 0f));
+		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset -.55f, 1.8f, zPos + 1.9f), Quaternion.Euler (60f, 0f, 0f));
 		newStructure.ArmySprite_GO.GetComponent<Renderer>().enabled = false;
 		newStructure.ArmyNumber_GO.GetComponent<Renderer>().enabled = false;
 		// Add structure to list of structures.
@@ -433,7 +424,7 @@ public class GameBoard : MonoBehaviour
 		newStructure.Structure_GO = (GameObject)Instantiate (structure, new Vector3 (xCoord * xOffset + 1f, 0.4f, zPos + 1.6f), Quaternion.identity);
 		newStructure.Structure_GO.GetComponent<Collider>().enabled = false;
 		newStructure.ArmySprite_GO = (GameObject)Instantiate (armySprite, new Vector3 (xCoord * xOffset + 1f, 1.6f, zPos + 1.6f), Quaternion.Euler (60f, 0f, 0f));
-		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset + 1.4f, 1.8f, zPos + 1.8f), Quaternion.Euler (60f, 0f, 0f));
+		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset + 1.45f, 1.8f, zPos + 1.9f), Quaternion.Euler (60f, 0f, 0f));
 		newStructure.ArmySprite_GO.GetComponent<Renderer>().enabled = false;
 		newStructure.ArmyNumber_GO.GetComponent<Renderer>().enabled = false;
 		// Add structure to list of structures.
@@ -454,8 +445,8 @@ public class GameBoard : MonoBehaviour
 		// Spawn structure in game world.
 		newStructure.Structure_GO = (GameObject)Instantiate (structure, new Vector3 (xCoord * xOffset + 1.9f, 0.4f, zPos - .16f), Quaternion.identity);
 		newStructure.Structure_GO.GetComponent<Collider>().enabled = false;
-		newStructure.ArmySprite_GO = (GameObject)Instantiate (armySprite, new Vector3 (xCoord * xOffset + 1.9f, 0.4f, zPos - .16f), Quaternion.Euler (60f, 0f, 0f));
-		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset + 2.3f, 0.45f, zPos - .32f), Quaternion.Euler (60f, 0f, 0f));
+		newStructure.ArmySprite_GO = (GameObject)Instantiate (armySprite, new Vector3 (xCoord * xOffset + 1.9f, 1.6f, zPos - .16f), Quaternion.Euler (60f, 0f, 0f));
+		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset + 2.4f, 1.8f, zPos + .2f), Quaternion.Euler (60f, 0f, 0f));
 		newStructure.ArmySprite_GO.GetComponent<Renderer>().enabled = false;
 		newStructure.ArmyNumber_GO.GetComponent<Renderer>().enabled = false;
 		// Add structure to list of structures.
@@ -477,7 +468,7 @@ public class GameBoard : MonoBehaviour
 		newStructure.Structure_GO = (GameObject)Instantiate (structure, new Vector3 (xCoord * xOffset + 1f, 0.4f, zPos - 1.9f), Quaternion.identity);
 		newStructure.Structure_GO.GetComponent<Collider>().enabled = false;
 		newStructure.ArmySprite_GO = (GameObject)Instantiate (armySprite, new Vector3 (xCoord * xOffset + 1f, 1.6f, zPos - 1.9f), Quaternion.Euler (60f, 0f, 0f));
-		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 ((xCoord * xOffset) + 1.4f, 1.8f, zPos - 2.1f), Quaternion.Euler (60f, 0f, 0f));
+		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 ((xCoord * xOffset) + 1.5f, 1.8f, zPos - 1.55f), Quaternion.Euler (60f, 0f, 0f));
 		newStructure.ArmySprite_GO.GetComponent<Renderer>().enabled = false;
 		newStructure.ArmyNumber_GO.GetComponent<Renderer>().enabled = false;
 		// Add structure to list of structures.
@@ -499,7 +490,7 @@ public class GameBoard : MonoBehaviour
 		newStructure.Structure_GO = (GameObject)Instantiate (structure, new Vector3 (xCoord * xOffset - 1f, 0.4f, zPos - 1.9f), Quaternion.identity);
 		newStructure.Structure_GO.GetComponent<Collider>().enabled = false;
 		newStructure.ArmySprite_GO = (GameObject)Instantiate (armySprite, new Vector3 (xCoord * xOffset - 1f, 1.6f, zPos - 1.9f), Quaternion.Euler (60f, 0f, 0f));
-		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset -.6f, 1.8f, zPos - 1.7f), Quaternion.Euler (60f, 0f, 0f));
+		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset -.5f, 1.8f, zPos - 1.53f), Quaternion.Euler (60f, 0f, 0f));
 		newStructure.ArmySprite_GO.GetComponent<Renderer>().enabled = false;
 		newStructure.ArmyNumber_GO.GetComponent<Renderer>().enabled = false;
 		// Add structure to list of structures.
@@ -521,7 +512,7 @@ public class GameBoard : MonoBehaviour
 		newStructure.Structure_GO = (GameObject)Instantiate (structure, new Vector3 (xCoord * xOffset - 1.9f, 0.4f, zPos - .16f), Quaternion.identity);
 		newStructure.Structure_GO.GetComponent<Collider>().enabled = false;
 		newStructure.ArmySprite_GO = (GameObject)Instantiate (armySprite, new Vector3 (xCoord * xOffset - 1.9f, 1.6f, zPos - .16f), Quaternion.Euler (60f, 0f, 0f));
-		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset - 1.5f, 1.8f, zPos + .04f), Quaternion.Euler (60f, 0f, 0f));
+		newStructure.ArmyNumber_GO = (GameObject)Instantiate (armyText, new Vector3 (xCoord * xOffset - 1.4f, 1.8f, zPos + .2f), Quaternion.Euler (60f, 0f, 0f));
 		newStructure.ArmySprite_GO.GetComponent<Renderer>().enabled = false;
 		newStructure.ArmyNumber_GO.GetComponent<Renderer>().enabled = false;
 		// Add structure to list of structures.
@@ -820,6 +811,7 @@ public class GameBoard : MonoBehaviour
 
 	public void BuyArmy(Structure targetCity)
 	{
+		AudioManager.playPlaceArmy();
 		targetCity.Armies++;
 		LocalGame.PlayerList[CurrentPlayer].HireArmy();
         targetCity.ArmyNumber_GO.GetComponent<TextMesh>().text = targetCity.Armies.ToString();
@@ -828,6 +820,7 @@ public class GameBoard : MonoBehaviour
 
 	public void ExecuteAttack()
 	{
+		AudioManager.playBattleSound();
 		if (AttackingCity.Armies > DefendingCity.Armies)
 		{
 			if (DefendingCity.Armies == 0)
@@ -960,6 +953,9 @@ public class GameBoard : MonoBehaviour
 	public void ShowAvailableSettlementsInitial()
 	{
 		bool isAvailable;
+		
+		tutorial.showPlaceInitialSettlementMessage();
+		
 		foreach (Structure currentStructure in Structures)
 		{
 			isAvailable = true;
@@ -1341,6 +1337,9 @@ public class GameBoard : MonoBehaviour
 
 	public void ShowAvailableRoadsInitial(Coordinate initialSettlement)
 	{
+		
+		tutorial.showPlaceInitialRoadMessage();
+		
 		foreach (Road currentRoad in Roads)
 		{
 			if ((CompareCoordinates(initialSettlement, currentRoad.SideA) || CompareCoordinates(initialSettlement, currentRoad.SideB)) && currentRoad.PlayerOwner == -1)
@@ -1827,17 +1826,21 @@ public class GameBoard : MonoBehaviour
 		return tempBool;
 	}
 
-	public void NextPlayer()
-	{
-       Debug.Log("NextPlayer: Turn changed");
+    public void HideAll()
+    {
+        HideAvailableSettlements();
+        HideAvailableSettlementsToUpgrade();
+        HideAvailableCitiesForArmies();
+        HideAvailableCitiesForAttack();
+        HideAvailableCitiesToAttack();
+        HideAvailableRoads();
+        HideHexLocations();
+    }
 
-      HideAvailableSettlements();
-      HideAvailableSettlementsToUpgrade();
-      HideAvailableCitiesForArmies();
-      HideAvailableCitiesForAttack();
-      HideAvailableCitiesToAttack();
-      HideAvailableRoads();
-      HideHexLocations();
+
+    public void NextPlayer()
+	{
+        HideAll();
         
 		BuildRoadButtonClicked = false;
 		BuildCityButtonClicked = false;
@@ -1923,6 +1926,9 @@ public class GameBoard : MonoBehaviour
       }
       if (LocalGame.PlayerList[CurrentPlayer].isConnected == false && LocalGame.isNetwork)
          NextPlayer();
+	 
+	  if (!InitialPlacement && tutorial.dontShowAgain == false && CurrentPlayer == LocalPlayer)
+		  tutorial.showBuildRoadTutorialBox();
     }
 
 	public void DistributeResources(int rollNumber)
@@ -2003,25 +2009,30 @@ public class GameBoard : MonoBehaviour
 		switch (resourceNumber)
 		{
 		case 0:
+		    AudioManager.playLumberSound();
 			amountToDistribute = ((isCity ? 2 : 1) + (LocalGame.PlayerList [playerNumber].playerAbility == 0 ? 1 : 0));
 			LocalGame.PlayerList [playerNumber].Wood += amountToDistribute;
 			StartCoroutine(FloatText (spawnLocation, Color.black, amountToDistribute));
 			break;
 		case 1:
+		    AudioManager.playOreSound();
 			amountToDistribute = ((isCity ? 2 : 1) + (LocalGame.PlayerList [playerNumber].playerAbility == 5 ? 1 : 0));
 			LocalGame.PlayerList [playerNumber].Ore += amountToDistribute;
 			StartCoroutine(FloatText (spawnLocation, Color.grey, amountToDistribute));
 			break;
 		case 2:
+		    AudioManager.playGrainSound();
 			LocalGame.PlayerList[playerNumber].Wheat += (isCity ? 2 : 1);
 			StartCoroutine(FloatText (spawnLocation, Color.yellow, (isCity ? 2 : 1)));
 			break;
 		case 3:
+		    AudioManager.playWoolSound();
 			amountToDistribute = ((isCity ? 2 : 1) + (LocalGame.PlayerList [playerNumber].playerAbility == 6 ? 1 : 0));
 			LocalGame.PlayerList [playerNumber].Wool += amountToDistribute;
 			StartCoroutine(FloatText (spawnLocation, Color.white, amountToDistribute));
 			break;
 		case 4:
+		    AudioManager.playBrickSound();
 			amountToDistribute = ((isCity ? 2 : 1) + (LocalGame.PlayerList [playerNumber].playerAbility == 7 ? 1 : 0));
 			LocalGame.PlayerList [playerNumber].Brick += amountToDistribute;
 			StartCoroutine(FloatText (spawnLocation, Color.red, amountToDistribute));
@@ -2153,6 +2164,7 @@ public class GameBoard : MonoBehaviour
 
 	public void DistributeGold()
 	{
+		AudioManager.playSellSound();
 		int goldToDistribute = 0;
 		foreach (Structure currentStructure in Structures)
 		{
@@ -2183,7 +2195,6 @@ public class GameBoard : MonoBehaviour
 				do
 				{
 					resourceToSteal = UnityEngine.Random.Range(1, 6);
-					Debug.Log (resourceToSteal);
 					switch (resourceToSteal)
 					{
 					case 1:
@@ -2265,6 +2276,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyWheat())
 		{
+			AudioManager.playBuySound();
 			LocalGame.PlayerList[CurrentPlayer].BuyWheat();
 		}
 	}
@@ -2273,6 +2285,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].Wheat > 0)
 		{
+			AudioManager.playSellSound();
 			LocalGame.PlayerList[CurrentPlayer].SellWheat();
 		}
 	}
@@ -2281,6 +2294,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyBrick())
 		{
+			AudioManager.playBuySound();
 			LocalGame.PlayerList[CurrentPlayer].BuyBrick();
 		}
 	}
@@ -2289,6 +2303,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].Brick > 0)
 		{
+			AudioManager.playSellSound();
 			LocalGame.PlayerList[CurrentPlayer].SellBrick();
 		}
 	}
@@ -2297,6 +2312,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyWool())
 		{
+			AudioManager.playBuySound();
 			LocalGame.PlayerList[CurrentPlayer].BuyWool();
 		}
 	}
@@ -2305,6 +2321,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].Wool > 0)
 		{
+			AudioManager.playSellSound();
 			LocalGame.PlayerList[CurrentPlayer].SellWool();
 		}
 	}
@@ -2313,6 +2330,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyWood())
 		{
+			AudioManager.playBuySound();
 			LocalGame.PlayerList[CurrentPlayer].BuyWood();
 		}
 	}
@@ -2321,6 +2339,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].Wood > 0)
 		{
+			AudioManager.playSellSound();
 			LocalGame.PlayerList[CurrentPlayer].SellWood();
 		}
 	}
@@ -2329,6 +2348,7 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].CanBuyOre())
 		{
+			AudioManager.playBuySound();
 			LocalGame.PlayerList[CurrentPlayer].BuyOre();
 		}
 	}
@@ -2337,16 +2357,16 @@ public class GameBoard : MonoBehaviour
 	{
 		if (LocalGame.PlayerList[CurrentPlayer].Ore > 0)
 		{
+			AudioManager.playSellSound();
 			LocalGame.PlayerList[CurrentPlayer].SellOre();
 		}
 	}
 
 	public void BuildSettlementClick()
 	{
-		HideAvailableSettlementsToUpgrade();
-		HideAvailableRoads();
+        HideAll();
 
-		if (BuildSettlementButtonClicked) 
+        if (BuildSettlementButtonClicked) 
 		{
 			BuildSettlementButtonClicked = false;
 			HideAvailableSettlements ();
@@ -2360,10 +2380,9 @@ public class GameBoard : MonoBehaviour
 
 	public void BuildRoadClick()
 	{
-		HideAvailableSettlementsToUpgrade();
-		HideAvailableSettlements();
+        HideAll();
 
-		if (BuildRoadButtonClicked) 
+        if (BuildRoadButtonClicked) 
 		{
 			BuildRoadButtonClicked = false;
 			HideAvailableRoads();
@@ -2377,10 +2396,9 @@ public class GameBoard : MonoBehaviour
 
 	public void BuildCityClick()
 	{
-		HideAvailableRoads();
-		HideAvailableSettlements();
+        HideAll();
 
-		if (BuildCityButtonClicked) 
+        if (BuildCityButtonClicked) 
 		{
 			BuildCityButtonClicked = false;
 			HideAvailableSettlementsToUpgrade();
@@ -2394,7 +2412,10 @@ public class GameBoard : MonoBehaviour
 
 	public void AttackClick()
 	{
-		if (Attacking) 
+		StartCoroutine(AudioManager.playBattleMusic());
+        HideAll();
+
+        if (Attacking) 
 		{
 			HideAvailableCitiesForAttack();
 		} 
@@ -2430,6 +2451,7 @@ public class GameBoard : MonoBehaviour
 
     public void ShowBarracksClick()
     {
+        HideAll();
         BuyingArmy = true;
         ShowAvailableCitiesForArmies();
         GUIManager.openBaracks();
@@ -2437,7 +2459,7 @@ public class GameBoard : MonoBehaviour
 
     public void HideBaracksClick()
     {
-        HideAvailableCitiesForArmies();
+        HideAll();
         GUIManager.closeBarracks();
     }
 

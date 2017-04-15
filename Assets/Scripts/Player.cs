@@ -31,11 +31,11 @@ public class Player
     private int turnOrder;      // The place in the turn order the player is, 0 for position not set.
     private int victoryPoints;  // The amount of victory points a player currently has.
 
-    private float brickDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Brick from the market.
-    private float oreDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Ore from the market.
-    private float wheatDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Wheat from the market.
-    private float woodDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Wood from the market.
-    private float woolDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Wool from the market.
+    public float brickDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Brick from the market.
+    public float oreDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Ore from the market.
+    public float wheatDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Wheat from the market.
+    public float woodDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Wood from the market.
+    public float woolDiscount = Constants.NoDiscount; // The discount the player receives when purchasing Wool from the market.
 
     // Constructors to instantiate Player classes
     #region Public constructors
@@ -304,7 +304,7 @@ public class Player
 		// If player has enough Brick, complete transaction, else throw exception.
 		if (Brick > 0)
 		{
-			Gold += (int)Constants.ResourceCost;
+			Gold += (int)Constants.ResourceSalePrice;
 			Brick--;
 		}
 		else
@@ -344,7 +344,7 @@ public class Player
 		// If player has enough Ore, complete transaction, else throw exception.
 		if (Ore > 0)
 		{
-			Gold += (int)Constants.ResourceCost;
+			Gold += (int)Constants.ResourceSalePrice;
 			Ore--;
 		}
 		else
@@ -384,7 +384,7 @@ public class Player
 		// If player has enough Wheat, complete transaction, else throw exception.
 		if (Wheat > 0)
 		{
-			Gold += (int)Constants.ResourceCost;
+			Gold += (int)Constants.ResourceSalePrice;
 			Wheat--;
 		}
 		else
@@ -424,7 +424,7 @@ public class Player
 		// If player has enough Wood, complete transaction, else throw exception.
 		if (Wood > 0)
 		{
-			Gold += (int)Constants.ResourceCost;
+			Gold += (int)Constants.ResourceSalePrice;
 			Wood--;
 		}
 		else
@@ -464,7 +464,7 @@ public class Player
 		// If player has enough Wool, complete transaction, else throw exception.
 		if (Wool > 0)
 		{
-			Gold += (int)Constants.ResourceCost;
+			Gold += (int)Constants.ResourceSalePrice;
 			Wool--;
 		}
 		else

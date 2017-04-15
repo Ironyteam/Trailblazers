@@ -24,7 +24,7 @@ public class loadgameSpin : MonoBehaviour {
 	private void FixedUpdate()
 	{
 		spinCounter++;
-		if (spinCounter % 15 == 0)
+		if (spinCounter % 5 == 0)
 			spinnerTransform.Rotate(new Vector3(0, 0, -36));
 	}
 
@@ -35,14 +35,13 @@ public class loadgameSpin : MonoBehaviour {
 
 		loadingCanvas.enabled = true;
 
-    	StartCoroutine (loadWithSpin ());
-
-    }
+		StartCoroutine (loadWithSpin ());
+	}
 
 	IEnumerator loadWithSpin()
 	{
 		characterSelect.startGame();
-		yield return new WaitForSeconds (1);
+		yield return new WaitForSeconds (2);
 		async = SceneManager.LoadSceneAsync ("In Game Scene");
 	}
 }
