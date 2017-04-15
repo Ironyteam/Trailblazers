@@ -17,12 +17,11 @@ public class loadgameSpin : MonoBehaviour {
 
 	private void Start()
 	{
-        DontDestroyOnLoad(this.gameObject);
 		loadingCanvas.enabled = false;
 		spinnerTransform = spinner.GetComponent<RectTransform>();
 	}
 
-	private void Update()
+	private void FixedUpdate()
 	{
 		spinCounter++;
 		if (spinCounter % 15 == 0)
@@ -36,9 +35,9 @@ public class loadgameSpin : MonoBehaviour {
 
 		loadingCanvas.enabled = true;
 
-        if (!NavigationScript.networkGame)    // SILAS
-    		StartCoroutine (loadWithSpin ());
-	}
+    	StartCoroutine (loadWithSpin ());
+
+    }
 
 	IEnumerator loadWithSpin()
 	{
@@ -46,18 +45,4 @@ public class loadgameSpin : MonoBehaviour {
 		yield return new WaitForSeconds (1);
 		async = SceneManager.LoadSceneAsync ("In Game Scene");
 	}
-	
-	public IEnumerator networkLoad()
-	{
-		characterSelect.startGame();
-        yield return new WaitForSeconds (1);
-        async = SceneManager.LoadSceneAsync("In Game Scene");
-        async.allowSceneActivation = false;
-
-		while (!async.isDone && !async.allowSceneActivation)
-		{
-			yield return null;
-		}
-        Destroy(gameObject);
-    }
 }

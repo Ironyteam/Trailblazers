@@ -91,10 +91,6 @@ public class GuiManager : MonoBehaviour {
 		Destroy (GameObject.Find("Directional light"));
 		Destroy (GameObject.Find("Ocean"));
         CurrentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
-	/*	if(NavigationScript.networkGame == true)
-		{
-			putLocalPlayerFirst((Player number received from network) here);
-		} */
 
         screenElementsArray[0].characterSelected.enabled = true;
     }
@@ -145,6 +141,11 @@ public class GuiManager : MonoBehaviour {
                 screenElementsArray[count].playerCanvas.enabled = false;
                 scoreboardElementsArray[count].ScoreboardCanvas.enabled = false;
             }
+        }
+        if (NavigationScript.networkGame == true)
+        {
+            putLocalPlayerFirst(CurrentGameBoard.LocalPlayer);
+            Debug.Log("GuiManager Start: " + CurrentGameBoard.LocalPlayer);
         }
     }
 
