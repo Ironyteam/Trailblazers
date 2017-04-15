@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2015
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trailblazers2.0.Plugins", "Trailblazers2.0.Plugins.csproj", "{166BE4A9-5107-654F-BDB3-1BF34C4374FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trailblazers2.0", "Trailblazers2.0.csproj", "{0027656B-75D8-00D2-2EC5-EB58E9BDECD8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trailblazers2.0.Editor", "Trailblazers2.0.Editor.csproj", "{D23D51ED-89D1-80E0-141B-FFD35CD1D93A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{166BE4A9-5107-654F-BDB3-1BF34C4374FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{166BE4A9-5107-654F-BDB3-1BF34C4374FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{166BE4A9-5107-654F-BDB3-1BF34C4374FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{166BE4A9-5107-654F-BDB3-1BF34C4374FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0027656B-75D8-00D2-2EC5-EB58E9BDECD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0027656B-75D8-00D2-2EC5-EB58E9BDECD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0027656B-75D8-00D2-2EC5-EB58E9BDECD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0027656B-75D8-00D2-2EC5-EB58E9BDECD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D23D51ED-89D1-80E0-141B-FFD35CD1D93A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D23D51ED-89D1-80E0-141B-FFD35CD1D93A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D23D51ED-89D1-80E0-141B-FFD35CD1D93A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D23D51ED-89D1-80E0-141B-FFD35CD1D93A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

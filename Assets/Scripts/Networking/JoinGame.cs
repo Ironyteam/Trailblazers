@@ -18,6 +18,7 @@ public class JoinGame : MonoBehaviour
         
    IEnumerator joinGame()
    {
+      Debug.Log("joinGame: in the function, NetworkManager.inPlayerLobby = " + NetworkManager.inPlayerLobby);
       if (NetworkManager.inPlayerLobby == false)
       {
          Text[] gameTextBoxes = joinBTN.transform.parent.transform.GetComponentsInChildren<Text>();
