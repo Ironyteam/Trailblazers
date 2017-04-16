@@ -21,10 +21,10 @@ public class loadgameSpin : MonoBehaviour {
 		spinnerTransform = spinner.GetComponent<RectTransform>();
 	}
 
-	private void Update()
+	private void FixedUpdate()
 	{
 		spinCounter++;
-		if (spinCounter % 15 == 0)
+		if (spinCounter % 5 == 0)
 			spinnerTransform.Rotate(new Vector3(0, 0, -36));
 	}
 
@@ -43,6 +43,8 @@ public class loadgameSpin : MonoBehaviour {
 		characterSelect.startGame();
 		yield return new WaitForSeconds (1);
 		async = SceneManager.LoadSceneAsync ("In Game Scene");
+		
+		yield return null;
 	}
 	
 	public IEnumerator networkLoad()

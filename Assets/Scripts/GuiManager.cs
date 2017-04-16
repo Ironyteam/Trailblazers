@@ -17,7 +17,9 @@ public class GuiManager : MonoBehaviour {
     public Button Market;
     public Button EndTurn;
     public Image DiceImage;
-    public Text DiceText;
+    public Text DiceText,
+				inGamePopupText;
+		   	    
     public bool GameCanvasEnabled = true;
 
     [System.Serializable]
@@ -46,7 +48,7 @@ public class GuiManager : MonoBehaviour {
 	}
 	
 	[System.Serializable]
-	public class scoreboardElements //*****************
+	public class scoreboardElements
 	{
 		public Canvas ScoreboardCanvas;
 		public Image  characterImage,
@@ -58,6 +60,7 @@ public class GuiManager : MonoBehaviour {
 					  numOfVP;
 	}
 
+	public Dropdown chatDropdown;
     public InputField chatInput;
     public Text brickScore;
     public Text chatBox;
@@ -68,12 +71,13 @@ public class GuiManager : MonoBehaviour {
     public Text wheatScore;
 	public Text scoreBoardWinnerText;
     public Text woodScore;
+    public Text dropLabel;
     public Canvas gameCanvas,
    	              escapeCanvas,
 		          optionsCanvas,
 				  shopCanvas,
 				  barracksCanvas,
-                  scoreboardCanvas; //*********************
+                  scoreboardCanvas;
            int currentPlayer  = 0,
  			   playerNumberCurrent = 0;
     
@@ -101,7 +105,7 @@ public class GuiManager : MonoBehaviour {
 
 	void Start()
 	{
-        for (int count = 0; count < BoardManager.numOfPlayers; count++) //***********************(4/8/2017)
+        for (int count = 0; count < BoardManager.numOfPlayers; count++)
         {
             playerClassLocalArray[count].characterPictureName = Characters.Names[characterSelect.selectedCharacters[count]];
             playerClassLocalArray[count].playerColourName = playerColourNames[count];
@@ -123,14 +127,28 @@ public class GuiManager : MonoBehaviour {
             scoreboardElementsArray[count].ScoreboardCanvas = GameObject.Find("player" + (count + 1) + "CanvasScoreboard").GetComponent<Canvas>();
         }
 
+		if(NavigationScript.networkGame)
+		{
+	        screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
+		}
+
+		chatDropdown = GameObject.Find("chatInputDropdown").GetComponent<Dropdown>(); //**********************
+		inGamePopupText = GameObject.Find("popupTextGlobal").GetComponent<Text>();
+        dropLabel = GameObject.Find("dropLabel").GetComponent<Text>();
+        dropLabel.text = Constants.chatMessages[0];
+
+		for(int count = 0; count < Constants.MaxChatMessages; count++)
+			chatDropdown.options.Add(new Dropdown.OptionData(Constants.chatMessages[count]));
+
         gameCanvas.enabled = true;
         escapeCanvas.enabled = false;
         optionsCanvas.enabled = false;
         shopCanvas.enabled = false;
         barracksCanvas.enabled = false;
-        scoreboardCanvas.enabled = false;// *****************
+        scoreboardCanvas.enabled = false;
         DiceImage.enabled = false;
         DiceText.enabled = false;
+		inGamePopupText.enabled = false;
 
         for (int count = 0; count < MAX_NUM_OF_PLAYERS; count++)
         {
@@ -213,10 +231,24 @@ public class GuiManager : MonoBehaviour {
 		}
     }
 
+	public void GetChatMessage()
+	{
+		AddChatMessage(CurrentGameBoard.LocalGame.PlayerList[CurrentGameBoard.LocalPlayer].Name, chatDropdown.value);	
+	}
+
     // Adds the passed string to the chat box. Used for both chat and system messages.
-    public void AddChatMessage(int playerNumber, string message)
+    public void AddChatMessage(string message)
     {
         chatBox.text += '\n' + message;
+    }
+
+    // Adds the passed string to the chat box. Used for both chat and system messages.
+    public void AddChatMessage(string characterName, int messageIndex)
+    {
+		if(Constants.chatMessages[messageIndex] == Constants.chatMessages[Constants.playerBasedMessageIndex])
+			chatBox.text += '\n' + characterName + Constants.chatMessages[messageIndex];
+		else
+			chatBox.text += '\n' + characterName + ": " + Constants.chatMessages[messageIndex];
     }
 
     // Sets the passed player number to the current winner of the longest road.
@@ -307,7 +339,7 @@ public class GuiManager : MonoBehaviour {
             else
                 currentPlayer = 0;
         }
-        else //********************************
+        else
         {
             if(playerNumberCurrent > 0)
                 playerNumberCurrent--;
@@ -453,11 +485,11 @@ public class GuiManager : MonoBehaviour {
         EndTurn.interactable = true;
     }
 
-    public IEnumerator RollDice(int rollOne, int rollTwo)
+    public IEnumerator RollDice(int rollDice)
     {
         DiceImage.enabled = true;
         DiceText.enabled = true;
-        diceValue.text = (rollOne + rollTwo).ToString();
+        diceValue.text = (rollDice).ToString();
         yield return new WaitForSeconds(2);
         DiceImage.enabled = false;
         DiceText.enabled = false;
@@ -493,19 +525,19 @@ public class GuiManager : MonoBehaviour {
 	{
 		if(networkPlayerNumberIndex > 0)
 		{
-			screenElements tempScreenElement = screenElementsArray[networkPlayerNumberIndex];
-	
 			for(int count = 0; count < networkPlayerNumberIndex; count++)
 			{
-				screenElementsArray[count+1] = screenElementsArray[count];
+			    screenElementsArray[count+1].characterPicture.sprite = Resources.Load<Sprite>(playerClassLocalArray[count].characterPictureName) as Sprite;
+				screenElementsArray[count+1].playerColour.sprite = Resources.Load<Sprite>(playerClassLocalArray[count].playerColourName) as Sprite;
 				playerClassLocalArray[count].uiPosition = count+1;
 			}
-			
-			screenElementsArray[0] = tempScreenElement;
-			playerClassLocalArray[networkPlayerNumberIndex].uiPosition = 0;
+
+            screenElementsArray[0].characterPicture.sprite = Resources.Load<Sprite>(playerClassLocalArray[networkPlayerNumberIndex].characterPictureName) as Sprite;
+            screenElementsArray[0].playerColour.sprite = Resources.Load<Sprite>(playerClassLocalArray[networkPlayerNumberIndex].playerColourName) as Sprite;
+            playerClassLocalArray[networkPlayerNumberIndex].uiPosition = 0;
 		}
 	}
-
+    
 	public void showVictoryScreen()
 	{
         for (int count = 0; count < BoardManager.numOfPlayers; count++)
@@ -542,5 +574,130 @@ public class GuiManager : MonoBehaviour {
 	public void setGameWinner(int playerNumber)
 	{
 		CurrentGameBoard.LocalGame.PlayerList[playerNumber].GameWinner = true;
+	}
+
+	public IEnumerator showPlayerTurnPopup(int playerNumber)
+	{
+		if(playerNumber == CurrentGameBoard.LocalPlayer)
+		{
+			inGamePopupText.text = "Your turn!";
+		}
+		else
+		{
+			inGamePopupText.text = CurrentGameBoard.LocalGame.PlayerList[playerNumber].Name + "'s turn!";
+		}
+
+		inGamePopupText.enabled = true;
+		yield return new WaitForSeconds(2);
+		inGamePopupText.enabled = false;
+	}
+
+	public IEnumerator showRobberMovedPopup(int playerNumber)
+	{	
+		if(playerNumber == CurrentGameBoard.LocalPlayer)
+		{
+			inGamePopupText.text = "You have moved the robber!";
+		}
+		else
+		{
+			inGamePopupText.text = CurrentGameBoard.LocalGame.PlayerList[playerNumber].Name + " has moved the robber!";
+		}
+
+		inGamePopupText.enabled = true;
+		yield return new WaitForSeconds(Constants.popupWaitTime);
+		inGamePopupText.enabled = false;
+	}
+
+	public IEnumerator showAttackedPopup(int playerNumber)
+	{
+		inGamePopupText.text = "Your city has been attacked by " + CurrentGameBoard.LocalGame.PlayerList[playerNumber].Name + "!";
+
+		inGamePopupText.enabled = true;
+		yield return new WaitForSeconds(Constants.popupWaitTime);
+		inGamePopupText.enabled = false;
+	}
+
+	public IEnumerator showNotEnoughGoldPopup(int playerNumber)
+	{
+		inGamePopupText.text = "Your city has been attacked by " + CurrentGameBoard.LocalGame.PlayerList[playerNumber].Name + "!";
+
+		inGamePopupText.enabled = true;
+		yield return new WaitForSeconds(Constants.popupWaitTime);
+		inGamePopupText.enabled = false;
+	}
+
+	public IEnumerator showNotEnoughResourcesToBuildPopup()
+	{
+		inGamePopupText.text = "You do not have enough resources to build this!";
+
+		inGamePopupText.enabled = true;
+		yield return new WaitForSeconds(Constants.popupWaitTime);
+		inGamePopupText.enabled = false;
+	}
+
+	public IEnumerator showNotEnoughResourcesToSellPopup()
+	{
+		inGamePopupText.text = "You do not have enough resources to sell!";
+
+		inGamePopupText.enabled = true;
+		yield return new WaitForSeconds(Constants.popupWaitTime);
+		inGamePopupText.enabled = false;
+	}
+
+	public IEnumerator showNoCitiesToPlaceArmiesIn()
+	{
+		inGamePopupText.text = "You currently have no cities to place armies in";
+
+		inGamePopupText.enabled = true;
+		yield return new WaitForSeconds(Constants.popupWaitTime);
+		inGamePopupText.enabled = false;
+	}
+
+	public IEnumerator showVictory()
+	{
+		if(CurrentGameBoard.CurrentPlayer == CurrentGameBoard.LocalPlayer)
+			inGamePopupText.text = "Victory!";
+		else
+			inGamePopupText.text = "Defeat!";
+
+		inGamePopupText.enabled = true;
+		yield return new WaitForSeconds(Constants.popupWaitTime);
+		inGamePopupText.enabled = false;
+		showVictoryScreen();
+	}
+
+	public void callAttackedPopup(int playerNumber)
+	{
+		StartCoroutine(showAttackedPopup(playerNumber));
+	}
+
+	public void callRobberMovedPopup(int playerNumber)
+	{
+		StartCoroutine(showRobberMovedPopup(playerNumber));
+	}
+
+	public void callPlayerTurnPopup(int playerNumber)
+	{
+		StartCoroutine(showPlayerTurnPopup(playerNumber));
+	}
+
+	public void callNotEnoughGoldPopup(int playerNumber)
+	{
+		StartCoroutine(showNotEnoughGoldPopup(playerNumber));
+	}
+
+	public void callNotEnoughResourcesToBuildPopup()
+	{
+		StartCoroutine(showNotEnoughResourcesToBuildPopup());
+	}
+
+	public void callNotEnoughResourcesToSellPopup()
+	{
+		StartCoroutine(showNotEnoughResourcesToSellPopup());
+	}
+
+	public void callNoCitiesToPlaceArmiesInPopup()
+	{
+		StartCoroutine(showNoCitiesToPlaceArmiesIn());
 	}
 }

@@ -10,7 +10,9 @@ public class keepScenery : MonoBehaviour {
 		              islandScenery,
 		              waterScenery,
                       boat,
-                      boatScenery;
+                      boatScenery,
+	                  dock,
+	                  dockScenery;
 	public ParticleSystem smoke,
 		                  smokeScenery;
 	public Light sceneLight,
@@ -41,12 +43,14 @@ public class keepScenery : MonoBehaviour {
 				waterScenery = water;
 				smokeScenery = smoke;
 				boatScenery  = boat;
+				dockScenery  = dock;
 				lightScenery = sceneLight;
 				islandScenery.name = "ISLAND";
 				DontDestroyOnLoad (islandScenery);
 				DontDestroyOnLoad (waterScenery);
 				DontDestroyOnLoad (smokeScenery);
 				DontDestroyOnLoad (boatScenery);
+				DontDestroyOnLoad (dockScenery);
 				DontDestroyOnLoad (lightScenery);
 			} 
 			else
@@ -57,6 +61,7 @@ public class keepScenery : MonoBehaviour {
 					Destroy (water);
 					Destroy (smoke);
 					Destroy (boat);
+					Destroy (dock);
 					Destroy (sceneLight);
 				}
 			}

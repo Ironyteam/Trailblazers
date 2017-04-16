@@ -53,7 +53,7 @@ public class Tutorial : MonoBehaviour
 	public const string EXPLAIN_ATTACK_MESSAGE           = "Once you have a city with army units you can attack other players' cities as long as they are within 2 road spaces of your city. The loser of the battle will have his city downgraded to a settlement.";
 
     private int  currentTutorialStep = 1;
-    private bool dontShowAgain       = false;
+    public bool dontShowAgain       = false;
 
     private void Start()
     {
@@ -64,24 +64,24 @@ public class Tutorial : MonoBehaviour
         currentTutorialStep = 1;
         dontShowAgain       = false;
 
-        //if (mainHelpText != null)
-          //  mainHelpText.enabled = false;
-        //if (leftUpPointTutrorialPanel != null)
-       //     leftUpPointTutrorialPanel.gameObject.SetActive(false);
-       // if (leftUpPointTutrorialText != null)
-       //     leftUpPointTutrorialText.enabled = false;
+        if (mainHelpText != null)
+            mainHelpText.enabled = false;
+        if (leftUpPointTutrorialPanel != null)
+            leftUpPointTutrorialPanel.gameObject.SetActive(false);
+        if (leftUpPointTutrorialText != null)
+            leftUpPointTutrorialText.enabled = false;
         if (rightUpPointTutrorialPanel != null)
             rightUpPointTutrorialPanel.gameObject.SetActive(false);
         if (rightUpPointTutrorialText != null)
             rightUpPointTutrorialText.enabled = false;
-      //  if (leftDownPointTutrorialPanel != null)
-      //      leftDownPointTutrorialPanel.gameObject.SetActive(false);
-      //  if (leftDownPointTutrorialText != null)
-       //     leftDownPointTutrorialText.enabled = false;
-        //if (rightDownPointTutrorialPanel != null)
-        //    rightDownPointTutrorialPanel.gameObject.SetActive(false);
-       // if (rightDownPointTutrorialText != null)
-         //   rightDownPointTutrorialText.enabled = false;
+        if (leftDownPointTutrorialPanel != null)
+            leftDownPointTutrorialPanel.gameObject.SetActive(false);
+        if (leftDownPointTutrorialText != null)
+            leftDownPointTutrorialText.enabled = false;
+        if (rightDownPointTutrorialPanel != null)
+            rightDownPointTutrorialPanel.gameObject.SetActive(false);
+        if (rightDownPointTutrorialText != null)
+            rightDownPointTutrorialText.enabled = false;
     }
 
     /*****************************/
@@ -314,7 +314,31 @@ public class Tutorial : MonoBehaviour
     {
         closeDialogue(BtnParent);
 
-        if (currentTutorialStep == 7)
-            showExplainResourcesTutorialBox();
+		currentTutorialStep += 1;
+		
+		switch (currentTutorialStep)
+		{
+            case 6:
+                showBuildSettlementTutorialBox();
+			    break;
+		    case 7:   
+		        showExplainVPTutorialBox();
+		        break;
+		    case 8:
+		        showExplainResourcesTutorialBox();
+				break;
+			case 9:
+		        showExplainGoldTutorialBox();
+				break;
+			case 10:
+		        showUpgradeToCityTutorialBox();
+				break;
+		    case 11:
+		        showBarracksTutorialBox();
+				break;
+		    case 12:
+		        showAttackTutorialBox();
+				break;
+		}
     }
 }

@@ -1,4 +1,2 @@
-w 9 13
-DefaultBoard1 8 12
-Silas 11 15
-yo 8 12
+bobby 2 6
+bob 3 7

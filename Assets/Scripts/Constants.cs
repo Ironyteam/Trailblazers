@@ -92,13 +92,14 @@ public static class Constants
 	public const int MinYCoordinate = 0;
 	public const int MaxYCoordinate = 40;
 
-	public const float TurnTime     	= 120.0f;
-	public const float StandardDiscount = 0.75f;
-	public const float SpecificDiscount = 0.50f;
-	public const float NoDiscount 		= 1.00f;
-	public const float ResourceCost	 	= 100.0f;
+	public const float TurnTime     	 = 120.0f;
+	public const float StandardDiscount  = 0.75f;
+	public const float SpecificDiscount  = 0.50f;
+	public const float NoDiscount 		 = 1.00f;
+	public const float ResourceCost	 	 = 100.0f;
+    public const float ResourceSalePrice = 50.0f;
 
-	public const float QueenGoldBonus = 1.5f;
+    public const float QueenGoldBonus = 1.5f;
 	public const int LongestRoadBonus = 2;
 	public const int LargestArmyBonus = 4;
     public const int MinLargestArmy = 4;
@@ -117,4 +118,15 @@ public static class Constants
 	public const float CAMERA_MAX_X = 24.14998f;
 	public const float CAMERA_MIN_Z = 4.299974f;
 	public const float CAMERA_MAX_Z = 21.84998f;
+    
+	// Chat Constants
+	public const int MaxChatMessages = 14;
+	public const int playerBasedMessageIndex = 12;
+	public static readonly string[] chatMessages = {"Avenge me!", "I will conquer!", "Good Move.", "Now you lose!",
+											 		"I did not expect that!", "No!", "Perfect!", "Good Game", "GG",
+											 		"Watch This!", "Init to Win it!", " is here to Win!", "Blast!",
+											 		"Ryuu ga waka teki wo kurao"};
+
+	// Popup Constants
+	public const float popupWaitTime = 2.0f;
 }

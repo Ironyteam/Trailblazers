@@ -58,8 +58,6 @@ public class BoardManager : MonoBehaviour
 
     // Confirm map deletion panel elements
     public Canvas confirmDeletionCanvas;
-    public Button confirmDeletionBtn;
-    public Button cancelDeletionBtn;
     public Text deleteMapText;
     
 	public static int  numOfPlayers  = 2;
@@ -94,6 +92,8 @@ public class BoardManager : MonoBehaviour
     public Image MapScreenShortImagePG;
     public Text MissingScreenShotTextPG;
     public Text MissingScreenShotTextMOD;
+	public Text mapSavedText;
+	public Button DeleteMapBtn;
 
     // Map error popup window buttons and text
     public Canvas errorsCanvas;
@@ -183,6 +183,8 @@ public class BoardManager : MonoBehaviour
         boardSelctionCanvasMOD.enabled = false;
 		createCanvas.enabled = false;
         errorsCanvas.enabled = false;
+		confirmDeletionCanvas.enabled = false;
+		//mapSavedText.enabled = false;
 		showConditionalButtons();
 
         if (startingGame == true)
@@ -190,6 +192,9 @@ public class BoardManager : MonoBehaviour
         else
             MapEditorSelectOn();
         startingGame = false;
+
+        turnTimerOn = turnTimerToggleLocal.isOn;
+		characterAbilitiesOn = characterAbilitiesToggle.isOn;
     }
 
     void Update()
@@ -295,16 +300,19 @@ public class BoardManager : MonoBehaviour
 		mainCamera.enabled = false;
 		boardManagerDirectionalLight.gameObject.SetActive(false);
 		boardManagerOcean.gameObject.SetActive(false);
-		lookAtIslandCamera.enabled = true;		
+		lookAtIslandCamera.enabled = true;
+		confirmDeletionCanvas.enabled = false;
         displayMaps();
     }
 
     public void MapEditorSelectOn()
     {
+		confirmDeletionCanvas.enabled = false;
         boardCreationCanvas.enabled    = false;
         boardSelctionCanvasPG.enabled  = false;
 		createCanvas.enabled    = false;
         boardSelctionCanvasMOD.enabled = true;
+		confirmDeletionCanvas.enabled = false;
         displayMaps();
     }
 
@@ -325,6 +333,7 @@ public class BoardManager : MonoBehaviour
         boardCreationCanvas.enabled = false;
         errorsCanvas.enabled = false;
         boardSelctionCanvasMOD.enabled = true;
+		confirmDeletionCanvas.enabled = false;
         displayMaps();
     }
 
@@ -449,7 +458,14 @@ public class BoardManager : MonoBehaviour
                                     "Maximum Victory Points: " + maps[board_index].maxVP;
         }
 
-       
+        if (board_index >= savedMapsStartindex)
+		{
+			DeleteMapBtn.gameObject.SetActive(true);
+		}
+		else
+		{
+			DeleteMapBtn.gameObject.SetActive(false);
+		}
     }
 
     public void deleteMap()
@@ -459,24 +475,67 @@ public class BoardManager : MonoBehaviour
             FileHandler handler = new FileHandler();
             handler.deleteMap(maps[board_index].mapName);
             displayMaps();
+			confirmDeletionCanvas.enabled = false;
         }
     }
 
     public void AddPortClicked()  // Glowing effect code added
     {
+        List<GameObject> hexesToRemove = new List<GameObject>();
         addPortEnabled = true;
         currentResource = -1;
         currentDiceNum = -1;
 
         hexesBorderingWater = getHexesBorderedByWater(template);
 
-        // Add glowing effect to hexagons that are bordered by water
         foreach(GameObject hex in hexesBorderingWater)
         {
-            //changeGlowEffect(hex, true);
+            if (template.hex[hex.GetComponent<HexData>().x_index,
+                             hex.GetComponent<HexData>().y_index].portGO != null)
+            {
+                hexesToRemove.Add(hex);
+            }
+        }
+
+        foreach (GameObject hex in hexesToRemove)
+        {
+            hexesBorderingWater.Remove(hex);
+        }
+
+        hexesToRemove.Clear();
+        foreach (GameObject hex in hexesBorderingWater)
+        {
+            GameObject[] availabeHexes;
+            bool hasAvailableSurroundingWaterHexes = false;
+
+            availabeHexes = getSurroundingHexes(hex.GetComponent<HexData>().x_index,
+                                                hex.GetComponent<HexData>().y_index);
+            
+            foreach (GameObject hexagon in availabeHexes)
+            {
+                int x = hexagon.GetComponent<HexData>().x_index;
+                int y = hexagon.GetComponent<HexData>().y_index;
+
+                if (template.hex[x, y].resource == -1 && template.hex[x, y].hexOwningPort == null)
+                {
+                    hasAvailableSurroundingWaterHexes = true;
+                }
+            }
+
+            if (hasAvailableSurroundingWaterHexes == false)
+                hexesToRemove.Add(hex);
+        }
+
+        foreach (GameObject hex in hexesToRemove)
+        {
+            hexesBorderingWater.Remove(hex);
+        }
+
+        foreach (GameObject hex in hexesBorderingWater)
+        {
             hex.GetComponentInChildren<Renderer>().material.color = ORANGE;
         }
-        
+
         tutorial.showSelectHexForPortTutorialBox();
     }      
 
@@ -497,9 +556,9 @@ public class BoardManager : MonoBehaviour
         hexes = getSurroundingHexes(x, y);
         for (int index = 0; index < hexes.Length; index++)
         {
-            if (template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].resource == -1)
-            {
-                //changeGlowEffect(hexes[index], true);
+            if (template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].resource == -1 &&
+               template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].hexOwningPort == null)
+			{
                 hexes[index].GetComponentInChildren<Renderer>().material.color = ORANGE;
                 availablePortHexes.Add(hexes[index], index);
             }
@@ -993,7 +1052,7 @@ public class BoardManager : MonoBehaviour
 
                 else if (errors.Contains(MAP_NAME_CONFLICT_ERROR))
                 {
-                   FileHandler fh = new FileHandler();
+                    FileHandler fh = new FileHandler();
                     numToAppendToName = fh.findNumberToAppendToName(mapName, MAX_MAPS_WITH_SAME_NAME);    //+++++++++++++++++++++++
 
                     mainErrorText.enabled = true;
@@ -1052,13 +1111,15 @@ public class BoardManager : MonoBehaviour
 		lookAtIslandCamera.enabled = false;
 		boardManagerDirectionalLight.gameObject.SetActive(true);
 		boardManagerOcean.gameObject.SetActive(true);
+		
 		mainCamera.enabled = true;
+		nameAppended = false;
         boardSelctionCanvasPG.enabled = false;
         boardSelctionCanvasMOD.enabled = false;
         boardCreationCanvas.enabled = true;
         boardCreationCanvas.gameObject.SetActive(true);
         mapNameField.text = "";
-        SpawnBoard(null, false);
+        BoardManager.template = SpawnBoard(null, false);
         tutorial.init();
         tutorial.showSelectResourceTutorialBox();
     }
@@ -1068,9 +1129,11 @@ public class BoardManager : MonoBehaviour
 		lookAtIslandCamera.enabled = false;
 		boardManagerDirectionalLight.gameObject.SetActive(true);
 		boardManagerOcean.gameObject.SetActive(true);
+		
 		mainCamera.enabled = true;
         nameAppended = false;
-        boardSelctionCanvasMOD.enabled = false;
+        boardSelctionCanvasPG.enabled = false;
+		boardSelctionCanvasMOD.enabled = false;
         boardCreationCanvas.enabled = true;
         boardCreationCanvas.gameObject.SetActive(true);
         mapNameField.text = "";
@@ -1079,8 +1142,9 @@ public class BoardManager : MonoBehaviour
             template = reader.retrieveMap(maps[board_index].mapName, true);
         else
             template = reader.retrieveMap(maps[board_index].mapName, false);
-        SpawnBoard(template, false);
-        
+        BoardManager.template = SpawnBoard(template, false);
+        tutorial.init();
+        tutorial.showSelectResourceTutorialBox();
     }
 
     public void changeSelectedResource(int resrouceNum)
@@ -1125,12 +1189,15 @@ public class BoardManager : MonoBehaviour
     public void confirmDeletionPanelOn()
     {
         confirmDeletionCanvas.enabled = true;
-        confirmDeletionBtn.gameObject.SetActive(true);
-        cancelDeletionBtn.gameObject.SetActive(true);
         deleteMapText.enabled = true;
-        deleteMapText.fontSize = 16;
+        deleteMapText.fontSize = 30;
         deleteMapText.text = "Are you sure you want to delete " + maps[board_index].mapName;
     }
+	
+	public void cancelMapDeletion()
+	{
+		confirmDeletionCanvas.enabled = false;
+	}
 
     public void changeHex(int x, int y)
     {
@@ -1311,6 +1378,15 @@ public class BoardManager : MonoBehaviour
                 MissingScreenShotTextMOD.enabled = true;
             }
         }
+		
+		if (board_index >= savedMapsStartindex)
+		{
+			DeleteMapBtn.gameObject.SetActive(true);
+		}
+		else
+		{
+			DeleteMapBtn.gameObject.SetActive(false);
+		}
     }
 
     private List<int> getAnyErrors(string newMapName, string warnings)
@@ -1391,6 +1467,8 @@ public class BoardManager : MonoBehaviour
         
         int minVP = 0;
         int maxVP = 0;
+		
+		resetPortAddingChanges();
         
         mapName = mapNameField.text;
 
@@ -1412,6 +1490,10 @@ public class BoardManager : MonoBehaviour
                 
                 FileHandler writer = new FileHandler();
                 writer.saveMap(template, mapName, "Bob", minVP, maxVP);             // Get user name for creator parameter
+				
+				//mapSavedText.text = "MAP SAVED";
+				//mapSavedText.enabled = true;
+				
                 ReturnToMapEditorSelect();
             }
         }

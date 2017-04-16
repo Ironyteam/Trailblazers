@@ -771,9 +771,9 @@ public class NetworkManager : MonoBehaviour
 
    // Send the two numbers that make up the dice roll
    // Number1, Number2
-   public void sendDiceRoll(int number1, int number2, int targetID)
+   public void sendDiceRoll(int diceRoll, int targetID)
    {
-      string message = Constants.diceRoll + Constants.commandDivider + number1 + Constants.gameDivider + number2;
+      string message = Constants.diceRoll + Constants.commandDivider + diceRoll;
       if (!isHostingGame)
          sendSocketMessage(message, targetID);
       else
@@ -892,7 +892,7 @@ public class NetworkManager : MonoBehaviour
             break;
          case Constants.diceRoll:
             // Number 1, Number2
-            mapObject.DiceRollNetwork(Int32.Parse(gameInfo[0]), Int32.Parse(gameInfo[1]));
+            mapObject.DiceRollNetwork(Int32.Parse(gameInfo[0]));
             break;
          case Constants.buildSettlement:
             // X = gameInfo[0], Y = gameInfo[1]

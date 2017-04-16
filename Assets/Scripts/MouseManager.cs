@@ -46,21 +46,22 @@ public class MouseManager : MonoBehaviour {
 									// Current clicked settlement has no owner
 									if (currentStructure.PlayerOwner == -1)
 									{
+                                        Debug.Log("Port Discount: " + currentStructure.portDiscount);
 										currentGameBoard.BuildSettlement(currentStructure);
 										currentGameBoard.HideAvailableSettlements ();
 
 										if (currentGameBoard.LocalGame.isNetwork)
-                              {
-                                 Debug.Log(currentStructure.Location.X + currentStructure.Location.Y);
+                                        {
+                                            Debug.Log(currentStructure.Location.X + currentStructure.Location.Y);
 											NetManager.sendBuildSettlement(currentStructure.Location.X, currentStructure.Location.Y, NetManager.hostConnectionID);
-                              }
-                              // If initial placement, show first road to build
-                              if (currentGameBoard.InitialPlacement)
-                              {
-                                 currentGameBoard.ShowAvailableRoadsInitial(currentStructure.Location);
-                                 currentGameBoard.LocalGame.PlayerList[currentGameBoard.CurrentPlayer].Settlements++;
-                                 currentGameBoard.LocalGame.PlayerList[currentGameBoard.CurrentPlayer].UpdateVictoryPoints();
-                              }
+                                        }
+                                        // If initial placement, show first road to build
+                                        if (currentGameBoard.InitialPlacement)
+                                        {
+                                            currentGameBoard.ShowAvailableRoadsInitial(currentStructure.Location);
+                                            currentGameBoard.LocalGame.PlayerList[currentGameBoard.CurrentPlayer].Settlements++;
+                                            currentGameBoard.LocalGame.PlayerList[currentGameBoard.CurrentPlayer].UpdateVictoryPoints();
+                                        }
 									}
 									// Current clicked settlement is owned by current player
 									else if (currentStructure.PlayerOwner == currentGameBoard.CurrentPlayer)
