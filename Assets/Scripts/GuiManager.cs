@@ -95,17 +95,11 @@ public class GuiManager : MonoBehaviour {
 		Destroy (GameObject.Find("Directional light"));
 		Destroy (GameObject.Find("Ocean"));
         CurrentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
-	/*	if(NavigationScript.networkGame == true)
-		{
-			putLocalPlayerFirst((Player number received from network) here);
-		} */
-
-        screenElementsArray[0].characterSelected.enabled = true;
     }
 
 	void Start()
 	{
-        for (int count = 0; count < BoardManager.numOfPlayers; count++)
+      for (int count = 0; count < BoardManager.numOfPlayers; count++)
         {
             playerClassLocalArray[count].characterPictureName = Characters.Names[characterSelect.selectedCharacters[count]];
             playerClassLocalArray[count].playerColourName = playerColourNames[count];
@@ -127,7 +121,12 @@ public class GuiManager : MonoBehaviour {
             scoreboardElementsArray[count].ScoreboardCanvas = GameObject.Find("player" + (count + 1) + "CanvasScoreboard").GetComponent<Canvas>();
         }
 
-		chatDropdown = GameObject.Find("chatInputDropdown").GetComponent<Dropdown>(); //**********************
+      // Set the current player highlighted
+      if (NavigationScript.networkGame)
+         screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
+      Debug.Log("Start: " + playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition);
+
+      chatDropdown = GameObject.Find("chatInputDropdown").GetComponent<Dropdown>(); //**********************
 		inGamePopupText = GameObject.Find("popupTextGlobal").GetComponent<Text>();
         dropLabel = GameObject.Find("dropLabel").GetComponent<Text>();
         dropLabel.text = Constants.chatMessages[0];
@@ -159,9 +158,15 @@ public class GuiManager : MonoBehaviour {
                 scoreboardElementsArray[count].ScoreboardCanvas.enabled = false;
             }
         }
-    }
 
-    void Update ()
+        if(NavigationScript.networkGame == true)
+        {
+          Debug.Log("Start: putting local player first");
+          putLocalPlayerFirst(CurrentGameBoard.LocalPlayer);
+        }
+   }
+
+   void Update ()
     {
         if (Input.GetKeyDown("escape"))
         {
@@ -394,8 +399,8 @@ public class GuiManager : MonoBehaviour {
         else
             lastPlayer = CurrentGameBoard.CurrentPlayer + 1;
 
-        screenElementsArray[lastPlayer].characterSelected.enabled = false;
-        screenElementsArray[CurrentGameBoard.CurrentPlayer].characterSelected.enabled = true;
+        screenElementsArray[playerClassLocalArray[lastPlayer].uiPosition].characterSelected.enabled = false;
+        screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
     }
 
 	public void openShop()
