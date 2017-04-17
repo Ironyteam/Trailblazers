@@ -59,8 +59,6 @@ public class MouseManager : MonoBehaviour {
                                         if (currentGameBoard.InitialPlacement)
                                         {
                                             currentGameBoard.ShowAvailableRoadsInitial(currentStructure.Location);
-                                            currentGameBoard.LocalGame.PlayerList[currentGameBoard.CurrentPlayer].Settlements++;
-                                            currentGameBoard.LocalGame.PlayerList[currentGameBoard.CurrentPlayer].UpdateVictoryPoints();
                                         }
 									}
 									// Current clicked settlement is owned by current player

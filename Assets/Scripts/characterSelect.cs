@@ -14,31 +14,31 @@ public class characterSelect : MonoBehaviour
    public Image selectedCharacterImage;      // The image preview of the character
    public Image[] playerChoiceImages = new Image[Constants.MaxPlayers]; // These are the images that have been selected.
    public static int[] selectedCharacters; // These are the indexes for the characters chosen. 
-   public Switch[] isAi = new Switch[Constants.MaxPlayers]; // The AI switch for local play.
+   //public Switch[] isAi = new Switch[Constants.MaxPlayers]; // The AI switch for local play.
    public static bool[] isAiBool = new bool[Constants.MaxPlayers];
    public bool CanChoose = true;
    public Button SelectCharacterBTN;
    public NetworkManager NetworkObject;
    public Text characterAbilitiesText;
-    public bool timerCoroutineStarted = false;
-    public float timeLeft;
-    public Text timerTextObject;
-    public Color timerRed = new Color(1, 0, 0);
-    public Color timerBlack = new Color(0, 0, 0);
+   // public bool timerCoroutineStarted = false;
+    //public float timeLeft;
+   // public Text timerTextObject;
+    //public Color timerRed = new Color(1, 0, 0);
+    //public Color timerBlack = new Color(0, 0, 0);
 
     void Awake()
    {   
         for(int count = 0; count < Constants.MaxPlayers; count++)
 		{
-			isAi[count].gameObject.SetActive(false);
+			//isAi[count].gameObject.SetActive(false);
             playerChoiceImages[count].enabled = false;
 		}
    }
 
    void Start()
    {
-        timeLeft = Constants.characterSelectTimer;
-        timerTextObject = GameObject.Find("turnTimerTextCharacterSelect").GetComponent<Text>();
+        //timeLeft = Constants.characterSelectTimer;
+        //timerTextObject = GameObject.Find("turnTimerTextCharacterSelect").GetComponent<Text>();
         // Sets the number of characters chosen from BoardManager.
         selectedCharacters = new int[BoardManager.numOfPlayers];
 
@@ -65,10 +65,10 @@ public class characterSelect : MonoBehaviour
 			{
 				playerChoiceImages[count].enabled = true;
 				selectedCharacters[count] = -1;
-				isAi[count].gameObject.SetActive(true);
+				//isAi[count].gameObject.SetActive(true);
 			}
 		}
-        StartCoroutine(turnTimer());
+        //StartCoroutine(turnTimer());
     }
 
    private void Update()
@@ -89,19 +89,19 @@ public class characterSelect : MonoBehaviour
       {
          SelectCharacterBTN.gameObject.SetActive(true);
       }
-        if (timeLeft <= 10)
+       // if (timeLeft <= 10)
         {
-            timerTextObject.color = timerRed;
+       //     timerTextObject.color = timerRed;
         }
-        else
+       // else
         {
-            timerTextObject.color = timerBlack;
+        //    timerTextObject.color = timerBlack;
         }
 
-        if (timeLeft >= 0)
+       // if (timeLeft >= 0)
         {
-            timeLeft -= Time.deltaTime;
-            timerTextObject.text = Mathf.Floor(timeLeft).ToString();
+        //    timeLeft -= Time.deltaTime;
+          //  timerTextObject.text = Mathf.Floor(timeLeft).ToString();
         }
     }
 
@@ -114,11 +114,11 @@ public class characterSelect : MonoBehaviour
          // If player has not chosen a character one is randomly assigned from the list of unchosen characters.
          if (selectedCharacters[count] == -1)
          {
-            int playerToChoose;
-            do
+            int playerToChoose = 0;
+            while (Characters.PlayerChosen[playerToChoose] == true) 
             {
-               playerToChoose = UnityEngine.Random.Range(0, 8);
-            } while (Characters.PlayerChosen[playerToChoose] == true);
+               playerToChoose++;
+            } 
 
             selectedCharacters[count] = playerToChoose;
             Characters.PlayerChosen[playerToChoose] = true;
@@ -207,7 +207,7 @@ public class characterSelect : MonoBehaviour
          if(currentPicker >= BoardManager.numOfPlayers)
             SelectCharacterBTN.interactable = false;
       }
-
+      /*
         if (timerCoroutineStarted)
         {
             StopCoroutine(turnTimer());
@@ -216,7 +216,7 @@ public class characterSelect : MonoBehaviour
         else
         {
             StartCoroutine(turnTimer());
-        }
+        }*/
     }
 
    public void returnToNetLobby()
@@ -225,12 +225,22 @@ public class characterSelect : MonoBehaviour
       Characters.ResetPlayers();
       Application.Quit();
    }
-
+    /*
     IEnumerator turnTimer() //********
     {
         timeLeft = Constants.characterSelectTimer;
         timerCoroutineStarted = true;
         yield return new WaitUntil(() => timeLeft < 0);
-        selectCharacter();
-    }
+
+        if (timeLeft <= 0)
+        {
+            int playerToChoose = 0;
+            while (Characters.PlayerChosen[playerToChoose] == true)
+            {
+                playerToChoose++;
+            }
+            selectedCharacter = playerToChoose;
+            selectCharacter();
+        }
+    }*/
 }

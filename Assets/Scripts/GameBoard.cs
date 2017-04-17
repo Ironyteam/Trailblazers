@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class GameBoard : MonoBehaviour
 {
+    public bool timerSoundPlaying = false;
 
 	public GameObject[] hexPrefabs;
 	public GameObject hexBoard;
@@ -414,7 +415,7 @@ public class GameBoard : MonoBehaviour
             }
             glowCounter++;
 
-            if (LocalGame.isNetwork)
+            if (LocalGame.isNetwork && !InitialPlacement)
             {
                 if (LocalPlayer == CurrentPlayer)
                     GUIManager.EnableGameCanvas();
@@ -429,10 +430,21 @@ public class GameBoard : MonoBehaviour
             {
                 if (timeLeft <= 10)
                 {
+                    if (timerSoundPlaying == false)
+                    {
+                        StartCoroutine(AudioManager.playTimerTick());
+                        timerSoundPlaying = true;
+                    }
+
                     timerTextObject.color = timerRed;
                 }
                 else
                 {
+                    if (timerSoundPlaying == true)
+                    {
+                        AudioManager.stopTimerSound();
+                        StopCoroutine(AudioManager.playTimerTick());
+                    }
                     timerTextObject.color = timerWhite;
                 }
 
@@ -850,7 +862,7 @@ public class GameBoard : MonoBehaviour
 		MeshRenderer mr = settlementTarget.Structure_GO.GetComponentInChildren<MeshRenderer> ();
 		mr.material = GetPlayerMaterial(CurrentPlayer, 1);
 		settlementTarget.PlayerOwner = CurrentPlayer;
-        Debug.Log("PortDiscount: " + settlementTarget.portDiscount);
+
 		if (settlementTarget.portDiscount != -1) 
 		{
 			switch (settlementTarget.portDiscount) 
@@ -876,9 +888,12 @@ public class GameBoard : MonoBehaviour
 		}
 
 		// Is not initial placement, charge player resources for building.
-		if (!InitialPlacement)
+		if (!InitialPlacement && CurrentPlayer == LocalPlayer)
 			LocalGame.PlayerList [CurrentPlayer].BuildSettlement();
-	}
+
+        LocalGame.PlayerList[CurrentPlayer].Settlements++;
+        LocalGame.PlayerList[CurrentPlayer].UpdateVictoryPoints();
+    }
 
 	public void BuildCity(Structure settlementTarget)
 	{
@@ -902,6 +917,8 @@ public class GameBoard : MonoBehaviour
 
         if (LocalPlayer == CurrentPlayer)
 		    LocalGame.PlayerList[CurrentPlayer].BuildCity();
+        
+        LocalGame.PlayerList[CurrentPlayer].UpdateVictoryPoints();
     }
 
 	public void BuildRoad(Road targetRoad)
@@ -926,7 +943,8 @@ public class GameBoard : MonoBehaviour
 	
 		else // Charge player for road and calculate longest road.
 		{
-			LocalGame.PlayerList[CurrentPlayer].BuildRoad();
+            if (CurrentPlayer == LocalPlayer)
+			    LocalGame.PlayerList[CurrentPlayer].BuildRoad();
 			
 			// Longest road logic.
 			int tempRoadLength = 0;
@@ -955,7 +973,12 @@ public class GameBoard : MonoBehaviour
 	{
 		AudioManager.playPlaceArmy();
 		targetCity.Armies++;
-		LocalGame.PlayerList[CurrentPlayer].HireArmy();
+
+        if (CurrentPlayer == LocalPlayer)
+            LocalGame.PlayerList[CurrentPlayer].HireArmy();
+        else
+            LocalGame.PlayerList[CurrentPlayer].Armies++;
+
         targetCity.ArmyNumber_GO.GetComponent<TextMesh>().text = targetCity.Armies.ToString();
 		CalculateLargestArmy ();
     }
@@ -982,7 +1005,7 @@ public class GameBoard : MonoBehaviour
 
 			MeshRenderer mr = AttackingCity.Structure_GO.GetComponentInChildren<MeshRenderer>();
 			mr = DefendingCity.Structure_GO.GetComponentInChildren<MeshRenderer>();
-			mr.material = GetPlayerMaterial(DefendingCity.PlayerOwner, 2);
+			mr.material = GetPlayerMaterial(DefendingCity.PlayerOwner, 1);
 			DefendingCity.IsCity = false;
 			DefendingCity.Structure_GO.GetComponent<Collider>().enabled = false;
             LocalGame.PlayerList[DefendingCity.PlayerOwner].Cities--;
@@ -1003,6 +1026,8 @@ public class GameBoard : MonoBehaviour
 
 	public void MoveRobber(Hex hexTarget)
 	{
+        AudioManager.playRobberSound();
+
 		MeshRenderer mr = hexTarget.token_go.GetComponentInChildren<MeshRenderer>();
 		mr.material = GetRobberTokenMaterial();
 		hexTarget.hasRobber = true;
@@ -1395,7 +1420,7 @@ public class GameBoard : MonoBehaviour
 								if (currentStructure.PlayerOwner != -1 && currentStructure.PlayerOwner != CurrentPlayer && currentStructure.IsCity) 
 								{
 									currentStructure.Structure_GO.GetComponent<Collider>().enabled = true;
-									currentStructure.Structure_GO.GetComponent<Renderer>().material = GetGlowingPlayerMaterial(CurrentPlayer, 2);
+									currentStructure.Structure_GO.GetComponent<Renderer>().material = GetGlowingPlayerMaterial(currentStructure.PlayerOwner, 2);
 								}
 							}
 						}
@@ -1986,7 +2011,7 @@ public class GameBoard : MonoBehaviour
     }
 
 
-    public void NextPlayer()
+    public void NextPlayer(bool fromTimer = false)
 	{
         HideAll();
         
@@ -1996,7 +2021,7 @@ public class GameBoard : MonoBehaviour
         BuyingArmy = false;
         Attacking = false;
 
-      if (LocalGame.isNetwork && CurrentPlayer == LocalPlayer)
+      if (LocalGame.isNetwork && CurrentPlayer == LocalPlayer && fromTimer == false)
          NetManager.sendEndTurn(NetManager.hostConnectionID);
 
       if (InitialPlacement)
@@ -2041,9 +2066,10 @@ public class GameBoard : MonoBehaviour
                 {
                     InitialPlacement = false;
                     
-                    if (LocalGame.isNetwork && LocalPlayer == CurrentPlayer)
+                    if (LocalGame.isNetwork)
                     {
-                        RollDiceClick();
+                        if (LocalPlayer == CurrentPlayer)
+                            RollDiceClick();
                     }
                     else
                     {
@@ -2602,21 +2628,24 @@ public class GameBoard : MonoBehaviour
 
     public void RollDiceClick()
     {
-		int diceValue = -1;
-        
         diceRoller.ShowDice();
 
         diceRoller.RollDice((value)=>{
-			if (value == 7)
-				ShowHexLocations();
-			else
-				DistributeResources(value);
+            if (value != -1)
+            {
+                if (value == 7)
+                    ShowHexLocations();
+                else
+                    DistributeResources(value);
+
+                if (LocalGame.isNetwork)
+                {
+                    NetManager.sendDiceRoll(value, NetManager.hostConnectionID);
+                }
+            }
 			});
         
-        if (LocalGame.isNetwork)
-        {
-           NetManager.sendDiceRoll(diceValue, NetManager.hostConnectionID);
-        }
+        
     }
 
     public void ReceiveDiceRoll(int diceRoll)
@@ -2664,6 +2693,6 @@ public class GameBoard : MonoBehaviour
 		timeLeft = BoardManager.turnTimerMax;
 		timerCoroutineStarted = true;
 		yield return new WaitUntil(() => timeLeft < 0);
-		NextPlayer();
+		NextPlayer(true);
 	}
 }

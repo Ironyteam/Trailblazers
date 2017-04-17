@@ -128,12 +128,6 @@ public class GuiManager : MonoBehaviour {
             scoreboardElementsArray[count].ScoreboardCanvas = GameObject.Find("player" + (count + 1) + "CanvasScoreboard").GetComponent<Canvas>();
         }
 
-		if(NavigationScript.networkGame)
-		{
-	        screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
-		}
-        else
-            screenElementsArray[0].characterSelected.enabled = true;
 
         chatPanelParent = GameObject.Find("chatPanelParent");
 		chatDropdown = GameObject.Find("chatInputDropdown").GetComponent<Dropdown>();
@@ -154,9 +148,9 @@ public class GuiManager : MonoBehaviour {
         DiceText.enabled = false;
 		inGamePopupText.enabled = false;
 
-        if(NavigationScript.networkGame == false)
+        //if(NavigationScript.networkGame == false)
         {
-            //chatPanelParent.gameObject.SetActive(false);
+            chatPanelParent.gameObject.SetActive(false);
         }
 
         for (int count = 0; count < MAX_NUM_OF_PLAYERS; count++)
@@ -173,6 +167,15 @@ public class GuiManager : MonoBehaviour {
                 scoreboardElementsArray[count].ScoreboardCanvas.enabled = false;
             }
         }
+
+        if (NavigationScript.networkGame == true)
+        {
+            Debug.Log("Start: putting local player first and highlighting current player");
+            putLocalPlayerFirst(CurrentGameBoard.LocalPlayer);
+            screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
+        }
+        else
+            screenElementsArray[0].characterSelected.enabled = true;
     }
 
     void Update ()
@@ -512,7 +515,7 @@ public class GuiManager : MonoBehaviour {
         {
             Player tempPlayer = CurrentGameBoard.LocalGame.PlayerList[CurrentGameBoard.LocalPlayer];
             // Wheat
-            wheatScore.text = tempPlayer.Wheat.ToString();
+            wheatScore.text = CurrentGameBoard.LocalPlayer.ToString();//tempPlayer.Wheat.ToString();
             // Brick
             brickScore.text = tempPlayer.Brick.ToString();
             // Wool

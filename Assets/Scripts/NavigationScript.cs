@@ -14,13 +14,39 @@ public class NavigationScript : MonoBehaviour
 	public Canvas gameRulesCanvas;
 	public static bool networkGame = false;
 
+    public Button nextPage;
+    public Button previousPage;
+
+    public Text bannerOneFirst;
+    public Text bannerTwoFirst;
+    public Text bannerOneSecond;
+    public Text bannerTwoSecond;
+
+    public Text textOneFirst;
+    public Text textTwoFirst;
+    public Text textOneSecond;
+    public Text textTwoSecond;
+
     void Awake()
     {
-       optionsCanvas.enabled   = false;
-       creditCanvas.enabled    = false;
-       quitCanvas.enabled      = false;
-	   playNowCanvas.enabled   = false;
-	   gameRulesCanvas.enabled = false;
+        optionsCanvas.enabled   = false;
+        creditCanvas.enabled    = false;
+        quitCanvas.enabled      = false;
+	    playNowCanvas.enabled   = false;
+	    gameRulesCanvas.enabled = false;
+
+        nextPage.gameObject.SetActive(true);
+        previousPage.gameObject.SetActive(false);
+
+        bannerOneFirst.enabled = true;
+        bannerTwoFirst.enabled = true;
+        textOneFirst.enabled = true;
+        textTwoFirst.enabled = true;
+
+        bannerOneSecond.enabled = false;
+        bannerTwoSecond.enabled = false;
+        textOneSecond.enabled = false;
+        textTwoSecond.enabled = false;
     }
 
 	void Update()
@@ -37,7 +63,8 @@ public class NavigationScript : MonoBehaviour
     public void optionsOn()
     {
        optionsCanvas.enabled = true;
-       mainCanvas.enabled    = false;;
+       mainCanvas.enabled    = false;
+;
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
@@ -57,7 +84,8 @@ public class NavigationScript : MonoBehaviour
     public void creditOn()
     {
        optionsCanvas.enabled = false;
-       mainCanvas.enabled    = false;;
+       mainCanvas.enabled    = false;
+;
        creditCanvas.enabled  = true;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
@@ -67,7 +95,8 @@ public class NavigationScript : MonoBehaviour
     public void returnOn()
     {
        optionsCanvas.enabled = false;
-       mainCanvas.enabled    = true;;
+       mainCanvas.enabled    = true;
+;
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
@@ -77,7 +106,8 @@ public class NavigationScript : MonoBehaviour
     public void quitOn()
     {
        optionsCanvas.enabled = false;
-       mainCanvas.enabled    = false;;
+       mainCanvas.enabled    = false;
+;
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = true;
 	   playNowCanvas.enabled = false;
@@ -87,7 +117,8 @@ public class NavigationScript : MonoBehaviour
 	public void rulesOn()
 	{
 	   optionsCanvas.enabled = false;
-       mainCanvas.enabled    = false;;
+       mainCanvas.enabled    = false;
+;
        creditCanvas.enabled  = false;
        quitCanvas.enabled    = false;
 	   playNowCanvas.enabled = false;
@@ -126,4 +157,36 @@ public class NavigationScript : MonoBehaviour
 		networkGame = false;
 		PreGameBoardSceneOn();
 	}
+
+    public void NextPageRules()
+    {
+        nextPage.gameObject.SetActive(false);
+        previousPage.gameObject.SetActive(true);
+
+        bannerOneFirst.enabled = false;
+        bannerTwoFirst.enabled = false;
+        textOneFirst.enabled = false;
+        textTwoFirst.enabled = false;
+
+        bannerOneSecond.enabled = true;
+        bannerTwoSecond.enabled = true;
+        textOneSecond.enabled = true;
+        textTwoSecond.enabled = true;
+    }
+
+    public void PreviousPageRules()
+    {
+        nextPage.gameObject.SetActive(true);
+        previousPage.gameObject.SetActive(false);
+
+        bannerOneFirst.enabled = true;
+        bannerTwoFirst.enabled = true;
+        textOneFirst.enabled = true;
+        textTwoFirst.enabled = true;
+
+        bannerOneSecond.enabled = false;
+        bannerTwoSecond.enabled = false;
+        textOneSecond.enabled = false;
+        textTwoSecond.enabled = false;
+    }
 }

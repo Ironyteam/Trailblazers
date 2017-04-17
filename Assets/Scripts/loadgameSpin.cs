@@ -41,7 +41,7 @@ public class loadgameSpin : MonoBehaviour {
 	IEnumerator loadWithSpin()
 	{
 		characterSelect.startGame();
-		yield return new WaitForSeconds (2);
+		yield return new WaitForSeconds (7);
 		async = SceneManager.LoadSceneAsync ("In Game Scene");
 	}
 }

@@ -57,26 +57,26 @@ public static class Constants
    public const string serverKillCode    = "1234";
 
 
-   public const int StartingGold      = 150;
+    public const int StartingGold      = 150;
 	public const int StartingResources = 0;
 	public const int GoldPerSettlement = 50;
 	public const int GoldPerCity	   = 50;
 
-	public const int BricksPerRoad = 0;
-	public const int OrePerRoad	 = 0;
+	public const int BricksPerRoad = 1;
+	public const int OrePerRoad	   = 0;
 	public const int WheatPerRoad  = 0;
-	public const int WoodPerRoad   = 0;
+	public const int WoodPerRoad   = 1;
 	public const int WoolPerRoad   = 0;
 
-	public const int BricksPerSettlement = 0;
+	public const int BricksPerSettlement = 1;
 	public const int OrePerSettlement    = 0;
-	public const int WheatPerSettlement  = 0;
-	public const int WoodPerSettlement   = 0;
-	public const int WoolPerSettlement   = 0;
+	public const int WheatPerSettlement  = 1;
+	public const int WoodPerSettlement   = 1;
+	public const int WoolPerSettlement   = 1;
 
 	public const int BricksPerCity = 0;
-	public const int OrePerCity    = 0;
-	public const int WheatPerCity  = 0;
+	public const int OrePerCity    = 3;
+	public const int WheatPerCity  = 2;
 	public const int WoodPerCity   = 0;
 	public const int WoolPerCity   = 0;
 

@@ -556,10 +556,6 @@ public class Player
         Wheat -= Constants.WheatPerSettlement;
         Wood -= Constants.WoodPerSettlement;
         Wool -= Constants.WoolPerSettlement;
-
-        Settlements++;
-
-		UpdateVictoryPoints();
     }
 
     public bool CanBuildSettlement()
@@ -599,10 +595,6 @@ public class Player
         Wheat -= Constants.WheatPerCity;
         Wood -= Constants.WoodPerCity;
         Wool -= Constants.WoolPerCity;
-
-		Cities++;
-
-		UpdateVictoryPoints();
     }
 
     public bool CanBuildCity()
