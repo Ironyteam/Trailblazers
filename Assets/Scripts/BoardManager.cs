@@ -482,13 +482,28 @@ public class BoardManager : MonoBehaviour
     public void AddPortClicked()  // Glowing effect code added
     {
         List<GameObject> hexesToRemove = new List<GameObject>();
+        GameObject oldBtn = null;
+        GameObject newBtn;
+
         addPortEnabled = true;
+
+        if (currentResource != -1)
+            oldBtn = GameObject.Find(resources[currentResource] + "Btn");
+        else if (currentDiceNum != -1)
+            oldBtn = GameObject.Find("DiceBtn" + currentDiceNum);
+
+        if (oldBtn != null)
+            oldBtn.GetComponent<Button>().interactable = true;
+
+        newBtn = GameObject.Find("AddPortBtn");
+        newBtn.GetComponent<Button>().interactable = false;
+
         currentResource = -1;
         currentDiceNum = -1;
 
         hexesBorderingWater = getHexesBorderedByWater(template);
 
-        foreach(GameObject hex in hexesBorderingWater)
+        foreach (GameObject hex in hexesBorderingWater)
         {
             if (template.hex[hex.GetComponent<HexData>().x_index,
                              hex.GetComponent<HexData>().y_index].portGO != null)
@@ -510,15 +525,18 @@ public class BoardManager : MonoBehaviour
 
             availabeHexes = getSurroundingHexes(hex.GetComponent<HexData>().x_index,
                                                 hex.GetComponent<HexData>().y_index);
-            
+
             foreach (GameObject hexagon in availabeHexes)
             {
-                int x = hexagon.GetComponent<HexData>().x_index;
-                int y = hexagon.GetComponent<HexData>().y_index;
-
-                if (template.hex[x, y].resource == -1 && template.hex[x, y].hexOwningPort == null)
+                if (hexagon != null)
                 {
-                    hasAvailableSurroundingWaterHexes = true;
+                    int x = hexagon.GetComponent<HexData>().x_index;
+                    int y = hexagon.GetComponent<HexData>().y_index;
+
+                    if (template.hex[x, y].resource == -1 && template.hex[x, y].hexOwningPort == null)
+                    {
+                        hasAvailableSurroundingWaterHexes = true;
+                    }
                 }
             }
 
@@ -537,7 +555,7 @@ public class BoardManager : MonoBehaviour
         }
 
         tutorial.showSelectHexForPortTutorialBox();
-    }      
+    }
 
     public void chooseHexForPort(GameObject chosenHex)       // Glowing effect code added
     {
@@ -556,22 +574,26 @@ public class BoardManager : MonoBehaviour
         hexes = getSurroundingHexes(x, y);
         for (int index = 0; index < hexes.Length; index++)
         {
-            if (template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].resource == -1 &&
-               template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].hexOwningPort == null)
-			{
-                hexes[index].GetComponentInChildren<Renderer>().material.color = ORANGE;
-                availablePortHexes.Add(hexes[index], index);
+            if (hexes[index] != null)
+            {
+                if (template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].resource == -1 &&
+                   template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].hexOwningPort == null)
+                {
+                    hexes[index].GetComponentInChildren<Renderer>().material.color = ORANGE;
+                    availablePortHexes.Add(hexes[index], index);
+                }
             }
         }
 
         tutorial.showAddPortTutorialBox();
-        
+
         choosingPort = true;
         hexToReceivePort = chosenHex;
         currentHexTrans = hexToReceivePort.transform.position;
         portGO = Instantiate(portPrefab, new Vector3(0, 0, 0), Quaternion.identity, HexCanvas.transform);
         portGO.GetComponent<Renderer>().enabled = false;
     }
+
 
     public int changeMouseOverPort(GameObject newHex)
     {
@@ -642,12 +664,18 @@ public class BoardManager : MonoBehaviour
         template.hex[chosenHex.GetComponent<HexData>().x_index, chosenHex.GetComponent<HexData>().y_index].hexOwningPort = template.hex[hex_x, hex_y].hex_go;
 
         tutorial.endTutorial();
-        
-        resetPortAddingChanges();
+
+        resetPortAddingChanges(false);
     }
 
-    private void resetPortAddingChanges()       // Glowing effect code added
+    private void resetPortAddingChanges(bool savingBoard)       // Glowing effect code added
     {
+        if (!savingBoard)
+        {
+            Button addPortBtn = GameObject.Find("AddPortBtn").GetComponent<Button>();
+            addPortBtn.interactable = true;
+        }
+
         // Remove glowing effect from water hexagons surrounding chosen hexagon if necessary
         if (choosingPort == true)
         {
@@ -783,7 +811,7 @@ public class BoardManager : MonoBehaviour
         {
             for (int x = 0; x < WIDTH; x++)
             {
-                if (template.hex[x, y].resource >= 0 && template.hex[x, y].portGO == null)
+                if (template.hex[x, y].resource >= 0)
                 {
                     borderedWaterHexes = getSurroundingHexes(x, y);
 
@@ -812,27 +840,62 @@ public class BoardManager : MonoBehaviour
 
     public bool addRandomDesert(HexTemplate template)
     {
-        List<GameObject> hexesBorderedByWater = getHexesBorderedByWater(template);
+        List<GameObject> hexesToRemove = new List<GameObject>();
+        List<GameObject> hexesBorderingWater = getHexesBorderedByWater(template);
         GameObject randomHex;
-        GameObject[] hexes;
         bool desertAdditionSuccessful;
 
-        if (hexesBorderedByWater.Count > 0)
+        foreach (GameObject hex in hexesBorderingWater)
         {
-            randomHex = hexesBorderedByWater[UnityEngine.Random.Range(0, hexesBorderedByWater.Count)];
-            hexes = getSurroundingHexes(randomHex.GetComponent<HexData>().x_index, randomHex.GetComponent<HexData>().y_index);
+            GameObject[] availabeHexes;
+            bool hasAvailableSurroundingWaterHexes = false;
+
+            availabeHexes = getSurroundingHexes(hex.GetComponent<HexData>().x_index,
+                                                hex.GetComponent<HexData>().y_index);
+
+            foreach (GameObject hexagon in availabeHexes)
+            {
+                if (hexagon != null)
+                {
+                    int x = hexagon.GetComponent<HexData>().x_index;
+                    int y = hexagon.GetComponent<HexData>().y_index;
+
+                    if (template.hex[x, y].resource == -1 && template.hex[x, y].hexOwningPort == null)
+                    {
+                        hasAvailableSurroundingWaterHexes = true;
+                    }
+                }
+            }
+
+            if (hasAvailableSurroundingWaterHexes == false)
+                hexesToRemove.Add(hex);
+        }
+
+        foreach (GameObject hex in hexesToRemove)
+        {
+            hexesBorderingWater.Remove(hex);
+        }
+
+        if (hexesBorderingWater.Count > 0)
+        {
+            randomHex = hexesBorderingWater[UnityEngine.Random.Range(0, hexesBorderingWater.Count)];
+            GameObject[] hexes = getSurroundingHexes(randomHex.GetComponent<HexData>().x_index, randomHex.GetComponent<HexData>().y_index);
 
             for (int index = 0; index < hexes.Length; index++)
             {
-                if (template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].resource == -1)
+                if (hexes[index] != null)
                 {
-                    hexes[index].GetComponentInChildren<Renderer>().material.color = Color.yellow;
-                    hexes[index].transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = DiceNumImages[5];
-                    template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].setDiceNum(7);
-                    template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].setResource(5);
-                    resourceCounts[5] += 1;
-                    diceNumCounts[5] += 1;
-                    index = hexes.Length;
+                    if (template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].resource == -1 &&
+                        template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].hexOwningPort == null)
+                    {
+                        hexes[index].GetComponentInChildren<Renderer>().material.color = Color.yellow;
+                        hexes[index].transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = DiceNumImages[5];
+                        template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].setDiceNum(7);
+                        template.hex[hexes[index].GetComponent<HexData>().x_index, hexes[index].GetComponent<HexData>().y_index].setResource(5);
+                        resourceCounts[5] += 1;
+                        diceNumCounts[5] += 1;
+                        index = hexes.Length;
+                    }
                 }
             }
             desertAdditionSuccessful = true;
@@ -1147,12 +1210,29 @@ public class BoardManager : MonoBehaviour
         tutorial.showSelectResourceTutorialBox();
     }
 
-    public void changeSelectedResource(int resrouceNum)
+    public void changeSelectedResource(int resourceNum)
     {
-        if (addPortEnabled == true)
-            resetPortAddingChanges();
-        currentResource = resrouceNum;
-        currentDiceNum  = -1;
+        GameObject oldBtn = null;
+        GameObject newBtn;
+
+        if (resourceNum != currentResource)
+        {
+            if (currentResource != -1)
+                oldBtn = GameObject.Find(resources[currentResource] + "Btn");
+            else if (currentDiceNum != -1)
+                oldBtn = GameObject.Find("DiceBtn" + currentDiceNum);
+
+            if (oldBtn != null)
+                oldBtn.GetComponent<Button>().interactable = true;
+
+            newBtn = GameObject.Find(resources[resourceNum] + "Btn");
+            newBtn.GetComponent<Button>().interactable = false;
+
+            if (addPortEnabled == true)
+                resetPortAddingChanges(false);
+            currentResource = resourceNum;
+            currentDiceNum = -1;
+        }
     }
 
     public void resetHex(int x, int y)
@@ -1297,10 +1377,27 @@ public class BoardManager : MonoBehaviour
 
     public void changeSelectedDiceNum(int diceNum)
     {
-        if (addPortEnabled == true)
-            resetPortAddingChanges();
-        currentDiceNum  = diceNum;
-        currentResource = -1;
+        GameObject newBtn;
+        GameObject oldBtn = null;
+
+        if (diceNum != currentDiceNum)
+        {
+            if (currentResource != -1)
+                oldBtn = GameObject.Find(resources[currentResource] + "Btn");
+            else if (currentDiceNum != -1)
+                oldBtn = GameObject.Find("DiceBtn" + currentDiceNum);
+
+            if (oldBtn != null)
+                oldBtn.GetComponent<Button>().interactable = true;
+
+            newBtn = GameObject.Find("DiceBtn" + diceNum);
+            newBtn.GetComponent<Button>().interactable = false;
+
+            if (addPortEnabled == true)
+                resetPortAddingChanges(false);
+            currentDiceNum = diceNum;
+            currentResource = -1;
+        }
     }
 
     public void ChangeDisplayedMap(int desiredIndex)
@@ -1468,7 +1565,7 @@ public class BoardManager : MonoBehaviour
         int minVP = 0;
         int maxVP = 0;
 		
-		resetPortAddingChanges();
+		resetPortAddingChanges(true);
         
         mapName = mapNameField.text;
 

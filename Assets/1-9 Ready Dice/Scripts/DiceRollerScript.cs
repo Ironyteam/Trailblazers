@@ -27,7 +27,19 @@ public class DiceRollerScript : MonoBehaviour
 		ClearDice ();
 	}
 
-	public void ClearDice ()
+    public void HideDice()
+    {
+        DiceArray[0].gameObject.SetActive(false);
+        DiceArray[1].gameObject.SetActive(false);
+    }
+
+    public void ShowDice()
+    {
+        DiceArray[0].gameObject.SetActive(true);
+        DiceArray[1].gameObject.SetActive(true);
+    }
+
+    public void ClearDice ()
 	{
 		foreach (var dice in DiceArray)
 		{

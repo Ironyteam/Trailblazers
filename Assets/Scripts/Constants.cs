@@ -129,4 +129,7 @@ public static class Constants
 
 	// Popup Constants
 	public const float popupWaitTime = 2.0f;
+
+    // Character select constants
+    public const float characterSelectTimer = 30.0f;
 }

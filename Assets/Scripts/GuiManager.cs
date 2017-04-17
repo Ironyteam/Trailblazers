@@ -19,7 +19,7 @@ public class GuiManager : MonoBehaviour {
     public Image DiceImage;
     public Text DiceText,
 				inGamePopupText;
-		   	    
+
     public bool GameCanvasEnabled = true;
 
     [System.Serializable]
@@ -72,6 +72,7 @@ public class GuiManager : MonoBehaviour {
 	public Text scoreBoardWinnerText;
     public Text woodScore;
     public Text dropLabel;
+    public GameObject chatPanelParent;
     public Canvas gameCanvas,
    	              escapeCanvas,
 		          optionsCanvas,
@@ -95,21 +96,21 @@ public class GuiManager : MonoBehaviour {
 		Destroy (GameObject.Find("Directional light"));
 		Destroy (GameObject.Find("Ocean"));
         CurrentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
-	/*	if(NavigationScript.networkGame == true)
-		{
-			putLocalPlayerFirst((Player number received from network) here);
-		} */
 
-        screenElementsArray[0].characterSelected.enabled = true;
+        if(NavigationScript.networkGame == true)
+        {
+            putLocalPlayerFirst(BoardManager.localPlayerIndex);
+        } 
     }
 
-	void Start()
+    void Start()
 	{
         for (int count = 0; count < BoardManager.numOfPlayers; count++)
         {
             playerClassLocalArray[count].characterPictureName = Characters.Names[characterSelect.selectedCharacters[count]];
             playerClassLocalArray[count].playerColourName = playerColourNames[count];
             playerClassLocalArray[count].uiPosition = count;
+            screenElementsArray[count].playerName.text = Characters.Names[characterSelect.selectedCharacters[count]];
             screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite>(playerClassLocalArray[count].characterPictureName) as Sprite;
             screenElementsArray[count].playerColour.sprite = Resources.Load<Sprite>(playerClassLocalArray[count].playerColourName) as Sprite;
             screenElementsArray[count].largestArmyIndicator.enabled = false;
@@ -131,8 +132,11 @@ public class GuiManager : MonoBehaviour {
 		{
 	        screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
 		}
+        else
+            screenElementsArray[0].characterSelected.enabled = true;
 
-		chatDropdown = GameObject.Find("chatInputDropdown").GetComponent<Dropdown>(); //**********************
+        chatPanelParent = GameObject.Find("chatPanelParent");
+		chatDropdown = GameObject.Find("chatInputDropdown").GetComponent<Dropdown>();
 		inGamePopupText = GameObject.Find("popupTextGlobal").GetComponent<Text>();
         dropLabel = GameObject.Find("dropLabel").GetComponent<Text>();
         dropLabel.text = Constants.chatMessages[0];
@@ -149,6 +153,11 @@ public class GuiManager : MonoBehaviour {
         DiceImage.enabled = false;
         DiceText.enabled = false;
 		inGamePopupText.enabled = false;
+
+        if(NavigationScript.networkGame == false)
+        {
+            //chatPanelParent.gameObject.SetActive(false);
+        }
 
         for (int count = 0; count < MAX_NUM_OF_PLAYERS; count++)
         {
@@ -304,6 +313,7 @@ public class GuiManager : MonoBehaviour {
             {
                 screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite>(playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].characterPictureName) as Sprite;
                 screenElementsArray[count].playerColour.sprite = Resources.Load<Sprite>(playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].playerColourName) as Sprite;
+                screenElementsArray[count].playerName.text = CurrentGameBoard.LocalGame.PlayerList[((playerNumberCurrent + count) % BoardManager.numOfPlayers)].Name;
                 playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].uiPosition = count;
             }
             if (previousLongestRoad > -1)
@@ -350,6 +360,7 @@ public class GuiManager : MonoBehaviour {
             {
                 screenElementsArray[count].characterPicture.sprite = Resources.Load<Sprite> (playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].characterPictureName) as Sprite;
                 screenElementsArray[count].playerColour.sprite = Resources.Load<Sprite>(playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].playerColourName) as Sprite;
+                screenElementsArray[count].playerName.text = CurrentGameBoard.LocalGame.PlayerList[((playerNumberCurrent + count) % BoardManager.numOfPlayers)].Name;
                 playerClassLocalArray[(playerNumberCurrent + count) % BoardManager.numOfPlayers].uiPosition = count;
             }
 
@@ -497,26 +508,36 @@ public class GuiManager : MonoBehaviour {
 
     public void UpdatePlayer()
 	{
-        Player tempPlayer = CurrentGameBoard.LocalGame.PlayerList[CurrentGameBoard.LocalGame.isNetwork? CurrentGameBoard.LocalPlayer: CurrentGameBoard.CurrentPlayer];
-        // Wheat
-        wheatScore.text = tempPlayer.Wheat.ToString();
-        // Brick
-        brickScore.text = tempPlayer.Brick.ToString();
-        // Wool
-        sheepScore.text = tempPlayer.Wool.ToString();
-        // Wood
-        woodScore.text = tempPlayer.Wood.ToString();
-        // Ore
-        oreScore.text = tempPlayer.Ore.ToString();
-        // Gold
-        goldScore.text = tempPlayer.Gold.ToString();
-
-        // Update the player portaits
-        for (int x = 0; x < BoardManager.numOfPlayers; x++)
+        if (CurrentGameBoard.LocalGame.GameOver == false)
         {
-            screenElementsArray[playerClassLocalArray[x].uiPosition].armySizeDisplay.text = CurrentGameBoard.LocalGame.PlayerList[x].Armies.ToString();
-            screenElementsArray[playerClassLocalArray[x].uiPosition].longestRoadLengthDisplay.text = CurrentGameBoard.LocalGame.PlayerList[x].LongestRoad.ToString();
-            screenElementsArray[playerClassLocalArray[x].uiPosition].victoryPoints.text = CurrentGameBoard.LocalGame.PlayerList[x].VictoryPoints.ToString();
+            Player tempPlayer = CurrentGameBoard.LocalGame.PlayerList[CurrentGameBoard.LocalPlayer];
+            // Wheat
+            wheatScore.text = tempPlayer.Wheat.ToString();
+            // Brick
+            brickScore.text = tempPlayer.Brick.ToString();
+            // Wool
+            sheepScore.text = tempPlayer.Wool.ToString();
+            // Wood
+            woodScore.text = tempPlayer.Wood.ToString();
+            // Ore
+            oreScore.text = tempPlayer.Ore.ToString();
+            // Gold
+            goldScore.text = tempPlayer.Gold.ToString();
+
+            // Update the player portaits
+            for (int x = 0; x < BoardManager.numOfPlayers; x++)
+            {
+                if (CurrentGameBoard.LocalGame.PlayerList[x].VictoryPoints >= CurrentGameBoard.LocalGame.VictoryPointsToWin)
+                {
+                    CurrentGameBoard.LocalGame.GameOver = true;
+                    setGameWinner(x);
+                    showVictoryScreen();
+                    DisableGameCanvas();
+                }
+                screenElementsArray[playerClassLocalArray[x].uiPosition].armySizeDisplay.text = CurrentGameBoard.LocalGame.PlayerList[x].Armies.ToString();
+                screenElementsArray[playerClassLocalArray[x].uiPosition].longestRoadLengthDisplay.text = CurrentGameBoard.LocalGame.PlayerList[x].LongestRoad.ToString();
+                screenElementsArray[playerClassLocalArray[x].uiPosition].victoryPoints.text = CurrentGameBoard.LocalGame.PlayerList[x].VictoryPoints.ToString();
+            }
         }
 
 	}

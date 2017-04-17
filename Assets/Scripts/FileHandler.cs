@@ -45,6 +45,7 @@ public class FileHandler
     {
         List<string> mapNames = new List<string>();
         List<string> mapInfo = new List<string>();
+        string nameWithUnderscores;
 
         try
         {
@@ -72,7 +73,8 @@ public class FileHandler
         }
 
         // Remove map's name from the list of map names
-        mapInfo.Remove(mapInfo[mapNames.IndexOf(name)]);
+        nameWithUnderscores = name.Replace(' ', '_');
+        mapInfo.Remove(mapInfo[mapNames.IndexOf(nameWithUnderscores)]);
 
         // Rewrite the remaining names to the map list file
         using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/MapList.txt"))
@@ -128,7 +130,7 @@ public class FileHandler
             {
                 hexInfo = tempString.Split();
                 if (hexInfo.Length == 3)
-                    mapNames.Add(new HexTemplate(hexInfo[0], Int32.Parse(hexInfo[1]), Int32.Parse(hexInfo[2])));
+                    mapNames.Add(new HexTemplate(hexInfo[0].Replace('_', ' '), Int32.Parse(hexInfo[1]), Int32.Parse(hexInfo[2])));
                 else
                     printMapListError();
             }
@@ -143,7 +145,7 @@ public class FileHandler
             {
                 hexInfo = tempString.Split();
                 if (hexInfo.Length == 3)
-                    mapNames.Add(new HexTemplate(hexInfo[0], Int32.Parse(hexInfo[1]), Int32.Parse(hexInfo[2])));
+                    mapNames.Add(new HexTemplate(hexInfo[0].Replace('_', ' '), Int32.Parse(hexInfo[1]), Int32.Parse(hexInfo[2])));
                 else
                     printMapListError();
             }
@@ -165,7 +167,6 @@ public class FileHandler
 
         if (isDefaultMap)
         {
-            Debug.Log(mapName);
             TextAsset map = Resources.Load("DefaultMaps/" + mapName) as TextAsset;
             byte[] byteArray = Encoding.UTF8.GetBytes(map.text);
             MemoryStream stream = new MemoryStream(byteArray);
@@ -181,8 +182,8 @@ public class FileHandler
         {
             List<string> numbers = new List<string>();
 
-            // Skip over name and creator
-            template.mapName = reader.ReadLine();
+            template.mapName = reader.ReadLine().Replace('_', ' ');
+            Debug.Log(template.mapName);
             reader.ReadLine();
 
             template.minVP = Int32.Parse(reader.ReadLine());
@@ -283,6 +284,7 @@ public class FileHandler
     public void saveMap(HexTemplate template, string name, string creator, int minVP, int maxVP)
     {
         List<string> mapNames = new List<string>();
+        string nameWithUnderscores;
 
         using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/" + name + ".txt"))
         {
@@ -315,9 +317,10 @@ public class FileHandler
             reader.Close();
         }
 
+        nameWithUnderscores = name.Replace(' ', '_');
         using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/MapList.txt"))
         {
-            writer.WriteLine(name + " " + minVP + " " + maxVP);
+            writer.WriteLine(nameWithUnderscores + " " + minVP + " " + maxVP);
             foreach (string mapName in mapNames)
             {
                 writer.WriteLine(mapName);
@@ -333,6 +336,7 @@ public class FileHandler
         List<string> mapNames = new List<string>();         //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Many changes
         string[] fileLines;
         string modifiedFileString;
+        string nameWithUnderscores;
 
         modifiedFileString = rawFileString.Replace("\r\n", "\n");
         fileLines = modifiedFileString.Split('\n');
@@ -353,12 +357,13 @@ public class FileHandler
                 mapNames.Add(tempString);
             reader.Close();
         }
-        
+
         // Separate the lines of the file string and use the appropriate lines to
         // write the minimum and maximum victory points
+        nameWithUnderscores = fileLines[0].Replace(' ', '_');
         using (StreamWriter writer = File.CreateText(Application.dataPath + "/SavedMaps/MapList.txt"))
         {
-            writer.WriteLine(fileLines[0] + " " + fileLines[2] + " " + fileLines[3]);
+            writer.WriteLine(nameWithUnderscores + " " + fileLines[2] + " " + fileLines[3]);
             Debug.Log(fileLines[0] + " " + fileLines[2] + " " + fileLines[3]);
             foreach (string mapName in mapNames)
             {
@@ -368,7 +373,8 @@ public class FileHandler
         }
 
     }
-   public bool mapExists(string name)
+
+    public bool mapExists(string name)
    {
       HexTemplate[] maps;
       bool exists = false;

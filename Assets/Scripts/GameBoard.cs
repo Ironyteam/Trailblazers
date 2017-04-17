@@ -50,11 +50,11 @@ public class GameBoard : MonoBehaviour
 
 	public int CurrentPlayer = 0;
     public int LocalPlayer = 0;
-	public float timeLeft = BoardManager.turnTimerMax;
+    public float timeLeft;
 	public Color timerRed = new Color(1, 0, 0);
-	public Color timerBlack = new Color(0, 0, 0);
-	public Text timerTextObject;
-	public bool timerCoroutineStarted = false;
+	public Color timerWhite = new Color(1, 1, 1);
+    public Text timerTextObject;
+    public bool timerCoroutineStarted = false;
     public bool InitialPlacement = true;
 	public bool FirstTurn = true;
 	public bool goingUp = true;
@@ -85,13 +85,21 @@ public class GameBoard : MonoBehaviour
 		MKGlowObject.BlurIterations = 3;
 		MKGlowObject.Samples = 4;
         GUIManager.DisableGameCanvas();
-        LocalPlayer = BoardManager.localPlayerIndex;
 
 		LocalGame = new Game();
 
+        LocalGame.VictoryPointsToWin = BoardManager.victoryPoints;
         LocalGame.isNetwork = NavigationScript.networkGame;
 
-		timerTextObject = GameObject.Find("turnTimerText").GetComponent<Text>();
+        if (LocalGame.isNetwork)
+            LocalPlayer = BoardManager.localPlayerIndex;
+
+        timerTextObject = GameObject.Find("turnTimerText").GetComponent<Text>();
+
+        if (BoardManager.turnTimerOn == false)
+        {
+            timerTextObject.gameObject.SetActive(false);
+        }
 
         if (LocalGame.isNetwork)
 			NetManager = GameObject.Find("Network Handler").GetComponent<NetworkManager>();
@@ -332,28 +340,28 @@ public class GameBoard : MonoBehaviour
 					switch (template.hex [x, z].portSide)
 					{
 						case 0:
-							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 6, template.hex [x, z].resource);
 							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 1, template.hex [x, z].resource);
+							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 2, template.hex [x, z].resource);
 							break;
 						case 1:
-							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 1, template.hex [x, z].resource);
 							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 2, template.hex [x, z].resource);
+							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 3, template.hex [x, z].resource);
 							break;
 						case 2:
-							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 2, template.hex [x, z].resource);
 							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 3, template.hex [x, z].resource);
+							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 4, template.hex [x, z].resource);
 							break;
 						case 3:
-							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 3, template.hex [x, z].resource);
 							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 4, template.hex [x, z].resource);
+							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 5, template.hex [x, z].resource);
 							break;
 						case 4:
-							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 4, template.hex [x, z].resource);
-							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 5, template.hex [x, z].resource);
-							break;
-						case 5:
 							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 5, template.hex [x, z].resource);
 							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 6, template.hex [x, z].resource);
+							break;
+						case 5:
+							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 6, template.hex [x, z].resource);
+							SetSettlementPortDiscount(template.hex [x, z].HexLocation, 1, template.hex [x, z].resource);
 							break;
 						default:
 							break;
@@ -373,62 +381,70 @@ public class GameBoard : MonoBehaviour
             ShowAvailableSettlementsInitial();
         else if (LocalPlayer == CurrentPlayer)
             ShowAvailableSettlementsInitial();
+
+        StartCoroutine(turnTimer());
     }
 
 	void FixedUpdate () {
 
-		//if (glowCounter == 100)
-		{
-			glowCounter = 0;
-			if (goingUp)
-			{
-				if (MKGlowObject.GlowIntensity < .500f)
-					MKGlowObject.GlowIntensity += .002f;
-				else
-				{
-					goingUp = false;
-					MKGlowObject.GlowIntensity -= .002f;
-				}
-			}
-			else
-			{
-				if (MKGlowObject.GlowIntensity > .400f)
-					MKGlowObject.GlowIntensity -= .002f;
-				else
-				{
-					goingUp = true;
-					MKGlowObject.GlowIntensity += .002f;
-				}
-			}
-		}
-		glowCounter++;
+        if (LocalGame.GameOver == false)
+        {
+            {
+                glowCounter = 0;
+                if (goingUp)
+                {
+                    if (MKGlowObject.GlowIntensity < .500f)
+                        MKGlowObject.GlowIntensity += .002f;
+                    else
+                    {
+                        goingUp = false;
+                        MKGlowObject.GlowIntensity -= .002f;
+                    }
+                }
+                else
+                {
+                    if (MKGlowObject.GlowIntensity > .400f)
+                        MKGlowObject.GlowIntensity -= .002f;
+                    else
+                    {
+                        goingUp = true;
+                        MKGlowObject.GlowIntensity += .002f;
+                    }
+                }
+            }
+            glowCounter++;
 
-		if (LocalGame.isNetwork)
-			if (LocalPlayer == CurrentPlayer)
-				GUIManager.EnableGameCanvas();
-			else
-				GUIManager.DisableGameCanvas();
-		
-		if (!InitialPlacement)
-			GUIManager.UpdatePlayer();
+            if (LocalGame.isNetwork)
+            {
+                if (LocalPlayer == CurrentPlayer)
+                    GUIManager.EnableGameCanvas();
+                else
+                    GUIManager.DisableGameCanvas();
+            }
 
-		if(BoardManager.turnTimerOn)
-		{
-			if(timeLeft <= 10)
-			{
-				timerTextObject.color = timerRed;
-			}
-			else
-			{
-				timerTextObject.color = timerBlack;
-			}
-	
-			if (timeLeft >= 0)
-			{
-		        timeLeft -= Time.deltaTime;
-		        timerTextObject.text = Mathf.Floor(timeLeft).ToString();
-			}
-		}
+            if (!InitialPlacement)
+                GUIManager.UpdatePlayer();
+
+            if (BoardManager.turnTimerOn)
+            {
+                if (timeLeft <= 10)
+                {
+                    timerTextObject.color = timerRed;
+                }
+                else
+                {
+                    timerTextObject.color = timerWhite;
+                }
+
+                if (timeLeft >= 0)
+                {
+                    timeLeft -= Time.deltaTime;
+                    timerTextObject.text = Mathf.Floor(timeLeft).ToString();
+                }
+            }
+        }
+        else
+            timerTextObject.text = "0";
    }
 
 	void spawnStructureOne(int xCoord, int yCoord)
@@ -834,7 +850,7 @@ public class GameBoard : MonoBehaviour
 		MeshRenderer mr = settlementTarget.Structure_GO.GetComponentInChildren<MeshRenderer> ();
 		mr.material = GetPlayerMaterial(CurrentPlayer, 1);
 		settlementTarget.PlayerOwner = CurrentPlayer;
-
+        Debug.Log("PortDiscount: " + settlementTarget.portDiscount);
 		if (settlementTarget.portDiscount != -1) 
 		{
 			switch (settlementTarget.portDiscount) 
@@ -872,15 +888,21 @@ public class GameBoard : MonoBehaviour
 
 		Destroy(settlementTarget.Structure_GO);
 		settlementTarget.Structure_GO = Instantiate(city, oldStructCoords, Quaternion.identity);
-		mr = settlementTarget.Structure_GO.GetComponentInChildren<MeshRenderer>();
-		mr.material = GetPlayerMaterial(CurrentPlayer, 2);
-		settlementTarget.IsCity = true;
+        mr = settlementTarget.Structure_GO.GetComponentInChildren<MeshRenderer>();
+        mr.material = GetPlayerMaterial(CurrentPlayer, 2);
+        settlementTarget.IsCity = true;
+        LocalGame.PlayerList[CurrentPlayer].Cities++;
+        LocalGame.PlayerList[CurrentPlayer].Settlements--;
 
-		if (LocalGame.PlayerList [CurrentPlayer].playerAbility == 5)
-			settlementTarget.Armies++;
-		
-		LocalGame.PlayerList[CurrentPlayer].BuildCity();
-	}
+        if (LocalGame.PlayerList[CurrentPlayer].playerAbility == 5)
+        {
+            settlementTarget.Armies++;
+            LocalGame.PlayerList[CurrentPlayer].Armies++;
+        }
+
+        if (LocalPlayer == CurrentPlayer)
+		    LocalGame.PlayerList[CurrentPlayer].BuildCity();
+    }
 
 	public void BuildRoad(Road targetRoad)
 	{
@@ -899,10 +921,6 @@ public class GameBoard : MonoBehaviour
 			else
 			{
 				NextPlayer();
-				
-				// If still initial placement after cycling next player, show settlement locations.
-				if (InitialPlacement)
-					ShowAvailableSettlementsInitial();
 			}
 		}
 	
@@ -926,7 +944,8 @@ public class GameBoard : MonoBehaviour
 					LocalGame.LongestRoadPlayer = CurrentPlayer;
 					LocalGame.LongestRoad = tempRoadLength;
 					GUIManager.SetLongestRoadWinner(temp, CurrentPlayer);
-				}
+                    LocalGame.PlayerList[CurrentPlayer].UpdateVictoryPoints();
+                }
 
 			}
 		}
@@ -966,8 +985,9 @@ public class GameBoard : MonoBehaviour
 			mr.material = GetPlayerMaterial(DefendingCity.PlayerOwner, 2);
 			DefendingCity.IsCity = false;
 			DefendingCity.Structure_GO.GetComponent<Collider>().enabled = false;
-
-		}
+            LocalGame.PlayerList[DefendingCity.PlayerOwner].Cities--;
+            LocalGame.PlayerList[DefendingCity.PlayerOwner].Settlements++;
+        }
 		else if (AttackingCity.Armies < DefendingCity.Armies)
 		{
 			DefendingCity.Armies -= AttackingCity.Armies;
@@ -1189,7 +1209,7 @@ public class GameBoard : MonoBehaviour
 
 		foreach (Structure currentStructure in Structures)
 		{
-			if (currentStructure.PlayerOwner == CurrentPlayer)
+			if (currentStructure.PlayerOwner == CurrentPlayer && currentStructure.IsCity == false)
 			{
 				currentStructure.Structure_GO.GetComponent<Renderer>().material = GetPlayerMaterial(CurrentPlayer, 1);
 			}
@@ -1607,7 +1627,8 @@ public class GameBoard : MonoBehaviour
 
 	public void ShowHexLocations()
 	{
-		for (int z = 0; z < HEIGHT; z++) 
+        diceRoller.HideDice();
+        for (int z = 0; z < HEIGHT; z++) 
 		{
 			for (int x = 0; x < WIDTH; x++) 
 			{
@@ -1706,8 +1727,8 @@ public class GameBoard : MonoBehaviour
 				break;
 			}
 		}
-		else // is city
-		{
+		else if (type == 2) // is city
+        {
 			switch (playerNumber)
 			{
 			case -1:
@@ -1736,8 +1757,10 @@ public class GameBoard : MonoBehaviour
 				break;
 			}
 		}
+        else
+            playerMaterial = Resources.Load("Invisible", typeof(Material)) as Material;
 
-		return playerMaterial;
+        return playerMaterial;
 	}
 
 	public Material GetGlowingPlayerMaterial(int playerNumber, int type)
@@ -1958,6 +1981,8 @@ public class GameBoard : MonoBehaviour
         HideAvailableCitiesToAttack();
         HideAvailableRoads();
         HideHexLocations();
+        GUIManager.closeBarracks();
+        GUIManager.closeShop();
     }
 
 
@@ -1985,7 +2010,10 @@ public class GameBoard : MonoBehaviour
                     if (LocalGame.isNetwork)
                         GUIManager.NextPlayerNetwork();
                     else
+                    {
+                        LocalPlayer++;
                         GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer);
+                    }
                     
                 }
                 else
@@ -1998,21 +2026,24 @@ public class GameBoard : MonoBehaviour
 			{
                 if (CurrentPlayer > 0)
                 {
-                  CurrentPlayer--;
-                  //The swap player doesnt work for first turn for local... yet
-                  if (LocalGame.isNetwork)
+                    CurrentPlayer--;
+                    
+                    if (LocalGame.isNetwork)
                         GUIManager.NextPlayerNetwork(true);
-                  else
-                       GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer, true);
+                    else
+                    {
+                        LocalPlayer--;
+                        GUIManager.NextPlayerLocal(LocalGame.LongestRoadPlayer, LocalGame.MostArmiesPlayer, true);
+                    }
                     
                 }
                 else
                 {
                     InitialPlacement = false;
                     
-                    if (LocalGame.isNetwork)
+                    if (LocalGame.isNetwork && LocalPlayer == CurrentPlayer)
                     {
-                        // RollDiceNetwork
+                        RollDiceClick();
                     }
                     else
                     {
@@ -2023,23 +2054,30 @@ public class GameBoard : MonoBehaviour
 
             }
             
-            if (InitialPlacement && LocalGame.isNetwork && LocalPlayer == CurrentPlayer)
+            if (InitialPlacement && LocalPlayer == CurrentPlayer)
                 ShowAvailableSettlementsInitial();
         }
 		else
 		{
-			if (CurrentPlayer < LocalGame.PlayerList.Count - 1)
-				CurrentPlayer++;
-			else
-			{
-				CurrentPlayer = 0;
-				DistributeGold();
-			}
+            if (CurrentPlayer < LocalGame.PlayerList.Count - 1)
+            {
+                CurrentPlayer++;
+                if (!LocalGame.isNetwork)
+                    LocalPlayer++;
+            }
+            else
+            {
+                CurrentPlayer = 0;
+                if (!LocalGame.isNetwork)
+                    LocalPlayer = 0;
+                DistributeGold();
+            }
 
          if (LocalGame.isNetwork)
          {
             GUIManager.NextPlayerNetwork();
-            // RollDiceNetwork
+            if (CurrentPlayer == LocalPlayer)
+                RollDiceClick();
          }
          else
          {
@@ -2066,74 +2104,78 @@ public class GameBoard : MonoBehaviour
 
 	public void DistributeResources(int rollNumber)
 	{
-		for (int z = 0; z < HEIGHT; z++)
-		{
-			for (int x = 0; x < WIDTH; x++)
-			{
-				if (template.hex[x, z].dice_number == rollNumber && template.hex[x, z].resource >= 0 && template.hex[x, z].hasRobber == false)
-				{
-					foreach (Structure currentStructure in Structures)
-					{
-						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[0]))
-						{
-							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
-							break;
-						}
-					}
+        if (rollNumber != -1)
+        {
+            diceRoller.HideDice();
+            for (int z = 0; z < HEIGHT; z++)
+            {
+                for (int x = 0; x < WIDTH; x++)
+                {
+                    if (template.hex[x, z].dice_number == rollNumber && template.hex[x, z].resource >= 0 && template.hex[x, z].hasRobber == false)
+                    {
+                        foreach (Structure currentStructure in Structures)
+                        {
+                            if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[0]))
+                            {
+                                if (currentStructure.PlayerOwner != -1)
+                                    DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+                                break;
+                            }
+                        }
 
-					foreach (Structure currentStructure in Structures)
-					{
-						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[1]))
-						{
-							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
-							break;
-						}
-					}
+                        foreach (Structure currentStructure in Structures)
+                        {
+                            if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[1]))
+                            {
+                                if (currentStructure.PlayerOwner != -1)
+                                    DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+                                break;
+                            }
+                        }
 
-					foreach (Structure currentStructure in Structures)
-					{
-						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[2]))
-						{
-							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
-							break;
-						}
-					}
+                        foreach (Structure currentStructure in Structures)
+                        {
+                            if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[2]))
+                            {
+                                if (currentStructure.PlayerOwner != -1)
+                                    DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+                                break;
+                            }
+                        }
 
-					foreach (Structure currentStructure in Structures)
-					{
-						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[3]))
-						{
-							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
-							break;
-						}
-					}
+                        foreach (Structure currentStructure in Structures)
+                        {
+                            if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[3]))
+                            {
+                                if (currentStructure.PlayerOwner != -1)
+                                    DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+                                break;
+                            }
+                        }
 
-					foreach (Structure currentStructure in Structures)
-					{
-						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[4]))
-						{
-							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
-							break;
-						}
-					}
+                        foreach (Structure currentStructure in Structures)
+                        {
+                            if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[4]))
+                            {
+                                if (currentStructure.PlayerOwner != -1)
+                                    DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+                                break;
+                            }
+                        }
 
-					foreach (Structure currentStructure in Structures)
-					{
-						if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[5]))
-						{
-							if (currentStructure.PlayerOwner != -1)
-								DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
-							break;
-						}
-					}
-				}
-			}
-		}
+                        foreach (Structure currentStructure in Structures)
+                        {
+                            if (CompareCoordinates(currentStructure.Location, template.hex[x, z].Coordinates[5]))
+                            {
+                                if (currentStructure.PlayerOwner != -1)
+                                    DistributeResource(currentStructure.Structure_GO.transform.position, template.hex[x, z].resource, currentStructure.PlayerOwner, currentStructure.IsCity);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 	public void DistributeResource(Vector3 spawnLocation, int resourceNumber, int playerNumber, bool isCity)
@@ -2560,28 +2602,29 @@ public class GameBoard : MonoBehaviour
 
     public void RollDiceClick()
     {
-        //int rollOne = Dice.Roll();
-        //int rollTwo = Dice.Roll();
-		int diceValue = 0;
+		int diceValue = -1;
+        
+        diceRoller.ShowDice();
 
-        //StartCoroutine(GUIManager.RollDice(rollOne, rollTwo));
-
-		diceRoller.RollDice((value)=>{
+        diceRoller.RollDice((value)=>{
 			if (value == 7)
 				ShowHexLocations();
 			else
 				DistributeResources(value);
 			});
-
-        // if (diceValue != 7)
-        //    DistributeResources(diceValue);
-        // else
-        //     ShowHexLocations();
-
+        
         if (LocalGame.isNetwork)
         {
            NetManager.sendDiceRoll(diceValue, NetManager.hostConnectionID);
         }
+    }
+
+    public void ReceiveDiceRoll(int diceRoll)
+    {
+        StartCoroutine(GUIManager.RollDice(diceRoll));
+
+        if (diceRoll != 7)
+            DistributeResources(diceRoll);
     }
 
     public void DiceRollNetwork(int diceRoll)
