@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class loadgameSpin : MonoBehaviour {
 
-	AsyncOperation async;
+	public AsyncOperation async;
 	public Canvas loadingCanvas;
 	public Canvas main;
 	public Image spinner;
@@ -41,22 +41,7 @@ public class loadgameSpin : MonoBehaviour {
 	IEnumerator loadWithSpin()
 	{
 		characterSelect.startGame();
-		yield return new WaitForSeconds (1);
+		yield return new WaitForSeconds (2);
 		async = SceneManager.LoadSceneAsync ("In Game Scene");
-		
-		yield return null;
-	}
-	
-	public IEnumerator networkLoad()
-	{
-		characterSelect.startGame();
-		yield return new WaitForSeconds (1);
-		async = SceneManager.LoadSceneAsync ("In Game Scene");
-		async.allowSceneActivation = false;
-
-		while (!async.isDone && !async.allowSceneActivation)
-		{
-			yield return null;
-		}
 	}
 }

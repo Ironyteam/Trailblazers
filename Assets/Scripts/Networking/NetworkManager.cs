@@ -14,19 +14,20 @@ public class NetworkManager : MonoBehaviour
    int myReliableChannelId;
    int socketId;
    int socketPort = 5010;
-   int serverConnectionID       = 1; // Updates when you connect to a server
+   int serverConnectionID        = 1; // Updates when you connect to a server
    public int hostConnectionID   = -1;
    const string myIP = "127.0.0.1";
-   public string serverIP = "192.168.0.11";
+   public string serverIP = "192.168.0.2";
    public int loadedPlayers = 0;
    public List<Player> lobbyPlayers = new List<Player>();
    public Player myPlayer;
    GameObject newPlayerPNL;
    Player player;
 
-   bool isHostingGame                 = false;
-   public static bool inPlayerLobby   = false;
-   public static bool inGame          = false;
+   bool isHostingGame                   = false;
+   public static bool inPlayerLobby     = false;
+   public static bool inCharacterSelect = false;
+   public static bool inGame            = false;
 
    List<string[]> gameList = new List<string[]>();
    public GameObject gameInfoPanel;
@@ -39,15 +40,19 @@ public class NetworkManager : MonoBehaviour
    public Text messageLog;
    public Text ipField;
 
-   // Buttons for Network Lobby scene
+   // Buttons for scenes
    public Button connectServerBTN;
    public Button hostGameBTN;
+   public Button returnToMenuBTN;
    public Button refreshGameListBTN;
    public Button cancelHostingBTN;
    public Button startGameBTN;
    public Button createGameBTN;
    public Button startGameCharacterSelectBTN;
+   public Button quitToMenu;
+   public Button quitToMenuEnd;
    public characterSelect characterScript;
+   public loadgameSpin    loadGameSpin;
 
    // Game settings input fields
    public Text gameName;
@@ -55,14 +60,15 @@ public class NetworkManager : MonoBehaviour
    public Text gamePassword;
    public Text mapName;
 
-   public string gameNameTemp = "Default";
+   public string gameNameTemp        = "Default";
    public string numberOfPlayersTemp = "0";
-   public string maxPlayersTemp = "0";
-   public string passwordTemp = "Default";
-   public string mapNameTemp = "Default";
+   public string maxPlayersTemp      = "0";
+   public string passwordTemp        = "Default";
+   public string mapNameTemp         = "Default";
 
 #endregion
 
+#region StartFunctions
    // Awake when object first created
    void Awake()
    {
@@ -79,21 +85,51 @@ public class NetworkManager : MonoBehaviour
    {
       int maxConnections = 5;
 
+      // Create Saved Maps directory if one does not exist
+      if (!Directory.Exists(Application.dataPath + "/Config"))
+         Directory.CreateDirectory(Application.dataPath + "/Config");
+      // Create ip config file if one does not exist
+      if (!File.Exists(Application.dataPath + "/Config/config.cfg"))
+      {
+         using (StreamWriter temp = File.CreateText(Application.dataPath + "/Config/config.cfg"))
+         {
+            temp.Write(serverIP);
+            temp.Close();
+         }
+      }
+      // Read the server ip address into the variable
+      using (StreamReader reader = File.OpenText(Application.dataPath + "/Config/config.cfg"))
+      {
+         string tempString;
+
+         while ((tempString = reader.ReadLine()) != null)
+         {
+            serverIP = tempString;
+         }
+         reader.Close();
+      }
+
       // Opens a port on local computer that will be used for sending and recieving, done on client and server
       NetworkTransport.Init();
       ConnectionConfig config = new ConnectionConfig();
       myReliableChannelId = config.AddChannel(QosType.Reliable);
       HostTopology topology = new HostTopology(config, maxConnections);
-        socketId = NetworkTransport.AddHost(topology, socketPort);
+      socketId = NetworkTransport.AddHost(topology, socketPort);
 
       // Create an fake game on launch for testing TEST
-      requestGameList("172.16.51.124~FakeGame1~4~5~password~map;172.16.51.127~FakeGame2~4~5~password~map");
+      //requestGameList("172.16.51.124~Refresh Game~4~5~password~List;172.16.51.127~To See2~4~5~password~Network Games");
       myGame = new NetworkGame();
       myPlayer = new Player("Silas");
+      myPlayer.connectionID = 0;
       connectToServer(serverIP);
-      // requestGameListServer();
+      StartCoroutine(startRefreshGameList());
    }
-
+   
+   IEnumerator startRefreshGameList()
+    {
+        yield return new WaitForSeconds(1);
+        requestGameListServer();
+    }
    private void OnEnable()
    {
       SceneManager.sceneLoaded += hookUpLobbyFunctionality;
@@ -104,60 +140,237 @@ public class NetworkManager : MonoBehaviour
       SceneManager.sceneLoaded -= hookUpLobbyFunctionality;
    }
 
+   // Hook up external buttons and objects depending on scene loaded, called every scene change
    private void hookUpLobbyFunctionality(Scene scene, LoadSceneMode mode)
    {
-      if (scene.name == "Network Lobby")
-      {
-         // UI linkups, panels and fields
-         gameInfoPanel = Resources.Load("GameInfoPNL") as GameObject;
-         gameListCanvas = GameObject.Find("ContentPNL");
-         playerInfoPanel = Resources.Load("PlayerInfoPNL") as GameObject;
-         messageLog = GameObject.Find("MessageLogTXT").GetComponent<Text>();
-         ipField = GameObject.Find("ipTXT").GetComponent<Text>();
-         MessagePopup = GameObject.Find("NotificationMessageTXT").GetComponent<Text>();
-         MessagePopup.gameObject.SetActive(false);
+        if (scene.name == "Network Lobby" && NavigationScript.networkGame)
+        {
+            // UI linkups, panels and fields
+            gameInfoPanel = Resources.Load("GameInfoPNL") as GameObject;
+            gameListCanvas = GameObject.Find("ContentPNL");
+            playerInfoPanel = Resources.Load("PlayerInfoPNL") as GameObject;
+            messageLog = GameObject.Find("MessageLogTXT").GetComponent<Text>();
+            ipField = GameObject.Find("ipTXT").GetComponent<Text>();
+            MessagePopup = GameObject.Find("NotificationMessageTXT").GetComponent<Text>();
+            MessagePopup.gameObject.SetActive(false);
 
-         // Buttons linkup
-         connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
-         connectServerBTN.onClick.AddListener(() => connectToServer(serverIP));
-         refreshGameListBTN = GameObject.Find("RefreshBTN").GetComponent<Button>();
-         refreshGameListBTN.onClick.AddListener(() => requestGameListServer());
-         cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
-         cancelHostingBTN.onClick.AddListener(() => cancelGame());
-         createGameBTN = GameObject.Find("CreateGameBTN").GetComponent<Button>();
-         createGameBTN.onClick.AddListener(() => createGame());
-         startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
-         startGameBTN.onClick.AddListener(() => startCharacterSelect());
-         startGameBTN.gameObject.SetActive(false);
-         if (!isHostingGame)
-         {
+            // Buttons linkup
+            connectServerBTN = GameObject.Find("ServerBTN").GetComponent<Button>();
+            connectServerBTN.onClick.AddListener(() => connectToServer(serverIP));
+            refreshGameListBTN = GameObject.Find("RefreshBTN").GetComponent<Button>();
+            refreshGameListBTN.onClick.AddListener(() => requestGameListServer());
+            returnToMenuBTN = GameObject.Find("Main Menu").GetComponent<Button>();
+            returnToMenuBTN.onClick.AddListener(() => userQuitToMenu());
+            cancelHostingBTN = GameObject.Find("CancelHostingBTN").GetComponent<Button>();
+            cancelHostingBTN.onClick.AddListener(() => cancelGame());
+            createGameBTN = GameObject.Find("CreateGameBTN").GetComponent<Button>();
+            createGameBTN.onClick.AddListener(() => createGame());
+            startGameBTN = GameObject.Find("StartGameBTN").GetComponent<Button>();
+            startGameBTN.onClick.AddListener(() => startCharacterSelect());
             startGameBTN.gameObject.SetActive(false);
-         }
-         else
-         {
-            // Destroy the list of network games in the panel
-            clearGamePanel();
-
-            //startGameBTN.gameObject.SetActive(true);
-            createGameBTN.gameObject.SetActive(false);
-            refreshGameListBTN.gameObject.SetActive(false);
+            ipField.gameObject.SetActive(false);
+            ipField.transform.parent.gameObject.SetActive(false);
             connectServerBTN.gameObject.SetActive(false);
-         }
+            if (!isHostingGame)
+            {
+                startGameBTN.gameObject.SetActive(false);
+                cancelHostingBTN.gameObject.SetActive(false);
+            }
+            else
+            {
+                // Destroy the list of network games in the panel
+                clearGamePanel();
 
-         GameObject.Find("Network Handler").GetComponent<NetworkManager>();
-      }
-      else if (scene.name == "In Game Scene")
+                //startGameBTN.gameObject.SetActive(true);
+                createGameBTN.gameObject.SetActive(false);
+                refreshGameListBTN.gameObject.SetActive(false);
+                connectServerBTN.gameObject.SetActive(false);
+            }
+        }
+        else if (scene.name == "Character Select" && NavigationScript.networkGame)
+        {
+            startGameCharacterSelectBTN = GameObject.Find("Start Game").GetComponent<Button>();
+            startGameCharacterSelectBTN.onClick.AddListener(() => characterSelectStartGame());
+            characterScript = GameObject.Find("Main Camera").GetComponent<characterSelect>();
+            loadGameSpin = GameObject.Find("loadingScript").GetComponent<loadgameSpin>();
+            if (!isHostingGame)
+                startGameCharacterSelectBTN.enabled = false;
+        }
+        else if (scene.name == "In Game Scene" && NavigationScript.networkGame)
+        {
+            quitToMenu = GameObject.Find("Quit to Menu").GetComponent<Button>();
+            quitToMenu.onClick.AddListener(() => userQuitToMenu());
+            quitToMenuEnd = GameObject.Find("Quit to Menu Scoreboard").GetComponent<Button>();
+            quitToMenuEnd.onClick.AddListener(() => userQuitToMenu());
+            mapObject = GameObject.Find("Map").GetComponent<GameBoard>();
+            mapObject.LocalGame.isNetwork = true;
+        }
+        else if (scene.name == "Menu" && NavigationScript.networkGame)
+        {
+           isHostingGame = false;
+           endNetworkGame(myPlayer);
+        }
+   }
+#endregion
+
+   // Called every frame, checks for incoming network messages
+   void Update()
+   {
+      int recHostId;
+      int recConnectionId;
+      int recChannelId;
+      byte[] recBuffer = new byte[1024];
+      int bufferSize = 1024;
+      int dataSize;
+      byte error;
+      NetworkEventType recNetworkEvent = NetworkTransport.Receive(out recHostId, out recConnectionId, out recChannelId, recBuffer, bufferSize, out dataSize, out error);
+
+      switch (recNetworkEvent)
       {
-         mapObject = GameObject.Find("Map").GetComponent<GameBoard>();
-         mapObject.LocalGame.isNetwork = true;
+         case NetworkEventType.Nothing:
+            break;
+         case NetworkEventType.ConnectEvent:
+            Debug.Log("\n" + "Incoming connection: ");
+            Debug.Log("recHostId = " + recHostId + "recConnectionId = " + recConnectionId);
+            break;
+         case NetworkEventType.DataEvent:
+            Stream stream = new MemoryStream(recBuffer);
+            BinaryFormatter formatter = new BinaryFormatter();
+            string message = formatter.Deserialize(stream) as string;
+            Debug.Log("\nIncoming Data: " + message);
+            processNetworkMessage(message, recConnectionId);
+            break;
+         case NetworkEventType.DisconnectEvent:
+            Debug.Log("\n" + "Remote client disconnected");
+            player = lobbyPlayers.Find(item => item.connectionID == recConnectionId);
+            if (player != null && isHostingGame && inGame && !inCharacterSelect) // Player left during game
+            {
+               Debug.Log("Player disconnected this should be host");
+               playerDisconnected(player);
+            }
+            else if (lobbyPlayers.Count > 0 && recConnectionId == hostConnectionID && inGame) // Host disconnected close game and reset
+            {
+               Debug.Log("Host disconnected");
+               hostDisconnected();
+               lobbyPlayers.Clear();
+            }
+            else if (recConnectionId == serverConnectionID) // Server disconnected keep trying to reconnect will be a reconnect attempt every 4-8 seconds
+            {
+               Debug.Log("Server disconnected");
+               // Server disconnected
+               connectToServer(serverIP);
+            }
+            else if (inCharacterSelect && isHostingGame) // Player left during character select cancel game
+            {
+               Debug.Log("Player left during character select");
+               endNetworkGame(player);
+            }
+            else if (inPlayerLobby && isHostingGame) // Player in the lobby left
+            {
+               Debug.Log("Player left the lobby");
+               lobbyPlayers.Remove(player);
+               lobbyPlayerChange(lobbyPlayers.Count);
+               sendActionToClients(Constants.playerAdded + Constants.commandDivider + lobbyPlayers.Count, -1);
+               NetworkTransport.Disconnect(recHostId, recConnectionId, out error);
+            }
+            else if (inPlayerLobby)
+            {
+               Debug.Log("Join Game Full");
+               joinGameFull();
+            }
+            else
+            {
+               Debug.Log("Player disconnected randomly: inCharacterSelect = " + inCharacterSelect + " inGame = " + inGame + " inPlayerLobby = " + inPlayerLobby);
+            }
+            break;
       }
-      else if (scene.name == "Character Select")
+   }
+
+   public void processNetworkMessage(string networkMessage, int recConnectionID)
+   {
+      string[] gameInfo = networkMessage.Split(Convert.ToChar(Constants.commandDivider));
+
+      switch (gameInfo[0])
       {
-         startGameCharacterSelectBTN = GameObject.Find("Start Game").GetComponent<Button>();
-         startGameCharacterSelectBTN.onClick.AddListener(() => characterSelectStartGame());
-         characterScript = GameObject.Find("Main Camera").GetComponent<characterSelect>();
-         if (!isHostingGame)
-            startGameCharacterSelectBTN.enabled = false;
+         case Constants.addPlayer:         // #, ipAddress, password
+            // Player requesting to join game
+            addPlayer(gameInfo[1], recConnectionID);
+            break;
+         case Constants.lobbyFull:
+            joinGameFull();
+            break;
+         case Constants.playerDisconnect:
+            clientPlayerDisconnected(Int32.Parse(gameInfo[1]));
+            break;
+         case Constants.playerAdded:
+            lobbyPlayerChange(Int32.Parse(gameInfo[1]));
+            break;
+         case Constants.requestGameList:   // #, game, game, game, game...
+            requestGameList(gameInfo[1]);
+            break;
+         case Constants.cancelGame:        // #
+            removeGame(gameInfo[1]);
+            break;
+         case Constants.sendMap:
+            getMapFromNetwork(gameInfo[1]);
+            break;
+         case Constants.sendGameInfo:
+            setupGameInfoFromHost(gameInfo[1]);
+            break;
+         case Constants.goToCharacterSelect:       // #, ipAddress
+            inGame = true;
+            inPlayerLobby = false;
+            inCharacterSelect = true;
+            BoardManager.template = myGame.gameMap;
+            SceneManager.LoadScene("Character Select");
+            break;
+         case Constants.characterResult:   // #, characterResult
+            break;
+         case Constants.gameStarted:
+            startInGameLoad();
+            break;
+         case Constants.inGameSceneLoaded:
+            clientInGameLoaded();
+            break;
+         case Constants.enterInGameScene:
+            loadGameSpin.async.allowSceneActivation = true;
+            break;
+         case Constants.gameEnded:         // #, ipAddress
+            // Game ended
+            endNetworkGame(myPlayer); // Client is calling this so the player doesn't matter
+            break;
+         case Constants.playerNumber:
+            setupPlayersOnClient(Int32.Parse(gameInfo[1]));
+            break;
+         case Constants.networkError:      // #, info
+            networkError(gameInfo[1]);
+            break;
+         case Constants.diceRoll:          // #, number1, number2
+                                           // Fall through
+         case Constants.characterSelect:   // #, character, player index
+                                           // Fall through
+         case Constants.buildSettlement:
+         // Fall through
+         case Constants.upgradeToCity:
+         // Fall through
+         case Constants.buildRoad:
+         // Fall through
+         case Constants.buildArmy:
+         // Fall through
+         case Constants.attackCity:
+         // Fall through
+         case Constants.moveRobber:
+         // Fall through
+         case Constants.endTurn:
+         // Fall through
+         case Constants.startTurn:
+         // Fall through
+         case Constants.sendChat:
+            gameCommandProcessing(gameInfo[0], gameInfo[1], recConnectionID);
+            break;
+         default:
+            networkError(gameInfo[1]);
+            break;
       }
    }
 
@@ -165,9 +378,12 @@ public class NetworkManager : MonoBehaviour
    public void connectToServer(string ip)
    {
       byte error;
+      if (ipField.text != "" && ipField.text != null)
+         serverIP = ipField.text;
       serverConnectionID = NetworkTransport.Connect(socketId, serverIP, socketPort, 0, out error);
       connectServerBTN.gameObject.SetActive(false);
       ipField.transform.parent.gameObject.SetActive(false);
+      ipField.gameObject.SetActive(false);
       Debug.Log("\n Connecting to server: " + serverIP + "  Server ConnectionID: " + serverConnectionID);
    }
 
@@ -196,11 +412,15 @@ public class NetworkManager : MonoBehaviour
    }
 
    // Set the values recieved from BoardManager and send the server the game
-   public void setupGameSettings(int totalPlayers, int turnTimer, int victoryPoints, string gameName, string mapName, HexTemplate map)
+   public void setupGameSettings(int totalPlayers, int turnTimer, int victoryPoints, bool charAbilitiesOn, string gameName, string mapName, HexTemplate map)
    {
       myGame.maxPlayers = totalPlayers.ToString();
       myGame.turnTimer  = turnTimer.ToString();
       myGame.numberOfVictoryPoints = victoryPoints.ToString();
+        if (charAbilitiesOn)
+            myGame.abilitiesOn = "1";
+        else
+            myGame.abilitiesOn = "0";
       myGame.gameName   = gameName;
       myGame.mapName    = mapName;
       myGame.gameMap    = map;
@@ -218,7 +438,9 @@ public class NetworkManager : MonoBehaviour
    {
       if (isHostingGame)
       {
+         inPlayerLobby = true;
          string gameInfo;
+         loadedPlayers = 0;
          myPlayer.connectionID = 0;
          myPlayer.playerIndex  = 0;
          lobbyPlayers.Add(myPlayer);
@@ -229,9 +451,14 @@ public class NetworkManager : MonoBehaviour
       }
    }
 
-   // Host goes to character select and tell the clients to go there
+   // Host goes to character select and tell the clients to go there, also tells the server game has started
    public void startCharacterSelect()
    {
+      // Tell server the game has started
+      sendSocketMessage(Constants.gameStarted + Constants.commandDivider + Network.player.ipAddress, serverConnectionID);
+
+      inCharacterSelect = true;
+      inPlayerLobby = false;
       inGame = true; // At this point the game is started and if a player leaves his spot will stay empty
       BoardManager.template          = myGame.gameMap;
       BoardManager.numOfPlayers      = Int32.Parse(myGame.maxPlayers);
@@ -241,18 +468,48 @@ public class NetworkManager : MonoBehaviour
       SceneManager.LoadScene("Character Select");
    }
 
+   // User quit to menu from 
+
+
+   // User quit to menu from in game
+   public void userQuitToMenu()
+   {
+      byte error;
+
+      Debug.Log("userQuitToMenu: called");
+      if (isHostingGame)
+      {
+         Debug.Log("userQuitToMenu: host quit");
+         endNetworkGame(myPlayer);
+      }
+      else
+      {
+         Debug.Log("userQuitToMenu: player quit");
+         NetworkTransport.Disconnect(myPlayer.connectionID, hostConnectionID, out error);
+      }
+      lobbyPlayers.Clear();
+      inGame = false;
+   }
+
    // End the game and disconnect all connections other than the server
    public void endGameNetwork()
    {
-      inGame = false; // The game is over so diconnects will not do in game behavior
+      byte error;
+      inGame = false; // The game is over
       // Close all connections other than serverConnectionID
+      for (int i = 1; i < lobbyPlayers.Count; i++)
+      {
+         NetworkTransport.Disconnect(myPlayer.connectionID, lobbyPlayers[i].connectionID, out error);
+      }
    }
 
    // Send all players what index they are on the player list
    public void sendPlayerNumbers()
    {
+      lobbyPlayers[0].playerIndex = 0;
       for (int i = 1; i < lobbyPlayers.Count; i++)
       {
+         lobbyPlayers[i].playerIndex = i;
          sendSocketMessage(Constants.playerNumber + Constants.commandDivider + i, lobbyPlayers[i].connectionID);
       }
    }
@@ -264,6 +521,7 @@ public class NetworkManager : MonoBehaviour
       for (int i = 0; i < Int32.Parse(myGame.maxPlayers); i++)
       {
          player = new Player();
+         player.playerIndex = i;
          lobbyPlayers.Add(player);
       }
       myPlayer.playerIndex = myIndex;
@@ -272,12 +530,26 @@ public class NetworkManager : MonoBehaviour
       Debug.Log("BoardManager.locaplayerindex = " + BoardManager.localPlayerIndex);
    }
 
-   // A player joined the lobby
-   public void lobbyPlayerAdded(int numPlayers)
+   // The number of lobby players changes
+   public void lobbyPlayerChange(int numPlayers)
    {
       clearGamePanel();
-      for (int i = 0; i < numPlayers; i++)
-         newPlayerPNL = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
+      for (int i = 1; i <= numPlayers; i++)
+      {
+         GameObject newPlayerPNL = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
+         if (i == 1)
+            newPlayerPNL.GetComponentInChildren<Text>().text = "  Player " + i + " (Host)";
+         else
+            newPlayerPNL.GetComponentInChildren<Text>().text = "  Player " + i;
+      }
+
+      if (isHostingGame)
+      {
+         if (lobbyPlayers.Count == Int32.Parse(myGame.maxPlayers))
+            startGameBTN.gameObject.SetActive(true);
+         else
+            startGameBTN.gameObject.SetActive(false);
+      }
    }
 
    // Clear the game info panel to display new games or new players
@@ -292,17 +564,48 @@ public class NetworkManager : MonoBehaviour
    // The host left the game
    public void hostDisconnected()
    {
-      SceneManager.LoadScene("Network Lobby");
-      showLobbyMessage("Error Host Disconnected\nReturning To Lobby");
-      requestGameListServer();
-      // Tell the user somehow
+      SceneManager.LoadScene("Menu");
+      onLeaveGameClient();
+      inGame = false;
    }
 
    // Tell the clients to go to in game scene
    public void characterSelectStartGame()
    {
       inGame = true;
+      inCharacterSelect = false;
       sendActionToClients(Constants.gameStarted + Constants.commandDivider + Network.player.ipAddress, 0);
+   }
+
+   // Start loading the in game scene
+   public void startInGameLoad()
+   {
+      inCharacterSelect = false;
+      Debug.Log("startInGameLoad: load started");
+      Debug.Log("Load script name " + loadGameSpin.name);
+      int count = 0;
+      loadGameSpin.loadBoard();
+   }
+
+   // A player told host he finished loading the in game scene
+   public void clientInGameLoaded()
+   {
+      loadedPlayers += 1;
+      Debug.Log("clientInGameLoaded: Player In Game load finished");
+      if (loadedPlayers >= lobbyPlayers.Count)
+      {
+         // Tell the clients to enter game
+         string message = Constants.enterInGameScene + Constants.commandDivider + Network.player.ipAddress;
+         sendActionToClients(message, -1);
+         enterInGameScene();
+      }
+   }
+
+   // Start the game by entering the in game scene
+   public void enterInGameScene()
+   {
+      // Set the async.allowSceneActivation to enter in game scene
+      loadGameSpin.async.allowSceneActivation = true;
    }
 
    // Send a socket message to connectionId
@@ -316,135 +619,8 @@ public class NetworkManager : MonoBehaviour
       formatter.Serialize(stream, message);
 
       int bufferSize = 1024;
-      Debug.Log("\nSending to ID " + connectionNum + " : " + message);
+      Debug.Log("\nSending message to ID " + connectionNum + " : " + message);
       NetworkTransport.Send(socketId, connectionNum, myReliableChannelId, buffer, bufferSize, out error);
-   }
-
-   // Called every frame
-   void Update()
-   {
-      int recHostId;
-      int recConnectionId;
-      int recChannelId;
-      byte[] recBuffer = new byte[1024];
-      int bufferSize = 1024;
-      int dataSize;
-      byte error;
-      NetworkEventType recNetworkEvent = NetworkTransport.Receive(out recHostId, out recConnectionId, out recChannelId, recBuffer, bufferSize, out dataSize, out error);
-
-
-      switch (recNetworkEvent)
-      {
-         case NetworkEventType.Nothing:
-            break;
-         case NetworkEventType.ConnectEvent:
-            Debug.Log("\n" + "Incoming connection event received");
-            break;
-         case NetworkEventType.DataEvent:
-            Stream stream = new MemoryStream(recBuffer);
-            BinaryFormatter formatter = new BinaryFormatter();
-            string message = formatter.Deserialize(stream) as string;
-            Debug.Log("\nMessage Recieved: " + message);
-            processNetworkMessage(message, recConnectionId);
-            break;
-         case NetworkEventType.DisconnectEvent:
-            Debug.Log("\n" + "Remote client disconnected");
-            player = lobbyPlayers.Find(item => item.connectionID == recConnectionId);
-            if (player != null && isHostingGame)
-            {
-               playerDisconnected(player);
-            }
-            else if (lobbyPlayers.Count > 0 && recConnectionId == hostConnectionID)
-            {
-               hostDisconnected();
-            }
-            else if (recConnectionId == serverConnectionID)
-            {
-               Debug.Log("Server disconnected");
-               // Server disconnected
-               connectToServer(serverIP);
-            }
-            else if (inPlayerLobby)
-               joinGameFull();
-            break;
-      }
-   }
-
-   public void processNetworkMessage(string networkMessage, int recConnectionID)
-   {
-      string[] gameInfo = networkMessage.Split(Convert.ToChar(Constants.commandDivider));
-
-      switch (gameInfo[0])
-      {
-         case Constants.addPlayer:         // #, ipAddress, password
-            // Player requesting to join game
-            addPlayer(gameInfo[1], recConnectionID);
-            break;
-         case Constants.lobbyFull:
-            joinGameFull();
-            break;
-         case Constants.playerDisconnect:
-
-            break;
-         case Constants.playerAdded:
-            lobbyPlayerAdded(Int32.Parse(gameInfo[1]));
-            break;
-         case Constants.requestGameList:   // #, game, game, game, game...
-            requestGameList(gameInfo[1]);
-            break;
-         case Constants.cancelGame:        // #
-            removeGame(gameInfo[1]);
-            break;
-         case Constants.sendMap:
-            getMapFromNetwork(gameInfo[1]);
-            break;
-         case Constants.sendGameInfo:
-            setupGameInfoFromHost(gameInfo[1]);
-            break;
-         case Constants.goToCharacterSelect:       // #, ipAddress
-            BoardManager.template = myGame.gameMap;
-            SceneManager.LoadScene("Character Select");
-            break;
-         case Constants.characterResult:   // #, characterResult
-            break;
-         case Constants.gameStarted:
-            SceneManager.LoadScene("In Game Scene");
-            break;
-         case Constants.gameEnded:         // #, ipAddress
-            break;
-         case Constants.playerNumber:
-            setupPlayersOnClient(Int32.Parse(gameInfo[1]));
-            break;
-         case Constants.networkError:      // #, info
-            networkError(gameInfo[1]);
-            break;
-         case Constants.diceRoll:          // #, number1, number2
-            // Fall through
-         case Constants.characterSelect:   // #, character, player index
-            // Fall through
-         case Constants.buildSettlement:
-            // Fall through
-         case Constants.upgradeToCity:
-            // Fall through
-         case Constants.buildRoad:
-            // Fall through
-         case Constants.buildArmy:
-            // Fall through
-         case Constants.attackCity:
-            // Fall through
-         case Constants.moveRobber:
-            // Fall through
-         case Constants.endTurn:
-            // Fall through
-         case Constants.startTurn:
-            // Fall through
-         case Constants.sendChat:
-            gameCommandProcessing(gameInfo[0], gameInfo[1], recConnectionID);
-            break;
-         default:
-            networkError(gameInfo[1]);
-            break;
-      }
    }
 
    // Show a message to the player for a brief time
@@ -452,7 +628,7 @@ public class NetworkManager : MonoBehaviour
    {
       MessagePopup.text = message;
       MessagePopup.gameObject.SetActive(true);
-      yield return new WaitForSecondsRealtime(1);
+      yield return new WaitForSecondsRealtime(2f);
       MessagePopup.gameObject.SetActive(false);
    }
 
@@ -464,10 +640,24 @@ public class NetworkManager : MonoBehaviour
       sendSocketMessage(message, hostId);
    }
 
+   // Client disconnected during game set them as inactive so thier turn us skipped
+   public void clientPlayerDisconnected(int playerIndex)
+   {
+      Debug.Log("clientPlayerDisconnected: setting player inactive");
+      mapObject.LocalGame.PlayerList[playerIndex].isConnected = false;
+   }
+
    // Player disconnected from the game
    public void playerDisconnected(Player player)
    {
-      sendActionToClients(Constants.playerDisconnect + Constants.commandDivider + player.playerIndex, player.connectionID);  
+      sendActionToClients(Constants.playerDisconnect + Constants.commandDivider + player.playerIndex, player.connectionID);
+      mapObject.LocalGame.PlayerList[player.playerIndex].isConnected = false;
+      Debug.Log("playerDisconnected: player.playerIndex = " + player.playerIndex + " mapObject.CurrentPlayer = " + mapObject.CurrentPlayer);
+      if (player.playerIndex == mapObject.CurrentPlayer)
+      {
+         sendEndTurn(myPlayer.connectionID);
+         mapObject.NextPlayer();
+      }
    }
 
    // Joined game, disable buttons
@@ -478,6 +668,16 @@ public class NetworkManager : MonoBehaviour
       createGameBTN.gameObject.SetActive(false);
       refreshGameListBTN.gameObject.SetActive(false);
       cancelHostingBTN.gameObject.SetActive(false);
+   }
+
+   // Left game, disable buttons
+   public void onLeaveGameClient()
+   {
+      inPlayerLobby = false;
+         
+      //createGameBTN.gameObject.SetActive(true);
+      //refreshGameListBTN.gameObject.SetActive(true);
+      //cancelHostingBTN.gameObject.SetActive(true);
    }
 
    // The lobby requested to join is full go back to the in game lobby and request the game list
@@ -501,8 +701,9 @@ public class NetworkManager : MonoBehaviour
 
 
       // Tell connecting player he failed to to join lobby, either it is full or we are not hosting
-      if (!isHostingGame || lobbyPlayers.Count >= Int32.Parse(myGame.maxPlayers))
+      if (!isHostingGame || lobbyPlayers.Count >= Int32.Parse(myGame.maxPlayers) || inGame || inCharacterSelect)
       {
+         Debug.Log("addPlayer: Lobby Join Failed - isHostingGame = " + isHostingGame + " lobbyPlayers.Count = " + lobbyPlayers.Count + " inGame = " + inGame + " inCharacterSelect = " + inCharacterSelect);
          sendlobbyFull(connectionID);
          return;
       }
@@ -523,17 +724,14 @@ public class NetworkManager : MonoBehaviour
          };
 
          lobbyPlayers.Add(newplayer);
+
          if (lobbyPlayers.Count == Int32.Parse(myGame.maxPlayers))
          {
             startGameBTN.gameObject.SetActive(true);
          }
 
          // Create UI GameObject to list player
-         GameObject newPlayer = Instantiate(playerInfoPanel, gameListCanvas.transform, false);
-         Text[] playerTexts = newPlayer.GetComponentsInChildren<Text>();
-         playerTexts[0].text = myGame.numberOfPlayers;
-         playerTexts[1].text = playerInfo[1];
-         playerTexts[3].text = playerInfo[0];
+         lobbyPlayerChange(lobbyPlayers.Count);
 
          // Send the player join event to all the players
          sendActionToClients(Constants.playerAdded + Constants.commandDivider + lobbyPlayers.Count, -1);
@@ -569,7 +767,6 @@ public class NetworkManager : MonoBehaviour
          BoardManager.characterAbilitiesOn = true;
       else
          BoardManager.characterAbilitiesOn = false;
-
    }
 
    // Send the map over the network as a string
@@ -635,7 +832,9 @@ public class NetworkManager : MonoBehaviour
    // Ask server to send list of games
    public void requestGameListServer()
    {
-      StartCoroutine(showLobbyMessage("Failed to join game\nGame Full"));
+      StartCoroutine(showLobbyMessage("Refreshing Game List\nFrom Server"));
+      foreach (NetworkPlayer playerConnection in Network.connections)
+         Debug.Log("requestGameListServer: Open connections" + playerConnection.ipAddress);
       sendSocketMessage(Constants.requestGameList + Constants.commandDivider + myIP, serverConnectionID);
    }
 
@@ -650,7 +849,7 @@ public class NetworkManager : MonoBehaviour
          string[] tempGame = game.Split(Convert.ToChar(Constants.gameDivider));
          gameList.Add(tempGame);
       }
-      refreshGameList();
+      StartCoroutine(refreshGameList());
    }
 
    // Stop game from hosting if server sends a kill command
@@ -660,28 +859,37 @@ public class NetworkManager : MonoBehaviour
       {
          isHostingGame = false;
          Debug.Log("\nremoveGame: Your game has been canceled by the server");
+         endNetworkGame(myPlayer);
       }
    }
 
-   public void refreshGameList()
+   IEnumerator refreshGameList()
    {
       foreach (Transform child in gameListCanvas.transform)
       {
          GameObject.Destroy(child.gameObject);
       }
-
-      foreach (string[] game in gameList)
+      if (gameList.Count == 1)
       {
-         GameObject serverGame = Instantiate(gameInfoPanel) as GameObject;
-         serverGame.transform.SetParent(gameListCanvas.transform, false);
-         Text[] nameText = serverGame.GetComponentsInChildren<Text>();
-         nameText[0].text = game[1];
-         nameText[1].text = game[2];
-         nameText[2].text = "\\" + game[3];
-         nameText[3].text = game[4];
-         nameText[4].text = game[5];
-         nameText[6].text = game[0];
+          yield return new WaitForSeconds(1);
+          StartCoroutine(showLobbyMessage("No Network Games Available"));
       }
+      else
+      {
+          foreach (string[] game in gameList)
+          {
+             GameObject serverGame = Instantiate(gameInfoPanel) as GameObject;
+             serverGame.transform.SetParent(gameListCanvas.transform, false);
+             Text[] nameText = serverGame.GetComponentsInChildren<Text>();
+             nameText[0].text = game[1];
+             nameText[1].text = game[2];
+             nameText[2].text = "\\" + game[3];
+             nameText[3].text = game[4];
+             nameText[4].text = game[5];
+             nameText[6].text = game[0];
+          }
+      }
+      yield return null;
    }
 
    // Tell the server that game is canceled
@@ -691,8 +899,44 @@ public class NetworkManager : MonoBehaviour
       {
          isHostingGame = false;
          startGameBTN.gameObject.SetActive(false);
+         if (refreshGameListBTN != null)
+         {
+            refreshGameListBTN.gameObject.SetActive(true);
+            createGameBTN.gameObject.SetActive(true);
+            cancelHostingBTN.gameObject.SetActive(false);
+         }
          sendSocketMessage(Constants.cancelGame + Constants.commandDivider + Network.player.ipAddress, serverConnectionID);
       }
+   }
+
+   // Game ended clean up network connections and go to Menu scene
+   public void endNetworkGame(Player player)
+   {
+      byte error;
+      Debug.Log("endNetworkGame: canceling game");
+      // Some of these should be false but just in case
+      inGame = false;
+      inCharacterSelect = false;
+      inPlayerLobby = false;
+      if (isHostingGame)
+      {
+         isHostingGame = false;
+         sendActionToClients(Constants.gameEnded + Constants.commandDivider + 0, player.connectionID);
+         sendSocketMessage(Constants.cancelGame + Constants.commandDivider + Network.player.ipAddress, serverConnectionID);
+         for (int i = 1; i < lobbyPlayers.Count; i++)
+         {
+            NetworkTransport.Disconnect(myPlayer.connectionID, lobbyPlayers[i].connectionID, out error);
+         }
+         SceneManager.LoadScene("Menu");
+         lobbyPlayers.Clear();
+      }
+      else
+      {
+         SceneManager.LoadScene("Menu");
+         NetworkTransport.Disconnect(myPlayer.connectionID, hostConnectionID, out error);
+      }
+      lobbyPlayers.Clear();
+      myGame = new NetworkGame();
    }
 
    // Tell the server the game has started
@@ -726,6 +970,7 @@ public class NetworkManager : MonoBehaviour
       characterScript.playerChoiceImages[index].sprite = Resources.Load<Sprite>(Characters.Names[character]) as Sprite;
       characterScript.currentPicker += 1;
       characterSelect.selectedCharacters[index] = character;
+      Characters.PlayerChosen[character] = true;
    }
 
    // Get the result of a dice roll
@@ -771,9 +1016,9 @@ public class NetworkManager : MonoBehaviour
 
    // Send the two numbers that make up the dice roll
    // Number1, Number2
-   public void sendDiceRoll(int diceRoll, int targetID)
+   public void sendDiceRoll(int diceNumber, int targetID)
    {
-      string message = Constants.diceRoll + Constants.commandDivider + diceRoll;
+      string message = Constants.diceRoll + Constants.commandDivider + diceNumber;
       if (!isHostingGame)
          sendSocketMessage(message, targetID);
       else
@@ -892,7 +1137,7 @@ public class NetworkManager : MonoBehaviour
             break;
          case Constants.diceRoll:
             // Number 1, Number2
-            mapObject.DiceRollNetwork(Int32.Parse(gameInfo[0]));
+            mapObject.ReceiveDiceRoll(Int32.Parse(gameInfo[0]));
             break;
          case Constants.buildSettlement:
             // X = gameInfo[0], Y = gameInfo[1]

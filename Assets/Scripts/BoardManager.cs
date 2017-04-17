@@ -1850,7 +1850,7 @@ public class BoardManager : MonoBehaviour
       if (NavigationScript.networkGame)
       {
          NetworkManager networkObject = GameObject.Find("Network Handler").GetComponent<NetworkManager>(); // SILAS
-         networkObject.setupGameSettings(numOfPlayers, turnTimerMax, victoryPoints, gameLobbyNameNetwork.text, maps[board_index].mapName, template); // SILAS
+         networkObject.setupGameSettings(numOfPlayers, turnTimerMax, victoryPoints, characterAbilitiesOn, gameLobbyNameNetwork.text, maps[board_index].mapName, template); // SILAS
          UnityEngine.SceneManagement.SceneManager.LoadScene("Network Lobby");
       }
       else
