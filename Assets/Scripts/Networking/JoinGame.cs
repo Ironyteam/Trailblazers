@@ -18,7 +18,7 @@ public class JoinGame : MonoBehaviour
         
    IEnumerator joinGame()
    {
-      Debug.Log("joinGame: in the function, NetworkManager.inPlayerLobby = " + NetworkManager.inPlayerLobby);
+      Debug.Log("joinGame: function called - NetworkManager.inPlayerLobby = " + NetworkManager.inPlayerLobby);
       if (NetworkManager.inPlayerLobby == false)
       {
          Text[] gameTextBoxes = joinBTN.transform.parent.transform.GetComponentsInChildren<Text>();
@@ -26,6 +26,7 @@ public class JoinGame : MonoBehaviour
          networkThing.myGame.mapName = gameTextBoxes[4].text;
          NetworkManager.inPlayerLobby = true;
          int hostId = networkThing.connectToHost(gameTextBoxes[6].text);
+         Debug.Log("joinGame: Trying to join game at" + gameTextBoxes[6].text);
          networkThing.onJoinGameClient();
          yield return new WaitForSecondsRealtime(1);
          networkThing.requestGameJoin(hostId);

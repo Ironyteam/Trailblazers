@@ -121,9 +121,6 @@ public class GuiManager : MonoBehaviour {
             scoreboardElementsArray[count].ScoreboardCanvas = GameObject.Find("player" + (count + 1) + "CanvasScoreboard").GetComponent<Canvas>();
         }
 
-      // Set the current player highlighted
-      if (NavigationScript.networkGame)
-         screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
       Debug.Log("Start: " + playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition);
 
       chatDropdown = GameObject.Find("chatInputDropdown").GetComponent<Dropdown>(); //**********************
@@ -161,8 +158,9 @@ public class GuiManager : MonoBehaviour {
 
         if(NavigationScript.networkGame == true)
         {
-          Debug.Log("Start: putting local player first");
+          Debug.Log("Start: putting local player first and highlighting current player");
           putLocalPlayerFirst(CurrentGameBoard.LocalPlayer);
+          screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
         }
    }
 

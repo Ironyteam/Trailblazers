@@ -168,6 +168,7 @@ public class characterSelect : MonoBehaviour
 
    public void selectCharacter()
    {
+      Debug.Log("Character Chosen = " + Characters.PlayerChosen[selectedCharacter]);
       if (currentPicker < BoardManager.numOfPlayers && Characters.PlayerChosen[selectedCharacter] != true)
       {
          playerChoiceImages[currentPicker].sprite = Resources.Load<Sprite>(Characters.Names[selectedCharacter]) as Sprite;
