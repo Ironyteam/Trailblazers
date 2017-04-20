@@ -20,6 +20,8 @@ public class characterSelect : MonoBehaviour
    public Button SelectCharacterBTN;
    public NetworkManager NetworkObject;
    public Text characterAbilitiesText;
+	public GameObject characterSelectPopupPanel;
+	public Text	characterSelectPopupText;
    // public bool timerCoroutineStarted = false;
     //public float timeLeft;
    // public Text timerTextObject;
@@ -41,6 +43,11 @@ public class characterSelect : MonoBehaviour
         //timerTextObject = GameObject.Find("turnTimerTextCharacterSelect").GetComponent<Text>();
         // Sets the number of characters chosen from BoardManager.
         selectedCharacters = new int[BoardManager.numOfPlayers];
+
+		characterSelectPopupPanel = GameObject.Find("chatacterSelectPopupPanel");
+		characterSelectPopupText = GameObject.Find("characterSelectPopupText").GetComponent<Text>();
+		characterSelectPopupPanel.gameObject.SetActive(false);
+		characterSelectPopupText.enabled = false;
 
       // Setup the gameobjects if in a network game
       SelectCharacterBTN = GameObject.Find("Select Character").GetComponent<Button>();
@@ -207,6 +214,8 @@ public class characterSelect : MonoBehaviour
          if(currentPicker >= BoardManager.numOfPlayers)
             SelectCharacterBTN.interactable = false;
       }
+	  else
+	     callSelectedAlreadyPopup();
       /*
         if (timerCoroutineStarted)
         {
@@ -225,6 +234,23 @@ public class characterSelect : MonoBehaviour
       Characters.ResetPlayers();
       Application.Quit();
    }
+
+
+	public IEnumerator showCharacterSelectedAlready()
+	{
+		characterSelectPopupText.text = "This character has already been selected. Please select a different character";
+		characterSelectPopupText.enabled = true;
+		characterSelectPopupPanel.gameObject.SetActive(true);
+		yield return new WaitForSeconds(Constants.popupWaitTime);
+		characterSelectPopupPanel.gameObject.SetActive(false);
+		characterSelectPopupText.enabled = false;
+	}
+
+	public void callSelectedAlreadyPopup()
+	{
+		StartCoroutine(showCharacterSelectedAlready());
+	}
+
     /*
     IEnumerator turnTimer() //********
     {

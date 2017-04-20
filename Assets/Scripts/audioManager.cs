@@ -435,10 +435,12 @@ public class audioManager : MonoBehaviour
     {
         timerAudio.clip = bellSound;
         timerAudio.Play();
+		StartCoroutine(stopTimerSound());
     }
 
-    public void stopTimerSound()
+    public IEnumerator stopTimerSound()
     {
+		yield return new WaitForSeconds(timerAudio.clip.length);
         timerAudio.Stop();
     }
 }

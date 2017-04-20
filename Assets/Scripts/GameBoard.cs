@@ -82,9 +82,9 @@ public class GameBoard : MonoBehaviour
 		MKGlowObject = GameObject.Find("Main Camera").GetComponent<MKGlow>();
 		GUIManager = GameObject.Find("Main Camera").GetComponent<GuiManager>();
 		AudioManager = GameObject.Find("MUSIC").GetComponent<audioManager>();
-        MKGlowObject.BlurSpread = .125f;
-		MKGlowObject.BlurIterations = 3;
-		MKGlowObject.Samples = 4;
+        MKGlowObject.BlurSpread = .296f;
+		MKGlowObject.BlurIterations = 4;
+		MKGlowObject.Samples = 2;
         GUIManager.DisableGameCanvas();
 
 		LocalGame = new Game();
@@ -394,22 +394,22 @@ public class GameBoard : MonoBehaviour
                 glowCounter = 0;
                 if (goingUp)
                 {
-                    if (MKGlowObject.GlowIntensity < .500f)
-                        MKGlowObject.GlowIntensity += .002f;
+                    if (MKGlowObject.GlowIntensity < .700f)
+                        MKGlowObject.GlowIntensity += .005f;
                     else
                     {
                         goingUp = false;
-                        MKGlowObject.GlowIntensity -= .002f;
+                        MKGlowObject.GlowIntensity -= .005f;
                     }
                 }
                 else
                 {
-                    if (MKGlowObject.GlowIntensity > .400f)
-                        MKGlowObject.GlowIntensity -= .002f;
+                    if (MKGlowObject.GlowIntensity > .500f)
+                        MKGlowObject.GlowIntensity -= .005f;
                     else
                     {
                         goingUp = true;
-                        MKGlowObject.GlowIntensity += .002f;
+                        MKGlowObject.GlowIntensity += .005f;
                     }
                 }
             }
@@ -1121,8 +1121,8 @@ public class GameBoard : MonoBehaviour
 	public void ShowAvailableSettlementsInitial()
 	{
 		bool isAvailable;
-		
-		tutorial.showPlaceInitialSettlementMessage();
+
+        tutorial.showPlaceInitialSettlementMessage();
 		
 		foreach (Structure currentStructure in Structures)
 		{
@@ -2009,7 +2009,6 @@ public class GameBoard : MonoBehaviour
         GUIManager.closeBarracks();
         GUIManager.closeShop();
     }
-
 
     public void NextPlayer(bool fromTimer = false)
 	{

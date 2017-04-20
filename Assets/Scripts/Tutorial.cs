@@ -23,17 +23,17 @@ public class Tutorial : MonoBehaviour
     private readonly Vector3 ADD_PORT_LOC            = new Vector3(-180f, 250f, 0f);
 
     // Constants for different In Game tutorial steps box LOCations
-    private readonly Vector3 BUILD_ROAD_LOC        = new Vector3(125, -129, 0);
-	private readonly Vector3 BUILD_SETTLEMENT_LOC  = new Vector3(0, -129, 0);
-	private readonly Vector3 EXPLAIN_VP_LOC        = new Vector3(0, 150, 0);
+    private readonly Vector3 BUILD_ROAD_LOC        = new Vector3(35, -150, 0);
+	private readonly Vector3 BUILD_SETTLEMENT_LOC  = new Vector3(-75, -145, 0);
+	private readonly Vector3 EXPLAIN_VP_LOC        = new Vector3(0, 110, 0);
     private readonly Vector3 EXPLAIN_RESOURCES_LOC = new Vector3(320, 150, 0);
 	private readonly Vector3 EXPLAIN_GOLD_LOC      = new Vector3(340, -20, 0);
-	private readonly Vector3 UPGRADE_TO_CITY_LOC   = new Vector3(-176, -133, 0);
-	private readonly Vector3 EXPLAIN_BARRACKS_LOC  = new Vector3(0, -133, 0);
-	private readonly Vector3 EXPLAIN_ATTACK_LOC    = new Vector3(-150, -133, 0);
+	private readonly Vector3 UPGRADE_TO_CITY_LOC   = new Vector3(-250, -135, 0);
+	private readonly Vector3 EXPLAIN_BARRACKS_LOC  = new Vector3(-100, -145, 0);
+	private readonly Vector3 EXPLAIN_ATTACK_LOC    = new Vector3(-250, -140, 0);
 
     // Constant messages for Map Editor tutorial
-    public const string SELECT_RESOURCE_MESSAGE     = "Select a resource a click on a hexagon to add it to the map.";
+    public const string SELECT_RESOURCE_MESSAGE     = "Select a resource and click on a hexagon to add it to the map.";
     public const string SELECT_DICE_NUM_MESSAGE     = "Select a dice number and click on the hexagon to add it.";
     public const string ADD_PORT_CLICKED_MESSAGE    = "Click here to add a port to the map.";
     public const string CHOOSE_HEX_FOR_PORT_MESSAGE = "Click a hexagon to add a port to.";
@@ -42,15 +42,22 @@ public class Tutorial : MonoBehaviour
     // Constant messages for In Game tutorial
     public const string PLACE_INITIAL_SETTLEMENT_MESSAGE = "Click a highlighted place on the map to build a settlement.";
     public const string PLACE_INITIAL_ROAD_MESSAGE       = "Click a highlighted place on the map to build a road out from your settlement.";
-    public const string ROLL_DICE_MESSAGE                = "Click the dice to see what resources your settlements have earned";
-    public const string BUILD_ROAD_MESSAGE               = "Click here when you want to build a road";
-	public const string BUILD_SETTLEMENT_MESSAGE         = "Click here when you want to build a settlement.";
-	public const string EXPLAIN_VP_MESSAGE               = "Here you can see your player info. You earn Victory Point (VP) by building settlements and cities. Whoever reaches the maximum VP first wins the game.";
-	public const string EXPLAIN_RESOURCES_MESSAGE        = "A road can only be built when you have the number of resources corresponding with the cost";
-	public const string EXPLAIN_GOLD_MESSAGE             = "You earn Gold for your settlements and cities each turn, and you can use Gold in the Market and the Barracks.";
+    //public const string ROLL_DICE_MESSAGE              = "Click the dice to see what resources your settlements have earned";
+    public readonly string BUILD_ROAD_MESSAGE            = "Click here when you want to build a road.The standard road cost is "
+                                                           + Constants.WoodPerRoad + " Wood, " + Constants.BricksPerRoad + " Brick";
+    public readonly string BUILD_SETTLEMENT_MESSAGE      = "Click here when you want to build a settlement. Settlements cost "
+                                                           + Constants.BricksPerSettlement + " brick, "
+                                                           + Constants.WoodPerSettlement + " wood, "
+                                                           + Constants.WheatPerSettlement + " wheat, "
+                                                           + Constants.WoolPerSettlement + " wool";
+    public const string EXPLAIN_VP_MESSAGE               = "Here you can see your player info. You earn Victory Point (VP) by building settlements and cities. Whoever reaches the maximum VP first wins.";
+	public const string EXPLAIN_RESOURCES_MESSAGE_1      = "Your resources are displayed here. You can mouse over them to see what each one is.";
+    public const string EXPLAIN_RESOURCES_MESSAGE_2      = "You need resources to build additional roads, settlements, and cities.";
+
+    public const string EXPLAIN_GOLD_MESSAGE             = "You earn Gold for your settlements and cities each turn, and you can use Gold in the Market and the Barracks.";
 	public const string UPGRADE_TO_CITY_MESSAGE          = "Click here when you want to upgrade a settlement to a city.";
-	public const string EXPLAIN_BARRACKS_MESSAGE         = "Once you have a city you can go to the Barracks to buy army units to protect your cities from the robber and other player's attcks. After you buy a army unit you must click the city you want to add it to.";
-	public const string EXPLAIN_ATTACK_MESSAGE           = "Once you have a city with army units you can attack other players' cities as long as they are within 2 road spaces of your city. The loser of the battle will have his city downgraded to a settlement.";
+	public const string EXPLAIN_BARRACKS_MESSAGE         = "Once you have a city you can go to the Barracks to buy army units to protect your cities from the robber and other player's attcks.";
+    public const string EXPLAIN_ATTACK_MESSAGE = "Once you have a city with army units you can attack other players' cities as long as they are within 2 road spaces of your city.";
 
     private int  currentTutorialStep = 1;
     public bool dontShowAgain       = false;
@@ -59,6 +66,7 @@ public class Tutorial : MonoBehaviour
     {
         init();
     }
+
     public void init()
     {
         currentTutorialStep = 1;
@@ -144,7 +152,7 @@ public class Tutorial : MonoBehaviour
 
     public void showPlaceInitialSettlementMessage()
     {
-        if (dontShowAgain == false && currentTutorialStep == 1 || currentTutorialStep == 3)
+        if (dontShowAgain == false)
         {
             showMessage(mainHelpText, PLACE_INITIAL_SETTLEMENT_MESSAGE);
             currentTutorialStep += 1;
@@ -155,13 +163,14 @@ public class Tutorial : MonoBehaviour
 
     public void showPlaceInitialRoadMessage()
     {
-        if (dontShowAgain == false && currentTutorialStep == 2 || currentTutorialStep == 4)
+        if (dontShowAgain == false)
         {
             showMessage(mainHelpText, PLACE_INITIAL_ROAD_MESSAGE);
             currentTutorialStep += 1;
         }
         else
             Debug.Log("ShowPlaceInitialRoadMessage called out of turn.");
+        currentTutorialStep = 5;
     }
 
     public void showBuildRoadTutorialBox()
@@ -200,7 +209,7 @@ public class Tutorial : MonoBehaviour
     {
         if (dontShowAgain == false && currentTutorialStep == 8)
         {
-			moveAndShowTutorialBox(rightDownPointTutrorialPanel, rightDownPointTutrorialText, EXPLAIN_RESOURCES_MESSAGE,
+			moveAndShowTutorialBox(rightDownPointTutrorialPanel, rightDownPointTutrorialText, EXPLAIN_RESOURCES_MESSAGE_1,
                                    EXPLAIN_RESOURCES_LOC, leftUpPointTutrorialPanel, leftUpPointTutrorialText);
             currentTutorialStep += 1;
         }
@@ -208,15 +217,22 @@ public class Tutorial : MonoBehaviour
 
 	public void showExplainGoldTutorialBox()
 	{
-		if (dontShowAgain == false && currentTutorialStep == 9)
+        /*if (dontShowAgain == false && currentTutorialStep == 9)
 		{
 			moveAndShowTutorialBox(rightDownPointTutrorialPanel, rightDownPointTutrorialText, EXPLAIN_GOLD_MESSAGE,
 				EXPLAIN_GOLD_LOC);
 			currentTutorialStep += 1;
-		}
-	}
+		}*/
 
-	public void showUpgradeToCityTutorialBox()
+        if (dontShowAgain == false && currentTutorialStep == 9)
+		{
+            moveAndShowTutorialBox(rightDownPointTutrorialPanel, rightDownPointTutrorialText, EXPLAIN_RESOURCES_MESSAGE_2,
+                                   EXPLAIN_RESOURCES_LOC, leftUpPointTutrorialPanel, leftUpPointTutrorialText);
+            currentTutorialStep += 1;
+        }
+    }
+
+    public void showUpgradeToCityTutorialBox()
 	{
 		if (dontShowAgain == false && currentTutorialStep == 10)
 		{
@@ -314,8 +330,6 @@ public class Tutorial : MonoBehaviour
     {
         closeDialogue(BtnParent);
 
-		currentTutorialStep += 1;
-		
 		switch (currentTutorialStep)
 		{
             case 6:

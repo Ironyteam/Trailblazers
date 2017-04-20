@@ -482,11 +482,11 @@ public class BoardManager : MonoBehaviour
     public void AddPortClicked()  // Glowing effect code added
     {
         List<GameObject> hexesToRemove = new List<GameObject>();
-        GameObject oldBtn = null;
+        /*GameObject oldBtn = null;
         GameObject newBtn;
-
+        */
         addPortEnabled = true;
-
+        /*
         if (currentResource != -1)
             oldBtn = GameObject.Find(resources[currentResource] + "Btn");
         else if (currentDiceNum != -1)
@@ -496,7 +496,7 @@ public class BoardManager : MonoBehaviour
             oldBtn.GetComponent<Button>().interactable = true;
 
         newBtn = GameObject.Find("AddPortBtn");
-        newBtn.GetComponent<Button>().interactable = false;
+        newBtn.GetComponent<Button>().interactable = false;*/
 
         currentResource = -1;
         currentDiceNum = -1;
@@ -1212,12 +1212,12 @@ public class BoardManager : MonoBehaviour
 
     public void changeSelectedResource(int resourceNum)
     {
-        GameObject oldBtn = null;
-        GameObject newBtn;
+        //GameObject oldBtn = null;
+        //GameObject newBtn;
 
         if (resourceNum != currentResource)
         {
-            if (currentResource != -1)
+            /*if (currentResource != -1)
                 oldBtn = GameObject.Find(resources[currentResource] + "Btn");
             else if (currentDiceNum != -1)
                 oldBtn = GameObject.Find("DiceBtn" + currentDiceNum);
@@ -1226,7 +1226,7 @@ public class BoardManager : MonoBehaviour
                 oldBtn.GetComponent<Button>().interactable = true;
 
             newBtn = GameObject.Find(resources[resourceNum] + "Btn");
-            newBtn.GetComponent<Button>().interactable = false;
+            newBtn.GetComponent<Button>().interactable = false;*/
 
             if (addPortEnabled == true)
                 resetPortAddingChanges(false);
@@ -1377,12 +1377,12 @@ public class BoardManager : MonoBehaviour
 
     public void changeSelectedDiceNum(int diceNum)
     {
-        GameObject newBtn;
-        GameObject oldBtn = null;
+       // GameObject newBtn;
+       // GameObject oldBtn = null;
 
         if (diceNum != currentDiceNum)
         {
-            if (currentResource != -1)
+            /*if (currentResource != -1)
                 oldBtn = GameObject.Find(resources[currentResource] + "Btn");
             else if (currentDiceNum != -1)
                 oldBtn = GameObject.Find("DiceBtn" + currentDiceNum);
@@ -1391,7 +1391,7 @@ public class BoardManager : MonoBehaviour
                 oldBtn.GetComponent<Button>().interactable = true;
 
             newBtn = GameObject.Find("DiceBtn" + diceNum);
-            newBtn.GetComponent<Button>().interactable = false;
+            newBtn.GetComponent<Button>().interactable = false;*/
 
             if (addPortEnabled == true)
                 resetPortAddingChanges(false);

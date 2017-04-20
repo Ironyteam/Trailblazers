@@ -83,7 +83,7 @@ public class NetworkManager : MonoBehaviour
    // Use this for initialization
    void Start()
    {
-      int maxConnections = 5;
+      int maxConnections = 20;
 
       // Create Saved Maps directory if one does not exist
       if (!Directory.Exists(Application.dataPath + "/Config"))
@@ -180,7 +180,7 @@ public class NetworkManager : MonoBehaviour
             {
                 // Destroy the list of network games in the panel
                 clearGamePanel();
-
+                lobbyPlayerChange(1); // Add myself to the lobby
                 //startGameBTN.gameObject.SetActive(true);
                 createGameBTN.gameObject.SetActive(false);
                 refreshGameListBTN.gameObject.SetActive(false);
@@ -444,7 +444,6 @@ public class NetworkManager : MonoBehaviour
          myPlayer.connectionID = 0;
          myPlayer.playerIndex  = 0;
          lobbyPlayers.Add(myPlayer);
-
          gameInfo = Constants.addGame + Constants.commandDivider + Network.player.ipAddress + Constants.gameDivider + myGame.gameName +
          Constants.gameDivider + "0" + Constants.gameDivider + myGame.maxPlayers + Constants.gameDivider + myGame.password + Constants.gameDivider + myGame.mapName;
          sendSocketMessage(gameInfo, serverConnectionID);
@@ -901,6 +900,7 @@ public class NetworkManager : MonoBehaviour
       {
          isHostingGame = false;
          startGameBTN.gameObject.SetActive(false);
+         lobbyPlayers.Clear();
          if (refreshGameListBTN != null)
          {
             refreshGameListBTN.gameObject.SetActive(true);

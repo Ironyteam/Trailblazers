@@ -96,11 +96,6 @@ public class GuiManager : MonoBehaviour {
 		Destroy (GameObject.Find("Directional light"));
 		Destroy (GameObject.Find("Ocean"));
         CurrentGameBoard = GameObject.Find("Map").GetComponent<GameBoard>();
-
-        if(NavigationScript.networkGame == true)
-        {
-            putLocalPlayerFirst(BoardManager.localPlayerIndex);
-        } 
     }
 
     void Start()
@@ -413,8 +408,8 @@ public class GuiManager : MonoBehaviour {
         else
             lastPlayer = CurrentGameBoard.CurrentPlayer + 1;
 
-        screenElementsArray[lastPlayer].characterSelected.enabled = false;
-        screenElementsArray[CurrentGameBoard.CurrentPlayer].characterSelected.enabled = true;
+        screenElementsArray[playerClassLocalArray[lastPlayer].uiPosition].characterSelected.enabled = false;
+        screenElementsArray[playerClassLocalArray[CurrentGameBoard.CurrentPlayer].uiPosition].characterSelected.enabled = true;
     }
 
 	public void openShop()
@@ -515,7 +510,7 @@ public class GuiManager : MonoBehaviour {
         {
             Player tempPlayer = CurrentGameBoard.LocalGame.PlayerList[CurrentGameBoard.LocalPlayer];
             // Wheat
-            wheatScore.text = CurrentGameBoard.LocalPlayer.ToString();//tempPlayer.Wheat.ToString();
+            wheatScore.text = tempPlayer.Wheat.ToString();
             // Brick
             brickScore.text = tempPlayer.Brick.ToString();
             // Wool
@@ -553,11 +548,13 @@ public class GuiManager : MonoBehaviour {
 			{
 			    screenElementsArray[count+1].characterPicture.sprite = Resources.Load<Sprite>(playerClassLocalArray[count].characterPictureName) as Sprite;
 				screenElementsArray[count+1].playerColour.sprite = Resources.Load<Sprite>(playerClassLocalArray[count].playerColourName) as Sprite;
+				screenElementsArray[count+1].playerName.text = CurrentGameBoard.LocalGame.PlayerList[count].Name;
 				playerClassLocalArray[count].uiPosition = count+1;
 			}
 
             screenElementsArray[0].characterPicture.sprite = Resources.Load<Sprite>(playerClassLocalArray[networkPlayerNumberIndex].characterPictureName) as Sprite;
             screenElementsArray[0].playerColour.sprite = Resources.Load<Sprite>(playerClassLocalArray[networkPlayerNumberIndex].playerColourName) as Sprite;
+			screenElementsArray[0].playerName.text = CurrentGameBoard.LocalGame.PlayerList[networkPlayerNumberIndex].Name;
             playerClassLocalArray[networkPlayerNumberIndex].uiPosition = 0;
 		}
 	}

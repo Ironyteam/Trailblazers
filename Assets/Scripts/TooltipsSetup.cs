@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -19,8 +19,14 @@ public class TooltipsSetup : MonoBehaviour
         "Wood",
         "Attack another"       + "\nplayer's city",
         "Buy armies for"       + "\nyour cities",
-        "Upgrade a Settlement" + "\nto a city",
-        "Build a Settlement",
+        "Upgrade a Settlement" + "\nto a city"
+                               + "\nCost: " + Constants.WheatPerCity        + " wheat, "
+                                            + Constants.OrePerCity          + " ore",
+
+        "Build a Settlement"   + "\nCost: " + Constants.BricksPerSettlement + " brick, "
+                                            + Constants.WoodPerSettlement   + " wood,\n"
+                                            + Constants.WheatPerSettlement  + " wheat, "
+                                            + Constants.WoolPerSettlement   + " wool",
         "Build a Road",
         "Buy and sell"         + "\nresources"
     };
@@ -34,6 +40,7 @@ public class TooltipsSetup : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        // Set up tooltips for non-player ability elements
         for (int index = 0; index < elementNames.Length; index++)
         {
             // Create the tooltip text as a child of the game object
@@ -53,7 +60,16 @@ public class TooltipsSetup : MonoBehaviour
                 tooltip.GetComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
                 tooltip.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                tooltip.transform.localPosition = new Vector3(-35, 20, 0);
+                if (GO.GetComponent<Button>() != null)
+                {
+                    // tooltip position for action buttons
+                    tooltip.transform.localPosition = new Vector3(-35, 35, 0);
+                }
+                else
+                {
+                    // tooltip positions for resource types and gold images
+                    tooltip.transform.localPosition = new Vector3(-35, 20, 0);
+                }
 
                 GO.AddComponent<Tooltips>();
 
@@ -69,6 +85,7 @@ public class TooltipsSetup : MonoBehaviour
             }
         }
 
+        // Setup tooltips for player images (abilities)
         for (int player = 1; player <= Constants.MaxPlayers; player++)
         {
             GameObject image = GameObject.Find("3 player" + player + "Image");
@@ -84,7 +101,9 @@ public class TooltipsSetup : MonoBehaviour
 
                 GameObject tooltip = new GameObject("tooltip");
                 tooltip.transform.SetParent(image.transform);
-                tooltip.transform.localPosition = new Vector3(10, -105, 0);
+
+                // tooltip position for character abilities on player images
+                tooltip.transform.localPosition = new Vector3(10, -118, 0);
 
                 image.AddComponent<AbilitiesTooltips>();
 
@@ -112,7 +131,9 @@ public class TooltipsSetup : MonoBehaviour
 
                 GameObject tooltip = new GameObject("tooltip");
                 tooltip.transform.SetParent(image.transform);
-                tooltip.transform.localPosition = new Vector3(20, -120, 0);
+
+                // tooltip position for Longest road images
+                tooltip.transform.localPosition = new Vector3(30, -140, 0);
 
                 image.AddComponent<Tooltips>();
 
@@ -141,7 +162,9 @@ public class TooltipsSetup : MonoBehaviour
 
                 GameObject tooltip = new GameObject("tooltip");
                 tooltip.transform.SetParent(image.transform);
-                tooltip.transform.localPosition = new Vector3(0, -85, 0);
+
+                // tooltip position for Victory Points images
+                tooltip.transform.localPosition = new Vector3(10, -105, 0);
 
                 image.AddComponent<Tooltips>();
 
@@ -170,7 +193,9 @@ public class TooltipsSetup : MonoBehaviour
 
                 GameObject tooltip = new GameObject("tooltip");
                 tooltip.transform.SetParent(image.transform);
-                tooltip.transform.localPosition = new Vector3(15, -50, 0);
+
+                // tooltip position for Largest army images
+                tooltip.transform.localPosition = new Vector3(20, -70, 0);
 
                 image.AddComponent<Tooltips>();
 

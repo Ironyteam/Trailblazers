@@ -97,8 +97,8 @@ public static class Constants
 	public const float StandardDiscount  = 0.75f;
 	public const float SpecificDiscount  = 0.50f;
 	public const float NoDiscount 		 = 1.00f;
-	public const float ResourceCost	 	 = 100.0f;
-    public const float ResourceSalePrice = 50.0f;
+	public const float ResourceCost	 	 = 150.0f;
+    public const float ResourceSalePrice = 75.0f;
 
     public const float QueenGoldBonus = 1.5f;
 	public const int LongestRoadBonus = 2;
